@@ -1897,16 +1897,28 @@ public class TestStringTemplate extends TestSuite {
         assertEqual(results, expecting);
     }
 
-    public void testHashMapPropertyFetch() throws Exception {
-        StringTemplate a = new StringTemplate("$stuff.prop$");
-        HashMap map = new HashMap();
-        a.setAttribute("stuff", map);
-        map.put("prop", "Terence");
-        String results = a.toString();
-        //System.out.println(results);
-        String expecting = "Terence";
-        assertEqual(results, expecting);
-    }
+	public void testHashMapPropertyFetch() throws Exception {
+		StringTemplate a = new StringTemplate("$stuff.prop$");
+		HashMap map = new HashMap();
+		a.setAttribute("stuff", map);
+		map.put("prop", "Terence");
+		String results = a.toString();
+		//System.out.println(results);
+		String expecting = "Terence";
+		assertEqual(results, expecting);
+	}
+
+	public void testHashMapPropertyFetchEmbeddedStringTemplate() throws Exception {
+		StringTemplate a = new StringTemplate("$stuff.prop$");
+		HashMap map = new HashMap();
+		a.setAttribute("stuff", map);
+		a.setAttribute("title", "ST rocks");
+		map.put("prop", new StringTemplate("embedded refers to $title$"));
+		String results = a.toString();
+		//System.out.println(results);
+		String expecting = "embedded refers to ST rocks";
+		assertEqual(results, expecting);
+	}
 
 	public void testEmbeddedComments() throws Exception {
 		StringTemplate st = new StringTemplate(
