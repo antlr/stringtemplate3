@@ -1,0 +1,2147 @@
+/*
+ [The "BSD licence"]
+ Copyright (c) 2003-2005 Terence Parr
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+package org.antlr.stringtemplate.test;
+
+import org.antlr.stringtemplate.StringTemplateGroup;
+import org.antlr.stringtemplate.StringTemplate;
+import org.antlr.stringtemplate.StringTemplateErrorListener;
+import org.antlr.stringtemplate.StringTemplateWriter;
+import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
+
+import java.io.*;
+import java.util.*;
+
+/** Test the various functionality of StringTemplate. Seems to run only
+ *  on unix due to \r\n vs \n issue.  David Scurrah says:
+ *
+ * "I don't think you were necessarily sloppy with your newlines, but Java make it very difficult to be consistant.
+The stringtemplate library used unix end of lines for writing toString methods and the like,
+while the testing was using the system local end of line. The other problem with end of lines was any template
+file used in the testing will also have a specific end of line ( this case unix) and when read into a string that can the unique problem
+of having end of line unix and local system end of line in the on  line.
+
+My solution was not very elegant but I think it required the least changes and only to the testing.
+I simply converted all strings to use unix end of line characters inside the assertTrue and then compared them.
+The only other problem I found was writing a file out to the /tmp directory won't work on windows so I used the
+system property  java.io.tmpdir to get a temp directory."
+
+ * I'll fix later.
+ */
+public class TestStringTemplate extends TestSuite {
+    final String newline = System.getProperty("line.separator");
+
+    public TestStringTemplate() {
+    }
+
+	static class ErrorBuffer implements StringTemplateErrorListener {
+		StringBuffer errorOutput = new StringBuffer(500);
+		public void error(String msg, Throwable e) {
+			if ( e!=null ) {
+				errorOutput.append(msg+": "+e);
+			}
+			else {
+				errorOutput.append(msg);
+			}
+		}
+		public void warning(String msg) {
+			errorOutput.append(msg);
+		}
+		public void debug(String msg) {
+			errorOutput.append(msg);
+		}
+        public boolean equals(Object o) {
+            String me = toString();
+            String them = o.toString();
+            return me.equals(them);
+        }
+		public String toString() {
+			return errorOutput.toString();
+		}
+	}
+
+    public void testGroupFileFormat() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "t() ::= \"literal template\"" +newline+
+                "bold(item) ::= \"<b>$item$</b>\""+newline+
+                "duh() ::= <<"+newline+"xx"+newline+">>"+newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+
+        String expecting = "group test;" +newline+
+                "duh() ::= <<xx>>" +newline+
+                "bold(item) ::= <<<b>$item$</b>>>" +newline+
+                "t() ::= <<literal template>>"+newline;
+        assertEqual(group.toString(), expecting);
+
+        StringTemplate a = group.getInstanceOf("t");
+        expecting = "literal template";
+        assertEqual(a.toString(), expecting);
+
+        StringTemplate b = group.getInstanceOf("bold");
+        b.setAttribute("item", "dork");
+        expecting = "<b>dork</b>";
+        assertEqual(b.toString(), expecting);
+    }
+
+    /** Check syntax and setAttribute-time errors */
+    public void testTemplateParameterDecls() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "t() ::= \"no args but ref $foo$\"" +newline+
+                "t2(item) ::= \"decl but not used is ok\""+newline +
+                "t3(a,b,c,d) ::= <<$a$ $d$>>"+newline+
+                "t4(a,b,c,d) ::= <<$a$ $b$ $c$ $d$>>"+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+
+        // check setting unknown arg in empty formal list
+        StringTemplate a = group.getInstanceOf("t");
+        String error = null;
+        try {
+            a.setAttribute("foo", "x"); // want NoSuchElementException
+        }
+        catch (NoSuchElementException e) {
+            error = e.getMessage();
+        }
+        String expecting = "no such attribute: foo in template t or in enclosing template";
+        assertEqual(error, expecting);
+
+        // check setting known arg
+        a = group.getInstanceOf("t2");
+        a.setAttribute("item", "x"); // shouldn't get exception
+
+        // check setting unknown arg in nonempty list of formal args
+        a = group.getInstanceOf("t3");
+        a.setAttribute("b", "x");
+    }
+
+    public void testTemplateRedef() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "a() ::= \"x\"" +newline+
+                "b() ::= \"y\"" +newline+
+                "a() ::= \"z\"" +newline;
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates), errors);
+        String expecting = "redefinition of template: a";
+        assertEqual(errors.toString(), expecting);
+    }
+
+    public void testMissingInheritedAttribute() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page(title,font) ::= <<"+newline +
+                "<html>"+newline +
+                "<body>"+newline +
+                "$title$<br>"+newline +
+                "$body()$"+newline +
+                "</body>"+newline +
+                "</html>"+newline +
+                ">>"+newline +
+                "body() ::= \"<font face=$font$>my body</font>\"" +newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate t = group.getInstanceOf("page");
+        t.setAttribute("title","my title");
+        t.setAttribute("font","Helvetica"); // body() will see it
+        t.toString(); // should be no problem
+    }
+
+    public void testFormalArgumentAssignment() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page() ::= <<$body(font=\"Times\")$>>"+newline +
+                "body(font) ::= \"<font face=$font$>my body</font>\"" +newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate t = group.getInstanceOf("page");
+        String expecting = "<font face=Times>my body</font>";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testUndefinedArgumentAssignment() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page(x) ::= <<$body(font=x)$>>"+newline +
+                "body() ::= \"<font face=$font$>my body</font>\"" +newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate t = group.getInstanceOf("page");
+        t.setAttribute("x","Times");
+        String error = "";
+        try {
+            t.toString();
+        }
+        catch (NoSuchElementException iae) {
+            error = iae.getMessage();
+        }
+        String expecting = "no such attribute: font in template body or in enclosing template";
+        assertEqual(error, expecting);
+    }
+
+    public void testFormalArgumentAssignmentInApply() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page(name) ::= <<$name:bold(font=\"Times\")$>>"+newline +
+                "bold(font) ::= \"<font face=$font$><b>$it$</b></font>\"" +newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate t = group.getInstanceOf("page");
+        t.setAttribute("name", "Ter");
+        String expecting = "<font face=Times><b>Ter</b></font>";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testUndefinedArgumentAssignmentInApply() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page(name,x) ::= <<$name:bold(font=x)$>>"+newline +
+                "bold() ::= \"<font face=$font$><b>$it$</b></font>\"" +newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate t = group.getInstanceOf("page");
+        t.setAttribute("x","Times");
+        t.setAttribute("name", "Ter");
+        String error = "";
+        try {
+            t.toString();
+        }
+        catch (NoSuchElementException iae) {
+            error = iae.getMessage();
+        }
+        String expecting = "no such attribute: font in template bold or in enclosing template";
+        assertEqual(error, expecting);
+    }
+
+    public void testUndefinedAttributeReference() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page() ::= <<$bold()$>>"+newline +
+                "bold() ::= \"$name$\"" +newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate t = group.getInstanceOf("page");
+        String error = "";
+        try {
+            t.toString();
+        }
+        catch (NoSuchElementException iae) {
+            error = iae.getMessage();
+        }
+        String expecting = "no such attribute: name in template bold";
+        assertEqual(error, expecting);
+    }
+
+    public void testUndefinedDefaultAttributeReference() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page() ::= <<$bold()$>>"+newline +
+                "bold() ::= \"$it$\"" +newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate t = group.getInstanceOf("page");
+        String error = "";
+        try {
+            t.toString();
+        }
+        catch (NoSuchElementException nse) {
+            error = nse.getMessage();
+        }
+        String expecting = "no such attribute: it in template bold";
+        assertEqual(error, expecting);
+    }
+
+    public void testAngleBracketsWithGroupFile() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "a(s) ::= \"<s:{case <i> : <it> break;}>\""+newline +
+                "b(t) ::= \"<t; separator=\\\",\\\">\"" +newline+
+                "c(t) ::= << <t; separator=\",\"> >>" +newline;
+        // mainly testing to ensure we don't get parse errors of above
+        StringTemplateGroup group =
+                new StringTemplateGroup(
+                        new StringReader(templates),
+                        AngleBracketTemplateLexer.class,
+                        null);
+        StringTemplate t = group.getInstanceOf("a");
+        t.setAttribute("s","Test");
+        String expecting = "case 1 : Test break;";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testAngleBracketsNoGroup() throws Exception {
+        StringTemplate st =new StringTemplate(
+                "Tokens : <rules; separator=\"|\"> ;",
+                AngleBracketTemplateLexer.class);
+        st.setAttribute("rules", "A");
+        st.setAttribute("rules", "B");
+        String expecting = "Tokens : A|B ;";
+        assertEqual(st.toString(), expecting);
+    }
+
+    public void testSimpleInheritance() throws Exception {
+		// make a bold template in the super group that you can inherit from sub
+		StringTemplateGroup supergroup = new StringTemplateGroup("super");
+		StringTemplateGroup subgroup = new StringTemplateGroup("sub");
+		StringTemplate bold = supergroup.defineTemplate("bold", "<b>$it$</b>");
+		subgroup.setSuperGroup(supergroup);
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		subgroup.setErrorListener(errors);
+		supergroup.setErrorListener(errors);
+		StringTemplate duh = new StringTemplate(subgroup, "$name:bold()$");
+		duh.setAttribute("name", "Terence");
+		String expecting = "<b>Terence</b>";
+		assertEqual(duh.toString(), expecting);
+	}
+
+	public void testOverrideInheritance() throws Exception {
+		// make a bold template in the super group and one in sub group
+		StringTemplateGroup supergroup = new StringTemplateGroup("super");
+		StringTemplateGroup subgroup = new StringTemplateGroup("sub");
+		supergroup.defineTemplate("bold", "<b>$it$</b>");
+		subgroup.defineTemplate("bold", "<strong>$it$</strong>");
+		subgroup.setSuperGroup(supergroup);
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		subgroup.setErrorListener(errors);
+		supergroup.setErrorListener(errors);
+		StringTemplate duh = new StringTemplate(subgroup, "$name:bold()$");
+		duh.setAttribute("name", "Terence");
+		String expecting = "<strong>Terence</strong>";
+		assertEqual(duh.toString(), expecting);
+	}
+
+	public void testMultiLevelInheritance() throws Exception {
+		// must loop up two levels to find bold()
+		StringTemplateGroup rootgroup = new StringTemplateGroup("root");
+		StringTemplateGroup level1 = new StringTemplateGroup("level1");
+		StringTemplateGroup level2 = new StringTemplateGroup("level2");
+		rootgroup.defineTemplate("bold", "<b>$it$</b>");
+		level1.setSuperGroup(rootgroup);
+		level2.setSuperGroup(level1);
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		rootgroup.setErrorListener(errors);
+		level1.setErrorListener(errors);
+		level2.setErrorListener(errors);
+		StringTemplate duh = new StringTemplate(level2, "$name:bold()$");
+		duh.setAttribute("name", "Terence");
+		String expecting = "<b>Terence</b>";
+		assertEqual(duh.toString(), expecting);
+	}
+
+	public void testExprInParens() throws Exception {
+		// specify a template to apply to an attribute
+		// Use a template group so we can specify the start/stop chars
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".");
+		StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
+		StringTemplate duh = new StringTemplate(group, "$(\"blort: \"+(list)):bold()$");
+		duh.setAttribute("list", "a");
+		duh.setAttribute("list", "b");
+		duh.setAttribute("list", "c");
+		// System.out.println(duh);
+		String expecting = "<b>blort: abc</b>";
+		assertEqual(duh.toString(), expecting);
+	}
+
+    public void testMultipleAdditions() throws Exception {
+        // specify a template to apply to an attribute
+        // Use a template group so we can specify the start/stop chars
+        StringTemplateGroup group =
+            new StringTemplateGroup("dummy", ".");
+        group.defineTemplate("link", "<a href=\"$url$\"><b>$title$</b></a>");
+        StringTemplate duh =
+            new StringTemplate(group,
+                "$link(url=\"/member/view?ID=\"+ID+\"&x=y\"+foo, title=\"the title\")$");
+        duh.setAttribute("ID", "3321");
+        duh.setAttribute("foo", "fubar");
+        String expecting = "<a href=\"/member/view?ID=3321&x=yfubar\"><b>the title</b></a>";
+        assertEqual(duh.toString(), expecting);
+    }
+
+    public void testCollectionAttributes() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate t =
+            new StringTemplate(group, "$data$, $data:bold()$, "+
+                                      "$list:bold():bold()$, $array$, $a2$, $a3$, $a4$");
+        Vector v = new Vector();
+        v.addElement("1");
+        v.addElement("2");
+        v.addElement("3");
+        List list = new ArrayList();
+        list.add("a");
+        list.add("b");
+        list.add("c");
+        t.setAttribute("data", v);
+        t.setAttribute("list", list);
+        t.setAttribute("array", new String[] {"x","y"});
+        t.setAttribute("a2", new int[] {10,20});
+        t.setAttribute("a3", new float[] {1.2f,1.3f});
+        t.setAttribute("a4", new double[] {8.7,9.2});
+        //System.out.println(t);
+        String expecting="123, <b>1</b><b>2</b><b>3</b>, "+
+            "<b><b>a</b></b><b><b>b</b></b><b><b>c</b></b>, xy, 1020, 1.21.3, 8.79.2";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testParenthesizedExpression() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate t = new StringTemplate(group, "$(first+last):bold()$");
+        t.setAttribute("first", "Joe");
+        t.setAttribute("last", "Schmoe");
+        //System.out.println(t);
+        String expecting="<b>JoeSchmoe</b>";
+        assertEqual(t.toString(), expecting);
+    }
+
+	public void testApplyTemplateNameExpression() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("foobar", "foo$attr$bar");
+        StringTemplate t = new StringTemplate(group, "$data:(name+\"bar\")()$");
+        t.setAttribute("data", "Ter");
+        t.setAttribute("data", "Tom");
+        t.setAttribute("name", "foo");
+        //System.out.println(t);
+        String expecting="fooTerbarfooTombar";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testTemplateNameExpression() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate foo = group.defineTemplate("foo", "hi there!");
+        StringTemplate t = new StringTemplate(group, "$(name)()$");
+        t.setAttribute("name", "foo");
+        //System.out.println(t);
+        String expecting="hi there!";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testMissingEndDelimiter() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+        group.setErrorListener(errors);
+        StringTemplate t = new StringTemplate(group, "stuff $a then more junk etc...");
+        String expectingError="problem parsing template 'anonymous': line 1:31: expecting '$', found '<EOF>'";
+        //System.out.println("error: '"+errors+"'");
+        //System.out.println("expecting: '"+expectingError+"'");
+        assertEqual(errors.toString(), expectingError);
+    }
+
+    public void testSetButNotRefd() throws Exception {
+        StringTemplate.setLintMode(true);
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate t = new StringTemplate(group, "$a$ then $b$ and $c$ refs.");
+        t.setAttribute("a", "Terence");
+        t.setAttribute("b", "Terence");
+        t.setAttribute("cc", "Terence"); // oops...should be 'c'
+        final String newline = System.getProperty("line.separator");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+        group.setErrorListener(errors);
+        String expectingError="anonymous: set but not used: cc";
+        String result = t.toString();    // result is irrelevant
+        //System.out.println("result error: '"+errors+"'");
+        //System.out.println("expecting: '"+expectingError+"'");
+        StringTemplate.setLintMode(false);
+        assertEqual(errors.toString(), expectingError);
+    }
+
+    public void testNullTemplateApplication() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+        group.setErrorListener(errors);
+        StringTemplate t = new StringTemplate(group, "$names:bold(x=it)$");
+        t.setAttribute("names", "Terence");
+        //System.out.println(t);
+        String expecting=null;
+		String result = null;
+		String error = null;
+		try {
+			result = t.toString();
+		}
+		catch (IllegalArgumentException iae) {
+			error = iae.getMessage();
+		}
+		assertEqual(error, "Can't load template bold.st");
+    }
+
+    public void testNullTemplateToMultiValuedApplication() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+        group.setErrorListener(errors);
+        StringTemplate t = new StringTemplate(group, "$names:bold(x=it)$");
+        t.setAttribute("names", "Terence");
+        t.setAttribute("names", "Tom");
+        //System.out.println(t);
+        String expecting=null; // bold not found...empty string
+		String result = null;
+		String error = null;
+		try {
+			result = t.toString();
+		}
+		catch (IllegalArgumentException iae) {
+			error = iae.getMessage();
+		}
+		assertEqual(error, "Can't load template bold.st");
+    }
+
+    public void testChangingAttrValueTemplateApplicationToVector() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate italics = group.defineTemplate("italics", "<i>$x$</i>");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
+        StringTemplate t = new StringTemplate(group, "$names:bold(x=it)$");
+        t.setAttribute("names", "Terence");
+        t.setAttribute("names", "Tom");
+        //System.out.println("'"+t.toString()+"'");
+        String expecting="<b>Terence</b><b>Tom</b>";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testChangingAttrValueRepeatedTemplateApplicationToVector() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$item$</b>");
+        StringTemplate italics = group.defineTemplate("italics", "<i>$it$</i>");
+        StringTemplate members =
+                new StringTemplate(group, "$members:bold(item=it):italics(it=it)$");
+        members.setAttribute("members", "Jim");
+        members.setAttribute("members", "Mike");
+        members.setAttribute("members", "Ashar");
+        //System.out.println("members="+members);
+        String expecting = "<i><b>Jim</b></i><i><b>Mike</b></i><i><b>Ashar</b></i>";
+        assertEqual(members.toString(), expecting);
+    }
+
+    public void testAlternatingTemplateApplication() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        StringTemplate listItem = group.defineTemplate("listItem", "<li>$it$</li>");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate italics = group.defineTemplate("italics", "<i>$it$</i>");
+        StringTemplate item =
+                new StringTemplate(group, "$item:bold(),italics():listItem()$");
+        item.setAttribute("item", "Jim");
+        item.setAttribute("item", "Mike");
+        item.setAttribute("item", "Ashar");
+        //System.out.println("ITEM="+item);
+        String expecting = "<li><b>Jim</b></li><li><i>Mike</i></li><li><b>Ashar</b></li>";
+        assertEqual(item.toString(), expecting);
+    }
+
+    public void testExpressionAsRHSOfAssignment() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate hostname = group.defineTemplate("hostname", "$machine$.jguru.com");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
+        StringTemplate t = new StringTemplate(group, "$bold(x=hostname(machine=\"www\"))$");
+        String expecting="<b>www.jguru.com</b>";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testTemplateApplicationAsRHSOfAssignment() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate hostname = group.defineTemplate("hostname", "$machine$.jguru.com");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
+        StringTemplate italics = group.defineTemplate("italics", "<i>$it$</i>");
+        StringTemplate t = new StringTemplate(group, "$bold(x=hostname(machine=\"www\"):italics())$");
+        String expecting="<b><i>www.jguru.com</i></b>";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testParameterAndAttributeScoping() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate italics = group.defineTemplate("italics", "<i>$x$</i>");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
+        StringTemplate t = new StringTemplate(group, "$bold(x=italics(x=name))$");
+        t.setAttribute("name", "Terence");
+        //System.out.println(t);
+        String expecting="<b><i>Terence</i></b>";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testComplicatedSeparatorExpr() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("bulletSeparator", "</li>$foo$<li>");
+        // make separator a complicated expression with args passed to included template
+        StringTemplate t =
+            new StringTemplate(group,
+                               "<ul>$name; separator=bulletSeparator(foo=\" \")+\"&nbsp;\"$</ul>");
+        t.setAttribute("name", "Ter");
+        t.setAttribute("name", "Tom");
+        t.setAttribute("name", "Mel");
+        //System.out.println(t);
+        String expecting = "<ul>Ter</li> <li>&nbsp;Tom</li> <li>&nbsp;Mel</ul>";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testAttributeRefButtedUpAgainstEndifAndWhitespace() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate a = new StringTemplate(group,
+                                              "$if (!firstName)$$email$$endif$");
+        a.setAttribute("email", "parrt@jguru.com");
+        String expecting = "parrt@jguru.com";
+        assertEqual(a.toString(), expecting);
+    }
+
+    public void testStringCatenationOnSingleValuedAttribute() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate a = new StringTemplate(group, "$name+\" Parr\":bold()$");
+        StringTemplate b = new StringTemplate(group, "$bold(it=name+\" Parr\")$");
+        a.setAttribute("name", "Terence");
+        b.setAttribute("name", "Terence");
+        String expecting = "<b>Terence Parr</b>";
+		assertEqual(a.toString(), expecting);
+		assertEqual(b.toString(), expecting);
+    }
+
+    public void testApplyingTemplateFromDiskWithPrecompiledIF()
+            throws Exception
+    {
+        String newline = System.getProperty("line.separator");
+        // write the template files first to /tmp
+        FileWriter fw = new FileWriter("/tmp/page.st");
+        fw.write("<html><head>"+newline);
+        //fw.write("  <title>PeerScope: $title$</title>"+newline);
+        fw.write("</head>"+newline);
+        fw.write("<body>"+newline);
+        fw.write("$if(member)$User: $member:terse()$$endif$"+newline);
+        fw.write("</body>"+newline);
+        fw.write("</head>"+newline);
+        fw.close();
+
+        fw = new FileWriter("/tmp/terse.st");
+        fw.write("$it.firstName$ $it.lastName$ (<tt>$it.email$</tt>)"+newline);
+        fw.close();
+
+        // specify a template to apply to an attribute
+        // Use a template group so we can specify the start/stop chars
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", "/tmp");
+
+        StringTemplate a = group.getInstanceOf("page");
+        a.setAttribute("member", new Connector());
+        String expecting = "<html><head>"+newline+
+                "</head>"+newline+
+                "<body>"+newline+
+                "User: Terence Parr (<tt>parrt@jguru.com</tt>)"+newline+
+                "</body>"+newline+
+                "</head>";
+        //System.out.println("'"+a+"'");
+        assertEqual(a.toString(), expecting);
+    }
+
+    public void testMultiValuedAttributeWithAnonymousTemplateUsingIndexVariableI()
+            throws Exception
+    {
+        StringTemplateGroup tgroup =
+                new StringTemplateGroup("dummy", ".");
+        StringTemplate t =
+                new StringTemplate(tgroup,
+                                   " List:"+newline+"  "+newline+"foo"+newline+newline+
+                                   "$names:{<br>$i$. $it$"+newline+
+								   "}$");
+        t.setAttribute("names", "Terence");
+        t.setAttribute("names", "Jim");
+        t.setAttribute("names", "Sriram");
+        String newline = System.getProperty("line.separator");
+        //System.out.println(t);
+        String expecting =
+                " List:"+newline+
+                "  "+newline+
+                "foo"+newline+newline+
+                "<br>1. Terence"+newline+
+                "<br>2. Jim"+newline+
+                "<br>3. Sriram"+newline;
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testFindTemplateInCLASSPATH() throws Exception {
+        // Look for templates in CLASSPATH as resources
+        StringTemplateGroup mgroup =
+                new StringTemplateGroup("method stuff", AngleBracketTemplateLexer.class);
+        StringTemplate m = mgroup.getInstanceOf("org/antlr/stringtemplate/test/method");
+        // "method.st" references body() so "body.st" will be loaded too
+        m.setAttribute("visibility", "public");
+        m.setAttribute("name", "foobar");
+        m.setAttribute("returnType", "void");
+        m.setAttribute("statements", "i=1;"); // body inherits these from method
+        m.setAttribute("statements", "x=i;");
+        String newline = System.getProperty("line.separator");
+        String expecting =
+                "public void foobar() {"+newline+
+                "\t// start of a body"+newline+
+                "\ti=1;"+newline+
+				"\tx=i;"+newline+
+                "\t// end of a body"+newline+
+                "}";
+		//System.out.println(m);
+        assertEqual(m.toString(), expecting);
+    }
+
+    public void testApplyTemplateToSingleValuedAttribute() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
+        StringTemplate name = new StringTemplate(group, "$name:bold(x=name)$");
+        name.setAttribute("name", "Terence");
+        assertEqual(name.toString(), "<b>Terence</b>");
+    }
+
+    public void testStringLiteralAsAttribute() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate name = new StringTemplate(group, "$\"Terence\":bold()$");
+        assertEqual(name.toString(), "<b>Terence</b>");
+    }
+
+    public void testApplyTemplateToSingleValuedAttributeWithDefaultAttribute() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate name = new StringTemplate(group, "$name:bold()$");
+        name.setAttribute("name", "Terence");
+        assertEqual(name.toString(), "<b>Terence</b>");
+    }
+
+    public void testApplyAnonymousTemplateToSingleValuedAttribute() throws Exception {
+        // specify a template to apply to an attribute
+        // Use a template group so we can specify the start/stop chars
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        StringTemplate item =
+                new StringTemplate(group, "$item:{<li>$it$</li>}$");
+        item.setAttribute("item", "Terence");
+        assertEqual(item.toString(), "<li>Terence</li>");
+    }
+
+    public void testApplyAnonymousTemplateToMultiValuedAttribute() throws Exception {
+        // specify a template to apply to an attribute
+        // Use a template group so we can specify the start/stop chars
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        StringTemplate list =
+                new StringTemplate(group, "<ul>$items$</ul>");
+        // demonstrate setting arg to anonymous subtemplate
+        StringTemplate item =
+                new StringTemplate(group, "$item:{<li>$it$</li>}; separator=\",\"$");
+        item.setAttribute("item", "Terence");
+        item.setAttribute("item", "Jim");
+        item.setAttribute("item", "John");
+        list.setAttribute("items", item); // nested template
+        assertEqual(list.toString(), "<ul><li>Terence</li>,<li>Jim</li>,<li>John</li></ul>");
+    }
+
+    public void testApplyAnonymousTemplateToAggregateAttribute() throws Exception {
+        StringTemplate st =
+                new StringTemplate("$items:{$it.last$, $it.first$\n}$");
+        st.setAttribute("items.{first,last}", "Ter", "Parr");
+        st.setAttribute("items.{first,last}", "Tom", "Burns");
+        String expecting =
+                "Parr, Ter"+newline +
+                "Burns, Tom"+newline;
+        assertEqual(st.toString(), expecting);
+    }
+
+    public void testRepeatedApplicationOfTemplateToSingleValuedAttribute() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        StringTemplate search = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate item =
+                new StringTemplate(group, "$item:bold():bold()$");
+        item.setAttribute("item", "Jim");
+        assertEqual(item.toString(), "<b><b>Jim</b></b>");
+    }
+
+    public void testRepeatedApplicationOfTemplateToMultiValuedAttributeWithSeparator() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        StringTemplate search = group.defineTemplate("bold", "<b>$it$</b>");
+        StringTemplate item =
+                new StringTemplate(group, "$item:bold():bold(); separator=\",\"$");
+        item.setAttribute("item", "Jim");
+        item.setAttribute("item", "Mike");
+        item.setAttribute("item", "Ashar");
+        // first application of template must yield another vector!
+        //System.out.println("ITEM="+item);
+        assertEqual(item.toString(), "<b><b>Jim</b></b>,<b><b>Mike</b></b>,<b><b>Ashar</b></b>");
+    }
+
+    // ### NEED A TEST OF obj ASSIGNED TO ARG?
+
+    public void testMultiValuedAttributeWithSeparator() throws Exception {
+        StringTemplate query;
+
+        // if column can be multi-valued, specify a separator
+        StringTemplateGroup group =
+            new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+        query = new StringTemplate(group, "SELECT <distinct> <column; separator=\", \"> FROM <table>;");
+        query.setAttribute("column", "name");
+        query.setAttribute("column", "email");
+        query.setAttribute("table", "User");
+        // uncomment next line to make "DISTINCT" appear in output
+        // query.setAttribute("distince", "DISTINCT");
+        // System.out.println(query);
+        assertEqual(query.toString(), "SELECT  name, email FROM User;");
+    }
+
+    public void testSingleValuedAttributes() throws Exception {
+        // all attributes are single-valued:
+        StringTemplate query =
+                new StringTemplate("SELECT $column$ FROM $table$;");
+        query.setAttribute("column", "name");
+        query.setAttribute("table", "User");
+        // System.out.println(query);
+        assertEqual(query.toString(), "SELECT name FROM User;");
+    }
+
+	public void testIFTemplate() throws Exception {
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			new StringTemplate(group,
+					  "SELECT <column> FROM PERSON "+
+					  "<if(cond)>WHERE ID=<id><endif>;");
+		t.setAttribute("column", "name");
+		t.setAttribute("cond", "true");
+		t.setAttribute("id", "231");
+		assertEqual(t.toString(), "SELECT name FROM PERSON WHERE ID=231;");
+	}
+
+	/** As of 2.0, you can test a boolean value */
+	public void testIFBoolean() throws Exception {
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".");
+		StringTemplate t =
+			new StringTemplate(group,
+					  "$if(b)$x$endif$ $if(!b)$y$endif$");
+		t.setAttribute("b", new Boolean(true));
+		assertEqual(t.toString(), "x ");
+
+		t = t.getInstanceOf();
+		t.setAttribute("b", new Boolean(false));
+		assertEqual(t.toString(), " y");
+	}
+
+    public void testNestedIFTemplate() throws Exception {
+        String newline = System.getProperty("line.separator");
+        StringTemplateGroup group =
+            new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+        StringTemplate t =
+            new StringTemplate(group,
+                "ack<if(a)>"+newline+
+                "foo"+newline+
+                "<if(!b)>stuff<endif>"+newline+
+                "<if(b)>no<endif>"+newline+
+                "junk"+newline+
+                "<endif>"
+            );
+        t.setAttribute("a", "blort");
+        // leave b as null
+        //System.out.println("t="+t);
+        String expecting =
+                "ackfoo"+newline+
+                "stuff"+newline+
+                "junk";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public class Connector {
+        public int getID() { return 1; }
+        public String getFirstName() { return "Terence"; }
+        public String getLastName() { return "Parr"; }
+        public String getEmail() { return "parrt@jguru.com"; }
+        public String getBio() { return "Superhero by night..."; }
+		/** As of 2.0, booleans work as you expect.  In 1.x,
+		 *  a missing value simulated a boolean.
+		 */
+        public boolean getCanEdit() { return false; }
+    }
+
+	public class Connector2 {
+		public int getID() { return 2; }
+		public String getFirstName() { return "Tom"; }
+		public String getLastName() { return "Burns"; }
+		public String getEmail() { return "tombu@jguru.com"; }
+		public String getBio() { return "Superhero by day..."; }
+		public Boolean getCanEdit() { return new Boolean(true); }
+	}
+
+    public void testObjectPropertyReference() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        String newline = System.getProperty("line.separator");
+        StringTemplate t =
+                new StringTemplate(
+                        group,
+                        "<b>Name: $p.firstName$ $p.lastName$</b><br>"+newline+
+                        "<b>Email: $p.email$</b><br>"+newline+
+                        "$p.bio$"
+                );
+        t.setAttribute("p", new Connector());
+        //System.out.println("t is "+t.toString());
+        String expecting =
+                "<b>Name: Terence Parr</b><br>"+newline+
+                "<b>Email: parrt@jguru.com</b><br>"+newline+
+                "Superhero by night...";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testApplyRepeatedAnonymousTemplateWithForeignTemplateRefToMultiValuedAttribute() throws Exception {
+        // specify a template to apply to an attribute
+        // Use a template group so we can specify the start/stop chars
+        StringTemplateGroup group =
+            new StringTemplateGroup("dummy", ".");
+        group.defineTemplate("link", "<a href=\"$url$\"><b>$title$</b></a>");
+        StringTemplate duh =
+            new StringTemplate(group,
+        "start|$p:{$link(url=\"/member/view?ID=\"+it.ID, title=it.firstName)$ $if(it.canEdit)$canEdit$endif$}:"+
+        "{$it$<br>\n}$|end");
+        duh.setAttribute("p", new Connector());
+        duh.setAttribute("p", new Connector2());
+        String newline = System.getProperty("line.separator");
+        //System.out.println(duh);
+        String expecting = "start|<a href=\"/member/view?ID=1\"><b>Terence</b></a> <br>"+newline+
+            "<a href=\"/member/view?ID=2\"><b>Tom</b></a> canEdit<br>"+newline+
+            "|end";
+        assertEqual(duh.toString(), expecting);
+    }
+
+	public static class Tree {
+		protected List children = new LinkedList();
+		protected String text;
+		public Tree(String t) {
+			text = t;
+		}
+		public String getText() {
+			return text;
+		}
+		public void addChild(Tree c) {
+			children.add(c);
+		}
+		public Tree getFirstChild() {
+			if ( children.size()==0 ) {
+				return null;
+			}
+			return (Tree)children.get(0);
+		}
+		public List getChildren() {
+			return children;
+		}
+	}
+
+	public void testRecursion() throws Exception {
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+		group.defineTemplate("tree",
+		"<if(it.firstChild)>"+
+		  "( <it.text> <it.children:tree(); separator=\" \"> )" +
+		"<else>" +
+		  "<it.text>" +
+		"<endif>");
+		StringTemplate tree = group.getInstanceOf("tree");
+		// build ( a b (c d) e )
+		Tree root = new Tree("a");
+		root.addChild(new Tree("b"));
+		Tree subtree = new Tree("c");
+		subtree.addChild(new Tree("d"));
+		root.addChild(subtree);
+		root.addChild(new Tree("e"));
+		tree.setAttribute("it", root);
+		String expecting = "( a b ( c d ) e )";
+		assertEqual(tree.toString(), expecting);
+	}
+
+    public void testNestedAnonymousTemplates() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        String newline = System.getProperty("line.separator");
+        StringTemplate t =
+                new StringTemplate(
+                        group,
+                        "$A:{" + newline +
+                          "<i>$it:{" + newline +
+                            "<b>$it$</b>" + newline +
+                          "}$</i>" + newline +
+                        "}$"
+                );
+        t.setAttribute("A", "parrt");
+        String expecting = newline +
+            "<i>" + newline +
+            "<b>parrt</b>" + newline +
+            "</i>" + newline;
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testAnonymousTemplateAccessToEnclosingAttributes() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        String newline = System.getProperty("line.separator");
+        StringTemplate t =
+                new StringTemplate(
+                        group,
+                        "$A:{" + newline +
+                          "<i>$it:{" + newline +
+                            "<b>$it$, $B$</b>" + newline +
+                          "}$</i>" + newline +
+                        "}$"
+                );
+        t.setAttribute("A", "parrt");
+        t.setAttribute("B", "tombu");
+        String expecting = newline +
+            "<i>" + newline +
+            "<b>parrt, tombu</b>" + newline +
+            "</i>" + newline;
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testNestedAnonymousTemplatesAgain() throws Exception {
+
+        StringTemplateGroup group =
+                new StringTemplateGroup("dummy", ".");
+        String newline = System.getProperty("line.separator");
+        StringTemplate t =
+                new StringTemplate(
+                        group,
+                        "<table>"+newline +
+                        "$names:{<tr>$it:{<td>$it:{<b>$it$</b>}$</td>}$</tr>}$"+newline +
+                        "</table>"+newline
+                );
+        t.setAttribute("names", "parrt");
+        t.setAttribute("names", "tombu");
+        String expecting =
+                "<table>" + newline +
+                "<tr><td><b>parrt</b></td></tr><tr><td><b>tombu</b></td></tr>" + newline +
+                "</table>" + newline;
+        assertEqual(t.toString(), expecting);
+    }
+
+	public void testEscapes() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("dummy", ".");
+		String newline = System.getProperty("line.separator");
+		group.defineTemplate("foo", "$x$ && $it$");
+		StringTemplate t =
+				new StringTemplate(
+						group,
+						"$A:foo(x=\"dog\\\"\\\"\")$" // $A:foo("dog\"\"")$
+				);
+		StringTemplate u =
+				new StringTemplate(
+						group,
+						"$A:foo(x=\"dog\\\"g\")$" // $A:foo(x="dog\"g")$
+				);
+		StringTemplate v =
+				new StringTemplate(
+						group,
+						// $A:{$attr:foo(x="\{dog\}\"")$ is nested}$
+						"$A:{$it:foo(x=\"\\{dog\\}\\\"\")$ is cool}$"
+				);
+		t.setAttribute("A", "ick");
+		u.setAttribute("A", "ick");
+		v.setAttribute("A", "ick");
+		//System.out.println("t is '"+t.toString()+"'");
+		//System.out.println("u is '"+u.toString()+"'");
+		//System.out.println("v is '"+v.toString()+"'");
+		String expecting = "dog\"\" && ick";
+		assertEqual(t.toString(), expecting);
+		expecting = "dog\"g && ick";
+		assertEqual(u.toString(), expecting);
+		expecting = "{dog}\" && ick is cool";
+		assertEqual(v.toString(), expecting);
+	}
+
+    public void testEscapesOutsideExpressions() throws Exception {
+        StringTemplate b = new StringTemplate("It\\'s ok...\\$; $a:{\\'hi\\', $it$}$");
+        b.setAttribute("a", "Ter");
+        String expecting ="It\\'s ok...$; \\'hi\\', Ter";
+        String result = b.toString();
+        assertEqual(result, expecting);
+    }
+
+    public void testElseClause() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "$if(title)$"+newline +
+                "foo"+newline +
+                "$else$"+newline +
+                "bar"+newline +
+                "$endif$"
+            );
+        e.setAttribute("title", "sample");
+        String expecting = "foo";
+        assertEqual(e.toString(), expecting);
+
+        e = e.getInstanceOf();
+        expecting = "bar";
+        assertEqual(e.toString(), expecting);
+    }
+
+	public void testNestedIF() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$if(title)$"+newline +
+				"foo"+newline +
+				"$else$"+newline +
+				"$if(header)$"+newline +
+				"bar"+newline +
+				"$else$"+newline +
+				"blort"+newline +
+				"$endif$"+newline +
+				"$endif$"
+			);
+		e.setAttribute("title", "sample");
+		String expecting = "foo";
+		assertEqual(e.toString(), expecting);
+
+		e = e.getInstanceOf();
+		e.setAttribute("header", "more");
+		expecting = "bar";
+		assertEqual(e.toString(), expecting);
+
+		e = e.getInstanceOf();
+		expecting = "blort";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testEmbeddedMultiLineIF() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplate main = new StringTemplate(group, "$sub$");
+		StringTemplate sub = new StringTemplate(group,
+				"begin" + newline +
+				"$if(foo)$" + newline +
+				"$foo$" + newline +
+				"$else$" +newline +
+				"blort" + newline +
+				"$endif$" + newline
+			);
+		sub.setAttribute("foo", "stuff");
+		main.setAttribute("sub", sub);
+		String expecting =
+			"begin"+newline+
+			"stuff";
+		assertEqual(main.toString(), expecting);
+
+		main = new StringTemplate(group, "$sub$");
+		sub = sub.getInstanceOf();
+		main.setAttribute("sub", sub);
+		expecting =
+			"begin"+newline+
+			"blort";
+		assertEqual(main.toString(), expecting);
+	}
+
+    public void testSimpleIndentOfAttributeList()
+            throws Exception
+    {
+        String templates =
+                "group test;" +newline+
+                "list(names) ::= <<" +
+                "  $names; separator=\"\n\"$"+newline+
+                ">>"+newline;
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates), errors);
+        StringTemplate t = group.getInstanceOf("list");
+        t.setAttribute("names", "Terence");
+        t.setAttribute("names", "Jim");
+        t.setAttribute("names", "Sriram");
+        String expecting =
+                "  Terence"+newline+
+                "  Jim"+newline+
+                "  Sriram";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testIndentOfMultilineAttributes()
+            throws Exception
+    {
+        String templates =
+                "group test;" +newline+
+                "list(names) ::= <<" +
+                "  $names; separator=\"\n\"$"+newline+
+                ">>"+newline;
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates), errors);
+        StringTemplate t = group.getInstanceOf("list");
+        t.setAttribute("names", "Terence\nis\na\nmaniac");
+        t.setAttribute("names", "Jim");
+        t.setAttribute("names", "Sriram\nis\ncool");
+        String expecting =
+                "  Terence"+newline+
+                "  is"+newline+
+                "  a"+newline+
+                "  maniac"+newline+
+                "  Jim"+newline+
+                "  Sriram"+newline+
+                "  is"+newline+
+                "  cool";
+        assertEqual(t.toString(), expecting);
+    }
+
+	public void testIndentOfMultipleBlankLines()
+			throws Exception
+	{
+		String templates =
+				"group test;" +newline+
+				"list(names) ::= <<" +
+				"  $names$"+newline+
+				">>"+newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates), errors);
+		StringTemplate t = group.getInstanceOf("list");
+		t.setAttribute("names", "Terence\n\nis a maniac");
+		String expecting =
+				"  Terence"+newline+
+				""+newline+ // no indent on blank line
+				"  is a maniac";
+		assertEqual(t.toString(), expecting);
+	}
+
+    public void testIndentBetweenLeftJustifiedLiterals()
+            throws Exception
+    {
+        String templates =
+                "group test;" +newline+
+                "list(names) ::= <<" +
+                "Before:"+newline +
+                "  $names; separator=\"\\n\"$"+newline+
+                "after" +newline+
+                ">>"+newline;
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates), errors);
+        StringTemplate t = group.getInstanceOf("list");
+        t.setAttribute("names", "Terence");
+        t.setAttribute("names", "Jim");
+        t.setAttribute("names", "Sriram");
+        String expecting =
+                "Before:" +newline+
+                "  Terence"+newline+
+                "  Jim"+newline+
+                "  Sriram"+newline+
+                "after";
+        assertEqual(t.toString(), expecting);
+    }
+
+    public void testNestedIndent()
+            throws Exception
+    {
+        String templates =
+                "group test;" +newline+
+                "method(name,stats) ::= <<" +
+                "void $name$() {"+newline +
+                "\t$stats; separator=\"\\n\"$"+newline+
+                "}" +newline+
+                ">>"+newline+
+                "ifstat(expr,stats) ::= <<"+newline +
+                "if ($expr$) {"+newline +
+                "  $stats; separator=\"\\n\"$"+newline +
+                "}" +
+                ">>"+newline +
+                "assign(lhs,expr) ::= <<$lhs$=$expr$;>>"+newline
+                ;
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates), errors);
+        StringTemplate t = group.getInstanceOf("method");
+        t.setAttribute("name", "foo");
+        StringTemplate s1 = group.getInstanceOf("assign");
+        s1.setAttribute("lhs", "x");
+        s1.setAttribute("expr", "0");
+        StringTemplate s2 = group.getInstanceOf("ifstat");
+        s2.setAttribute("expr", "x>0");
+        StringTemplate s2a = group.getInstanceOf("assign");
+        s2a.setAttribute("lhs", "y");
+        s2a.setAttribute("expr", "x+y");
+        StringTemplate s2b = group.getInstanceOf("assign");
+        s2b.setAttribute("lhs", "z");
+        s2b.setAttribute("expr", "4");
+        s2.setAttribute("stats", s2a);
+        s2.setAttribute("stats", s2b);
+        t.setAttribute("stats", s1);
+        t.setAttribute("stats", s2);
+        String expecting =
+                "void foo() {"+newline+
+                "\tx=0;"+newline+
+                "\tif (x>0) {"+newline+
+                "\t  y=x+y;"+newline+
+                "\t  z=4;"+newline+
+                "\t}"+newline+
+                "}";
+        assertEqual(t.toString(), expecting);
+    }
+
+	public void testAlternativeWriter() throws Exception {
+		final StringBuffer buf = new StringBuffer();
+		StringTemplateWriter w = new StringTemplateWriter() {
+			public void pushIndentation(String indent) {
+			}
+			public String popIndentation() {
+				return null;
+			}
+			public int write(String str) throws IOException {
+				buf.append(str); // just pass thru
+				return str.length();
+			}
+		};
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		group.defineTemplate("bold", "<b>$x$</b>");
+		StringTemplate name = new StringTemplate(group, "$name:bold(x=name)$");
+		name.setAttribute("name", "Terence");
+		name.write(w);
+		assertEqual(buf.toString(), "<b>Terence</b>");
+	}
+
+	public void testApplyAnonymousTemplateToMapAndSet() throws Exception {
+		StringTemplate st =
+				new StringTemplate("$items:{<li>$it$</li>}$");
+		Map m = new HashMap();
+		m.put("a", "1");
+		m.put("b", "2");
+		m.put("c", "3");
+		st.setAttribute("items", m);
+		String expecting = "<li>1</li><li>3</li><li>2</li>";
+		assertEqual(st.toString(), expecting);
+
+		st = st.getInstanceOf();
+		Set s = new HashSet();
+		s.add("1");
+		s.add("2");
+		s.add("3");
+		st.setAttribute("items", s);
+		expecting = "<li>3</li><li>2</li><li>1</li>";
+		assertEqual(st.toString(), expecting);
+	}
+
+	public void testDumpMapAndSet() throws Exception {
+		StringTemplate st =
+				new StringTemplate("$items; separator=\",\"$");
+		Map m = new HashMap();
+		m.put("a", "1");
+		m.put("b", "2");
+		m.put("c", "3");
+		st.setAttribute("items", m);
+		String expecting = "1,3,2";
+		assertEqual(st.toString(), expecting);
+
+		st = st.getInstanceOf();
+		Set s = new HashSet();
+		s.add("1");
+		s.add("2");
+		s.add("3");
+		st.setAttribute("items", s);
+		expecting = "3,2,1";
+		assertEqual(st.toString(), expecting);
+	}
+
+	public class Connector3 {
+		public int[] getValues() { return new int[] {1,2,3}; }
+		public Map getStuff() {
+			Map m = new HashMap(); m.put("a","1"); m.put("b","2"); return m;
+		}
+	}
+
+	public void testApplyAnonymousTemplateToArrayAndMapProperty() throws Exception {
+		StringTemplate st =
+				new StringTemplate("$x.values:{<li>$it$</li>}$");
+		st.setAttribute("x", new Connector3());
+		String expecting = "<li>1</li><li>2</li><li>3</li>";
+		assertEqual(st.toString(), expecting);
+
+		st = new StringTemplate("$x.stuff:{<li>$it$</li>}$");
+		st.setAttribute("x", new Connector3());
+		expecting = "<li>1</li><li>2</li>";
+		assertEqual(st.toString(), expecting);
+	}
+
+    public void testSuperTemplateRef()
+            throws Exception
+    {
+        // you can refer to a template defined in a super group via super.t()
+        StringTemplateGroup group = new StringTemplateGroup("super");
+        StringTemplateGroup subGroup = new StringTemplateGroup("sub");
+        subGroup.setSuperGroup(group);
+        group.defineTemplate("page", "$font()$:text");
+        group.defineTemplate("font", "Helvetica");
+        subGroup.defineTemplate("font", "$super.font()$ and Times");
+        StringTemplate st = subGroup.getInstanceOf("page");
+        String expecting =
+                "Helvetica and Times:text";
+        assertEqual(st.toString(), expecting);
+    }
+
+    public void testApplySuperTemplateRef()
+            throws Exception
+    {
+        StringTemplateGroup group = new StringTemplateGroup("super");
+        StringTemplateGroup subGroup = new StringTemplateGroup("sub");
+        subGroup.setSuperGroup(group);
+        group.defineTemplate("bold", "<b>$it$</b>");
+        subGroup.defineTemplate("bold", "<strong>$it$</strong>");
+        subGroup.defineTemplate("page", "$name:super.bold()$");
+        StringTemplate st = subGroup.getInstanceOf("page");
+        st.setAttribute("name", "Ter");
+        String expecting =
+                "<b>Ter</b>";
+        assertEqual(st.toString(), expecting);
+    }
+
+    public void testLazyEvalOfSuperInApplySuperTemplateRef()
+            throws Exception
+    {
+        StringTemplateGroup group = new StringTemplateGroup("super");
+        StringTemplateGroup subGroup = new StringTemplateGroup("sub");
+        subGroup.setSuperGroup(group);
+        group.defineTemplate("bold", "<b>$it$</b>");
+        subGroup.defineTemplate("bold", "<strong>$it$</strong>");
+        // this is the same as testApplySuperTemplateRef() test
+        // 'cept notice that here the supergroup defines page
+        // As long as you create the instance via the subgroup,
+        // "super." will evaluate lazily (i.e., not statically
+        // during template compilation) to the templates
+        // getGroup().superGroup value.  If I create instance
+        // of page in group not subGroup, however, I will get
+        // an error as superGroup is null for group "group".
+        group.defineTemplate("page", "$name:super.bold()$");
+        StringTemplate st = subGroup.getInstanceOf("page");
+        st.setAttribute("name", "Ter");
+        String expecting =
+                "<b>Ter</b>";
+        assertEqual(st.toString(), expecting);
+    }
+
+    public void testTemplatePolymorphism()
+            throws Exception
+    {
+        StringTemplateGroup group = new StringTemplateGroup("super");
+        StringTemplateGroup subGroup = new StringTemplateGroup("sub");
+        subGroup.setSuperGroup(group);
+        // bold is defined in both super and sub
+        // if you create an instance of page via the subgroup,
+        // then bold() should evaluate to the subgroup not the super
+        // even though page is defined in the super.  Just like polymorphism.
+        group.defineTemplate("bold", "<b>$it$</b>");
+        group.defineTemplate("page", "$name:bold()$");
+        subGroup.defineTemplate("bold", "<strong>$it$</strong>");
+        StringTemplate st = subGroup.getInstanceOf("page");
+        st.setAttribute("name", "Ter");
+        String expecting =
+                "<strong>Ter</strong>";
+        assertEqual(st.toString(), expecting);
+    }
+
+    public void testListOfEmbeddedTemplateSeesEnclosingAttributes() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "output(cond,items) ::= <<page: $items$>>" +newline+
+                "mybody() ::= <<$font()$stuff>>" +newline+
+                "font() ::= <<$if(cond)$this$else$that$endif$>>"
+                ;
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates), errors);
+        StringTemplate outputST = group.getInstanceOf("output");
+        StringTemplate bodyST1 = group.getInstanceOf("mybody");
+        StringTemplate bodyST2 = group.getInstanceOf("mybody");
+        StringTemplate bodyST3 = group.getInstanceOf("mybody");
+        outputST.setAttribute("items", bodyST1);
+        outputST.setAttribute("items", bodyST2);
+        outputST.setAttribute("items", bodyST3);
+        String expecting = "page: thatstuffthatstuffthatstuff";
+        assertEqual(outputST.toString(), expecting);
+    }
+
+    public void testInheritArgumentFromRecursiveTemplateApplication() throws Exception {
+        // do not inherit attributes through formal args
+        String templates =
+                "group test;" +newline+
+                "block(stats) ::= \"<stats>\"" +
+                "ifstat(stats) ::= \"IF true then <stats>\""+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates),
+                        AngleBracketTemplateLexer.class);
+        StringTemplate b = group.getInstanceOf("block");
+        b.setAttribute("stats", group.getInstanceOf("ifstat"));
+        b.setAttribute("stats", group.getInstanceOf("ifstat"));
+        String expecting = "IF true then IF true then ";
+        String result = b.toString();
+        //System.err.println("result='"+result+"'");
+        assertEqual(result, expecting);
+    }
+
+
+    public void testDeliberateRecursiveTemplateApplication() throws Exception {
+        // This test will cause infinite loop.  block contains a stat which
+        // contains the same block.  Must be in lintMode to detect
+        String templates =
+                "group test;" +newline+
+                "block(stats) ::= \"<stats>\"" +
+                "ifstat(stats) ::= \"IF true then <stats>\""+newline
+                ;
+        StringTemplate.setLintMode(true);
+        StringTemplate.resetTemplateCounter();
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates),
+                        AngleBracketTemplateLexer.class);
+        StringTemplate b = group.getInstanceOf("block");
+        StringTemplate ifstat = group.getInstanceOf("ifstat");
+        b.setAttribute("stats", ifstat); // block has if stat
+        ifstat.setAttribute("stats", b); // but make "if" contain block
+        String expecting = "IF true then ";
+        String expectingError =
+                "infinite recursion to <ifstat([stats])@4> referenced in <block([attributes, stats])@3>; stack trace:"+newline +
+                "<ifstat([stats])@4>, attributes=[stats=<block()@3>]>"+newline +
+                "<block([attributes, stats])@3>, attributes=[attributes, stats=<ifstat()@4>], references=[stats]>"+newline +
+                "<ifstat([stats])@4> (start of recursive cycle)"+newline +
+                "...";
+        // note that attributes attribute doesn't show up in ifstat() because
+        // recursion detection traps the problem before it writes out the
+        // infinitely-recursive template; I set the attributes attribute right
+        // before I render.
+        String errors = "";
+        try {
+            String result = b.toString();
+        }
+        catch (IllegalStateException ise) {
+            errors = ise.getMessage();
+        }
+        //System.err.println("errors="+errors+"'");
+        //System.err.println("expecting="+expectingError+"'");
+        StringTemplate.setLintMode(false);
+        assertEqual(errors, expectingError);
+    }
+
+
+    public void testImmediateTemplateAsAttributeLoop() throws Exception {
+        // even though block has a stats value that refers to itself,
+        // there is no recursion because each instance of block hides
+        // the stats value from above since it's a formal arg.
+        String templates =
+                "group test;" +newline+
+                "block(stats) ::= \"{<stats>}\""
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates),
+                        AngleBracketTemplateLexer.class);
+        StringTemplate b = group.getInstanceOf("block");
+        b.setAttribute("stats", group.getInstanceOf("block"));
+        String expecting ="{{}}";
+        String result = b.toString();
+        //System.err.println(result);
+        assertEqual(result, expecting);
+    }
+
+
+    public void testTemplateAlias() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "page(name) ::= \"name is <name>\"" +
+                "other ::= page"+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates),
+                        AngleBracketTemplateLexer.class);
+        StringTemplate b = group.getInstanceOf("other");  // alias for page
+        b.setAttribute("name", "Ter");
+        String expecting ="name is Ter";
+        String result = b.toString();
+        assertEqual(result, expecting);
+    }
+
+    public void testTemplateGetPropertyGetsAttribute() throws Exception {
+        // This test will cause infinite loop if missing attribute no
+        // properly caught in getAttribute
+        String templates =
+                "group test;"+newline+
+                "Cfile(funcs) ::= <<"+newline +
+                "#include \\<stdio.h>"+newline+
+                "<funcs:{public void <it.name>(<it.args>);}; separator=\"\\n\">"+newline+
+                "<funcs; separator=\"\\n\">"+newline+
+                ">>"+newline +
+                "func(name,args,body) ::= <<"+newline+
+                "public void <name>(<args>) {<body>}"+newline +
+                ">>"+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates),
+                        AngleBracketTemplateLexer.class);
+        StringTemplate b = group.getInstanceOf("Cfile");
+        StringTemplate f1 = group.getInstanceOf("func");
+        StringTemplate f2 = group.getInstanceOf("func");
+        f1.setAttribute("name", "f");
+        f1.setAttribute("args", "");
+        f1.setAttribute("body", "i=1;");
+        f2.setAttribute("name", "g");
+        f2.setAttribute("args", "int arg");
+        f2.setAttribute("body", "y=1;");
+        b.setAttribute("funcs",f1);
+        b.setAttribute("funcs",f2);
+        String expecting = "#include <stdio.h>" +newline+
+                "public void f();"+newline+
+				"public void g(int arg);" +newline+
+                "public void f() {i=1;}"+newline+
+                "public void g(int arg) {y=1;}";
+        assertEqual(b.toString(), expecting);
+    }
+
+    public static class Decl {
+        String name;
+        String type;
+        public Decl(String name, String type) {this.name=name; this.type=type;}
+        public String getName() {return name;}
+        public String getType() {return type;}
+    }
+
+	public void testComplicatedIndirectTemplateApplication() throws Exception {
+		String templates =
+				"group Java;"+newline +
+				""+newline +
+				"file(variables,methods) ::= <<" +
+				"<variables:{<it.decl:(it.format)()>}; separator=\"\\n\">"+newline +
+				"<methods>"+newline +
+				">>"+newline+
+				"intdecl() ::= \"int <it.name> = 0;\""+newline +
+				"intarray() ::= \"int[] <it.name> = null;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate f = group.getInstanceOf("file");
+		f.setAttribute("variables.{decl,format}", new Decl("i","int"), "intdecl");
+		f.setAttribute("variables.{decl,format}", new Decl("a","int-array"), "intarray");
+		//System.out.println("f='"+f+"'");
+		String expecting = "int i = 0;" +newline+
+				"int[] a = null;"+newline;
+		assertEqual(f.toString(), expecting);
+	}
+
+	public void testIndirectTemplateApplication() throws Exception {
+		String templates =
+				"group dork;"+newline +
+				""+newline +
+				"test(name) ::= <<" +
+				"<(name)()>"+newline +
+				">>"+newline+
+				"first() ::= \"the first\""+newline +
+				"second() ::= \"the second\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate f = group.getInstanceOf("test");
+		f.setAttribute("name", "first");
+		String expecting = "the first";
+		assertEqual(f.toString(), expecting);
+	}
+
+	public void testNullIndirectTemplateApplication() throws Exception {
+		String templates =
+				"group dork;"+newline +
+				""+newline +
+				"test(names) ::= <<" +
+				"<names:(ind)()>"+newline +
+				">>"+newline+
+				"ind() ::= \"[<it>]\""+newline;
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate f = group.getInstanceOf("test");
+		f.setAttribute("names", "me");
+		f.setAttribute("names", "you");
+		String expecting = "";
+		assertEqual(f.toString(), expecting);
+	}
+
+	public void testNullIndirectTemplate() throws Exception {
+		String templates =
+				"group dork;"+newline +
+				""+newline +
+				"test(name) ::= <<" +
+				"<(name)()>"+newline +
+				">>"+newline+
+				"first() ::= \"the first\""+newline +
+				"second() ::= \"the second\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate f = group.getInstanceOf("test");
+		//f.setAttribute("name", "first");
+		String expecting = "";
+		assertEqual(f.toString(), expecting);
+	}
+
+    public void testReflection() throws Exception {
+        StringTemplate.setLintMode(true);
+        StringTemplate a = new StringTemplate("$attributes$");
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        a.setErrorListener(errors);
+        a.setAttribute("name", "Terence");
+        a.setAttribute("name", "Tom");
+        StringTemplate embedded = new StringTemplate("embedded");
+        embedded.setAttribute("z", "hi");
+        a.setAttribute("name", embedded);
+        a.setAttribute("notUsed", "foo");
+        String expecting =
+                "Template anonymous:"+newline +
+                "    1. Attribute name values:"+newline +
+                "        1. String"+newline +
+                "        2. String"+newline +
+                "        3. Template anonymous:"+newline +
+                "            1. Attribute z values:"+newline +
+                "                1. String"+newline +
+                "    2. Attribute notUsed values:"+newline +
+                "        1. String"+newline;
+        a.setPredefinedAttributes();
+        String results = a.toString();
+        //System.out.println(results);
+        StringTemplate.setLintMode(false);
+        assertEqual(results, expecting);
+    }
+
+    public static class R1 {
+        public String getFirstName() { return "Terence"; }
+        public String getLastName() { return "Parr"; }
+        public StringTemplate getSubTemplate() {
+            StringTemplate s = new StringTemplate("sub ST");
+            s.setName("a template created in R1");
+            s.setAttribute("fruit", "Apple");
+            s.setAttribute("nestedAggr", new R2());
+            return s;
+        }
+        public R2 getSubAggregate() { return new R2(); }
+    };
+
+    public static class R2 {
+        public String getEmail() { return "parrt"; }
+    };
+
+    public void testReflectionRecursive() throws Exception {
+        StringTemplate.setLintMode(true);
+        StringTemplate a = new StringTemplate("$attributes$");
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        a.setErrorListener(errors);
+        a.setAttribute("name", "Terence");
+        a.setAttribute("name", "Tom");
+        StringTemplate b = new StringTemplate("embedded template text");
+        b.setName("EmbeddedTemplate");
+        b.setAttribute("x", new Integer(1));
+        b.setAttribute("y", "foo");
+        a.setAttribute("name", b);
+        a.setAttribute("name", new R1());
+        a.setAttribute("duh", "foo");
+        String results = a.toString();
+        //System.out.println(results);
+        String expecting =
+                "Template anonymous:"+newline +
+                "    1. Attribute duh values:"+newline +
+                "        1. String"+newline +
+                "    2. Attribute name values:"+newline +
+                "        1. String"+newline +
+                "        2. String"+newline +
+                "        3. Template EmbeddedTemplate:"+newline +
+                "            1. Attribute y values:"+newline +
+                "                1. String"+newline +
+                "            2. Attribute x values:"+newline +
+                "                1. Integer"+newline +
+                "        1. Property firstName : String"+newline +
+                "        2. Property lastName : String"+newline +
+                "        3. Property subTemplate : StringTemplate"+newline +
+                "            3. Template a template created in R1:"+newline +
+                "                1. Attribute nestedAggr values:"+newline +
+                "                    1. Property email : String"+newline +
+                "                2. Attribute fruit values:"+newline +
+                "                    1. String"+newline +
+                "        4. Property subAggregate : TestStringTemplate$R2"+newline;
+        StringTemplate.setLintMode(false);
+        assertEqual(results, expecting);
+    }
+
+    public static class A {
+        public B getB() { return null; }
+    };
+
+    public static class B {
+        public A getA() { return null; }
+        public String getHarmless1() { return ""; }
+    };
+
+    public static class C {
+        public C getSelf() { return null; }
+        public String getHarmless2() { return ""; }
+    };
+
+    public void testReflectionTypeLoop() throws Exception {
+        StringTemplate.setLintMode(true);
+        StringTemplate a = new StringTemplate("$attributes$");
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        a.setErrorListener(errors);
+        a.setAttribute("name", "Terence");
+        a.setAttribute("c", new C());
+        a.setAttribute("a", new A());
+        String results = a.toString();
+        //System.out.println(results);
+        String expecting =
+                "Template anonymous:"+newline +
+                "    1. Attribute a values:"+newline +
+                "        1. Property b : TestStringTemplate$B"+newline +
+                "            1. Property a : TestStringTemplate$A"+newline +
+                "            2. Property harmless1 : String"+newline +
+                "    2. Attribute c values:"+newline +
+                "        1. Property self : TestStringTemplate$C"+newline +
+                "        2. Property harmless2 : String"+newline +
+                "    3. Attribute name values:"+newline +
+                "        1. String"+newline;
+        StringTemplate.setLintMode(false);
+        assertEqual(results, expecting);
+    }
+
+    public static class R3 {
+        public String getEmail() { return "parrt"; }
+        public Map getAMap() {
+            HashMap m = new HashMap(); m.put("v","33"); return m;
+        }
+        public Hashtable getAnotherMap() {
+            return null;
+        }
+    };
+
+    public void testReflectionWithMap() throws Exception {
+        StringTemplate.setLintMode(true);
+        StringTemplate a = new StringTemplate("$attributes$");
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        a.setErrorListener(errors);
+        HashMap map = new HashMap();
+        a.setAttribute("stuff", map);
+        map.put("prop1", "Terence");
+        map.put("prop2", new R3());
+        String results = a.toString();
+        //System.out.println(results);
+        String expecting =
+                "Template anonymous:"+newline +
+                "    1. Attribute stuff values:"+newline +
+                "        1. Key prop1 : String"+newline +
+                "        2. Key prop2 : TestStringTemplate$R3"+newline +
+                "            1. Property email : String"+newline +
+                "            2. Property aMap : Map"+newline +
+                "                1. Key v : String"+newline +
+                "            3. Property anotherMap : Hashtable"+newline;
+        StringTemplate.setLintMode(false);
+        assertEqual(results, expecting);
+    }
+
+    public void testHashMapPropertyFetch() throws Exception {
+        StringTemplate a = new StringTemplate("$stuff.prop$");
+        HashMap map = new HashMap();
+        a.setAttribute("stuff", map);
+        map.put("prop", "Terence");
+        String results = a.toString();
+        //System.out.println(results);
+        String expecting = "Terence";
+        assertEqual(results, expecting);
+    }
+
+	public void testEmbeddedComments() throws Exception {
+		StringTemplate st = new StringTemplate(
+				"Foo $! ignore !$bar" +newline
+				);
+		String expecting ="Foo bar"+newline;
+		String result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+				"Foo $! ignore" +newline+
+				" and a line break!$" +newline+
+				"bar" +newline
+				);
+		expecting ="Foo "+newline+"bar"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+				"$! start of line $ and $! ick" +newline+
+				"!$boo"+newline
+				);
+		expecting ="boo"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+			"$! start of line !$" +newline+
+			"$! another to ignore !$" +newline+
+			"$! ick" +newline+
+			"!$boo"+newline
+		);
+		expecting ="boo"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+			"$! back !$$! to back !$" +newline+ // can't detect; leaves \n
+			"$! ick" +newline+
+			"!$boo"+newline
+		);
+		expecting =newline+"boo"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmbeddedCommentsAngleBracketed() throws Exception {
+		StringTemplate st = new StringTemplate(
+				"Foo <! ignore !>bar" +newline,
+				AngleBracketTemplateLexer.class
+				);
+		String expecting ="Foo bar"+newline;
+		String result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+				"Foo <! ignore" +newline+
+				" and a line break!>" +newline+
+				"bar" +newline,
+				AngleBracketTemplateLexer.class
+				);
+		expecting ="Foo "+newline+"bar"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+				"<! start of line $ and <! ick" +newline+
+				"!>boo"+newline,
+				AngleBracketTemplateLexer.class
+				);
+		expecting ="boo"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+			"<! start of line !>" +
+			"<! another to ignore !>" +
+			"<! ick" +newline+
+			"!>boo"+newline,
+			AngleBracketTemplateLexer.class
+		);
+		expecting ="boo"+newline;
+		result = st.toString();
+		//System.out.println(result);
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+			"<! back !><! to back !>" +newline+ // can't detect; leaves \n
+			"<! ick" +newline+
+			"!>boo"+newline,
+			AngleBracketTemplateLexer.class
+		);
+		expecting =newline+"boo"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testCharLiterals() throws Exception {
+		StringTemplate st = new StringTemplate(
+				"Foo <\\n><\\t> bar" +newline,
+				AngleBracketTemplateLexer.class
+				);
+		String expecting ="Foo "+newline+"\t bar"+newline;
+		String result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+				"Foo $\\n$$\\t$ bar" +newline);
+		expecting ="Foo "+newline+"\t bar"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+
+		st = new StringTemplate(
+				"Foo$\\ $bar$\\n$");
+		expecting ="Foo bar"+newline;
+		result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmptyIteratedValueGetsSeparator() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group, "$names; separator=\",\"$");
+		t.setAttribute("names", "Terence");
+		t.setAttribute("names", "");
+		t.setAttribute("names", "");
+		t.setAttribute("names", "Tom");
+		t.setAttribute("names", "Frank");
+		t.setAttribute("names", "");
+		// empty values get separator still
+		String expecting="Terence,,,Tom,Frank,";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmptyIteratedConditionalValueGetsNoSeparator() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"$users:{$if(it.ok)$$it.name$$endif$}; separator=\",\"$");
+		t.setAttribute("users.{name,ok}", "Terence", new Boolean(true));
+		t.setAttribute("users.{name,ok}", "Tom", new Boolean(false));
+		t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
+		t.setAttribute("users.{name,ok}", "Johnny", new Boolean(false));
+		// empty conditional values get no separator
+		String expecting="Terence,Frank,"; // haven't solved the last empty value problem yet
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmptyIteratedConditionalWithElseValueGetsSeparator() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"$users:{$if(it.ok)$$it.name$$else$$endif$}; separator=\",\"$");
+		t.setAttribute("users.{name,ok}", "Terence", new Boolean(true));
+		t.setAttribute("users.{name,ok}", "Tom", new Boolean(false));
+		t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
+		t.setAttribute("users.{name,ok}", "Johnny", new Boolean(false));
+		// empty conditional values get no separator
+		String expecting="Terence,,Frank,"; // haven't solved the last empty value problem yet
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testWhiteSpaceAtEndOfTemplate() throws Exception {
+		StringTemplateGroup group = new StringTemplateGroup("group");
+		StringTemplate pageST = group.getInstanceOf("org/antlr/stringtemplate/test/page");
+		StringTemplate listST = group.getInstanceOf("org/antlr/stringtemplate/test/users.list");
+		// users.list references row.st which has a single blank line at the end.
+		// I.e., there are 2 \n in a row at the end
+		// ST should eat all whitespace at end
+		listST.setAttribute("users", new Connector());
+		listST.setAttribute("users", new Connector2());
+		pageST.setAttribute("title", "some title");
+		pageST.setAttribute("body", listST);
+		String expecting ="some title" +newline+
+			"Terence parrt@jguru.comTom tombu@jguru.com";
+		String result = pageST.toString();
+		//System.out.println("'"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	static class Duh {
+		public List users = new ArrayList();
+	}
+
+	public void testSizeZeroButNonNullListGetsNoOutput() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"$duh.users:{name: $it$}; separator=\", \"$");
+		t.setAttribute("duh", new Duh());
+		String expecting="";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testSizeZeroOnLineByItselfGetsNoOutput() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"begin\n"+
+			"$name$\n"+
+			"$users:{name: $it$}$\n"+
+			"$users:{name: $it$}; separator=\", \"$\n"+
+			"end\n");
+		String expecting="begin\nend\n";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testSizeZeroOnLineWithIndentGetsNoOutput() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"begin\n"+
+			"  $name$\n"+
+			"	$users:{name: $it$}$\n"+
+			"	$users:{name: $it$$\\n$}$\n"+
+			"end\n");
+		String expecting="begin\nend\n";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testSimpleAutoIndent() throws Exception {
+		StringTemplate a = new StringTemplate(
+			"$title$: {\n" +
+			"	$name; separator=\"\n\"$\n" +
+			"}");
+		a.setAttribute("title", "foo");
+		a.setAttribute("name", "Terence");
+		a.setAttribute("name", "Frank");
+		String results = a.toString();
+		//System.out.println(results);
+		String expecting =
+			"foo: {\n" +
+			"	Terence\n" +
+			"	Frank\n" +
+			"}";
+		assertEqual(results, expecting);
+	}
+
+}

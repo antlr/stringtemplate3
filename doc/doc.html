@@ -1,0 +1,1871 @@
+<HTML>
+<HEAD>
+<body bgcolor=#FFFFFF text=#000000>
+<title>StringTemplate Documentation</title>
+</HEAD>
+<BODY>
+<H1>StringTemplate Documentation</H1>
+
+
+<P>Brought to you by that maniac that brings you
+<A HREF="http://www.antlr.org"><B> ANTLR</B></A>!
+
+<P>Terence Parr <BR>
+University of San Francisco <BR>
+<TT>parrt@cs.usfca.edu</TT> <BR>
+<em>Copyright 2003-2005</em> <BR>
+<A HREF="http://www.stringtemplate.org"><B>http://www.stringtemplate.org</B></A> <BR>
+(StringTemplate released under BSD License)
+
+<P>Version 2.1, January 22, 2005
+
+<P>Note that the <TT>TestStringTemplates.java</TT> file has many tests that are
+an excellent set of examples.  Also, I highly recommend you read the
+(academic-oriented) paper,
+<A HREF="http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf"><B> Enforcing
+Model-View Separation in Template Engines</B></A>.  There are some more
+examples including nested menu generation that will be of interest.
+<H2>Acknowledgements</H2>
+
+
+<P>Tom Burns (CEO jGuru.com) co-designed <TT>StringTemplate</TT> and listened to
+me think out loud incessantly.  I would also like to thank Monty
+Zukowski for planting the <TT>template</TT> "meme" in my head back in the mid
+1990's.  Loring Craymer and Monty both are helping me hone these ideas
+for use in source-to-source language translation.  Matthew Ford has done a
+huge amount of thinking about StringTemplate and has submitted numerous
+suggestions and patches.  Anthony Casalena at <A HREF="http://www.squarespace.com"><B>http://www.squarespace.com</B></A> has been a big help beta-testing <TT>StringTemplate</TT>.
+<H2>Introduction</H2>
+
+
+<P>A <TT>StringTemplate</TT> is a "document" with holes in it where you can
+stick values.  <TT>StringTemplate</TT> breaks up your template into chunks of
+text and attribute expressions, which are by default enclosed in
+dollar signs <TT>$</TT><em>attribute-expression</em><TT>$</TT> (to make them easy to see in
+HTML files).  <TT>StringTemplate</TT> ignores everything outside of attribute
+expressions, treating it as just text to spit out when you call
+<TT>StringTemplate.toString()</TT>.  For example, the following template has two chunks, a literal and a reference to attribute <TT>name</TT>:
+
+<FONT SIZE=2><PRE>
+Hello, $name$
+</PRE></FONT>
+
+
+
+<P>Using templates in Java code is very easy. Here is the requisite example that prints "<TT>Hello, World</TT>":
+
+<FONT SIZE=2><PRE>
+StringTemplate hello = new StringTemplate("Hello, $name$");
+hello.setAttribute("name", "World");
+System.out.println(hello.toString());
+</PRE></FONT>
+
+
+
+<P><TT>StringTemplate</TT> is not a "system" or "engine" or "server"; it's a
+library with two primary classes of interest: <TT>StringTemplate</TT> and
+<TT>StringTemplateGroup</TT>.  You can directly create a <TT>StringTemplate</TT> in
+Java code, you can load a template from a file, and you can load a
+single file with many templates (a template group file).
+
+<P><TT>StringTemplate</TT> evolved over years developing the following sites:
+<UL>
+<LI><A HREF="http://www.jguru.com"><B>http://www.jguru.com</B></A>
+</LI>
+<LI><A HREF="http://www.knowspam.net"><B>http://www.knowspam.net</B></A>
+</LI>
+<LI><A HREF="http://www.peerscope.com"><B>http://www.peerscope.com</B></A>
+</LI>
+<LI><A HREF="http://www.antlr.org"><B>http://www.antlr.org</B></A>
+</LI>
+
+</UL>
+
+<P>The need for dynamically-generated web pages, such as the book description pages at Amazon.com, has led to the development of numerous template engines in an attempt to make web application development easier, improve flexibility, reduce maintenance costs, and allow parallel code and HTML development.  These enticing benefits, which have driven the proliferation of template engines, derive entirely from a single principle: separating the specification of a page's business logic and data computations from the specification of how a page displays such information. With separate encapsulated specifications, template engines promote component reuse, pluggable site "looks", single-points-of-change for common components, and high overall system clarity.  
+
+<P>StringTemplate distinguishes itself by strictly enforcing the separation of business logic from display. After examining hundreds of template files that I created over years of development, I found that I needed only the following four basic canonical operations:
+<UL>
+<LI>attribute reference; e.g., <TT>$phoneNumber$</TT>
+</LI>
+<LI>template reference (like #include or macro expansion); e.g., <TT>$searchbox()$</TT>
+</LI>
+<LI>conditional include of subtemplate (an IF statement); e.g., <TT>$if(title)$&lt;title&gt;$title$&lt;/title&gt;$endif$</TT>
+</LI>
+<LI>template application to list of attributes; e.g., <TT>$names:bold()$</TT>
+</LI>
+
+</UL>
+
+<P>where template references can be recursive.  Things like setting variables, loops, arbitrary method calls into the model etc... are simply unnecessary and lead to entangled specifications.
+
+<P>While <TT>StringTemplate</TT> evolved while I was building websites, in the back of my mind I kept wondering how useful it would be in my research area (parser generators and other code
+generators).  With the 2.0 release I have augmented <TT>StringTemplate</TT>
+to better support text code generators such as auto-indentation and
+template group files.  Along with the group file format, you will see formal arguments for templates so that many previously-undetected errors can be trapped such as referencing an attribute that is not set by the controller.
+<H2>Defining Templates</H2>
+
+<H3>Creating Templates With Java Code</H3>
+
+
+<P>Here is a simple piece of Java that creates and uses a template on the fly:
+
+<FONT SIZE=2><PRE>
+StringTemplate query =
+  new StringTemplate("SELECT $column$ FROM $table$;");
+query.setAttribute("column", "name");
+query.setAttribute("table", "User");
+</PRE></FONT>
+
+
+
+<P>where <TT>StringTemplate</TT> considers anything in <TT>$...$</TT> to be something
+it needs to pay attention to.  By setting attributes, you are
+"pushing" values into the template for use when the template is
+printed out.  The attribute values are set by referencing their names.
+Invoking <TT>query.toString()</TT> would yield
+
+<FONT SIZE=2><PRE>
+SELECT name FROM User;
+</PRE></FONT>
+
+
+
+<P>You can set an attribute multiple times, which simply means that the
+attribute is multi-valued.  For example, adding another
+<TT>setAttribute()</TT> call makes attribute <TT>column</TT> multi-valued:
+
+<FONT SIZE=2><PRE>
+StringTemplate query =
+  new StringTemplate("SELECT $column$ FROM $table$;");
+query.setAttribute("column", "name");
+query.setAttribute("column", "email");
+query.setAttribute("table", "User");
+</PRE></FONT>
+
+
+
+<P>Invoking <TT>query.toString()</TT> would now yield
+
+<FONT SIZE=2><PRE>
+SELECT nameemail FROM User;
+</PRE></FONT>
+
+
+
+<P>Ooops...there is no separator between the multiple values.  If you want a comma, say, between the column names, then change the template to record that formatting information:
+
+<FONT SIZE=2><PRE>
+StringTemplate query =
+  new StringTemplate("SELECT $column; separator=\",\"$ FROM $table$;");
+query.setAttribute("column", "name");
+query.setAttribute("column", "email");
+query.setAttribute("table", "User");
+</PRE></FONT>
+
+
+
+<P>Note that the right-hand-side of the separator specification in this case is a string literal; therefore, I have escaped the double-quotes as the template is specified in a Java string.  In general, the right-hand-side can be any attribute expression.  Invoking <TT>query.toString()</TT> would now yield
+
+<FONT SIZE=2><PRE>
+SELECT name,email FROM User;
+</PRE></FONT>
+
+
+
+<P>Attributes can be any object at all.  <TT>StringTemplate</TT> calls <TT>toString()</TT> on each object as it writes the template out.  The separator is not used unless the attribute is multi-valued.
+<H3>Loading Templates From Files</H3>
+
+
+<P>To load a template from the disk you must use a <TT>StringTemplateGroup</TT>
+that will manage all the templates you load, caching them so you do
+not waste time talking to the disk for each template fetch request
+(you can change it to not cache; see below).  You may have multiple
+template groups.  Here is a simple example that loads the previous SQL
+template from file <TT>/tmp/theQuery.st</TT>:
+
+<FONT SIZE=2><PRE>
+SELECT $column; separator=","$ FROM $table$;
+</PRE></FONT>
+
+
+
+<P>The Java code creates a <TT>StringTemplateGroup</TT> called <TT>myGroup</TT> rooted
+at <TT>/tmp</TT> so that requests for template <TT>theQuery</TT> forces a load of
+file <TT>/tmp/theQuery.st</TT>.
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup group =
+  new StringTemplateGroup("myGroup", "/tmp");
+StringTemplate query = group.getInstanceOf("theQuery");
+query.setAttribute("column", "name");
+query.setAttribute("column", "email");
+query.setAttribute("table", "User");
+</PRE></FONT>
+
+
+
+<P>If you have a directory hierarchy of templates such as file
+<TT>/tmp/jguru/bullet.st</TT>, you would reference them relative to the root;
+in this case, you would ask for template <TT>jguru/bullet()</TT>.
+
+<P><B>Note</B>: StringTemplate strips whitespace from the front and back of
+all loaded template files.  You can add, for example, <TT>&lt;\n&gt;</TT> at the
+end of the file to get an extra carriage return.
+<H3>Loading Templates From CLASSPATH</H3>
+
+
+<P>When deploying applications or providing a library for use by other programmers, you will not know where your templates files live specifically on the disk.  You will, however, know relative to the classpath where your templates reside.  For example, if your code is in package <TT>com.mycompany.server</TT> you might put your templates in a <TT>templates</TT> subdirectory of <TT>server</TT>.  If you do not specify an absolute directory with the <TT>StringTemplateGroup</TT> constructor, future loads via that group will happen relative to the <TT>CLASSPATH</TT>.  For example, to load template file <TT>page.st</TT> you would do the following:
+
+<FONT SIZE=2><PRE>
+// Look for templates in CLASSPATH as resources
+StringTemplateGroup group = new StringTemplateGroup("mygroup");
+StringTemplate st = group.getInstanceOf("com/mycompany/server/templates/page");
+</PRE></FONT>
+
+
+
+<P>If <TT>page.st</TT> references, say, <TT>searchbox</TT> template, it must be fully qualified as:
+
+<FONT SIZE=2><PRE>
+&lt;font size=2&gt;SEARCH&lt;/font&gt;: $com/mycompany/server/templates/page/searchbox()$
+</PRE></FONT>
+
+
+
+<P>This is inconvenient and I may add the invoking template's path prefix automatically in the future.
+<H2>StringTemplate Group Files</H2>
+
+
+<P>2.0 introduces the notion of a group file that has two main attractions.  First, it allows you to define lots of small templates more conveniently because they may all be defined within a single file.  Second, you may specify formal template arguments that help <TT>StringTemplate</TT> detect errors (such as setting unknown attributes) and make the templates easier to read.  Here is a sample group file (I'm using <TT>&lt;...&gt;</TT> delimiters) with two templates, <TT>vardef</TT> and <TT>method</TT>, that could be used to generate C files:
+
+<FONT SIZE=2><PRE>
+group simple;
+
+vardef(type,name) ::= "&lt;type&gt; &lt;name&gt;;"
+
+method(type,name,args) ::= &lt;&lt;
+&lt;type&gt; &lt;name&gt;(&lt;args; separator=","&gt;) {
+  &lt;statements; separator="\n"&gt;
+}
+&gt;&gt;
+</PRE></FONT>
+
+
+
+<P>Single line templates are enclosed in double quotes while multi-line templates are enclosed in double angle-brackets. Every template must define arguments even if the formal argument list if blank.
+
+<P>Using templates in a group file is straightforwards.  A <TT>StringTemplateGroup</TT> constructor accepts a <TT>Reader</TT> so you can pass in a string or file or whatever:
+
+<FONT SIZE=2><PRE>
+String templates =
+   "group simple; vardef(type,name) ..."; // templates from above
+StringTemplateGroup group = new StringTemplateGroup(new StringReader(templates));
+StringTemplate t = group.getInstanceOf("vardef");
+t.setAttribute("type", "int");
+t.setAttribute("name", "foo");
+System.out.println(t);
+</PRE></FONT>
+
+
+
+<P>The output would be: "<TT>int foo;</TT>".
+<H3>Formal argument error handling</H3>
+
+
+<P>When using a group file format to specify templates, you must specify the formal arguments for that template.  If you try to set an attribute that is not specifically formally defined that template, you will get a <TT>NoSuchElementException</TT>.
+<H3>Newline handling</H3>
+
+
+<P>The first newline following the <TT>&lt;&lt;</TT> in a template definition is
+ignored as it is usually used just to get the first line of text for
+the template at the start of a line.  In other words, if you want to
+have a blank line at the start of your template, use:
+
+<FONT SIZE=2><PRE>
+foo() ::= &lt;&lt;
+
+2nd line is not blank, but first is
+&gt;&gt;
+</PRE></FONT>
+
+
+
+<P>or
+
+<FONT SIZE=2><PRE>
+foo() ::= &lt;&lt;&lt;\n&gt;
+same as before; newline then this line
+&gt;&gt;
+</PRE></FONT>
+
+
+
+<P>The last newline before the <TT>&gt;&gt;</TT> is also ignored and is included in
+the output.  To add a final newline, add an extra line or <TT>&lt;\n&gt;</TT>
+before the <TT>&gt;&gt;</TT>:
+
+<FONT SIZE=2><PRE>
+foo() ::= &lt;&lt;
+rodent
+
+&gt;&gt;
+</PRE></FONT>
+
+
+
+<P>or
+
+<FONT SIZE=2><PRE>
+foo() ::= &lt;&lt;
+rodent&lt;\n&gt;
+&gt;&gt;
+</PRE></FONT>
+
+
+
+<P>Template:
+
+<FONT SIZE=2><PRE>
+foo() ::= &lt;&lt;
+rodent
+&gt;&gt;
+</PRE></FONT>
+
+
+
+<P>on the other hand, is identical to
+
+<FONT SIZE=2><PRE>
+foo() ::= "rodent"
+</PRE></FONT>
+
+
+<H3>Group file format</H3>
+
+
+<FONT SIZE=2><PRE>
+group
+    :	"group" name:ID SEMI (template)*
+    ;
+
+template
+    :	name:ID LPAREN (args)? RPAREN DEFINED_TO_BE TEMPLATE
+    |   ID DEFINED_TO_BE ID // alias one template to be another
+    ;
+
+args:	ID (COMMA ID)*
+    ;
+</PRE></FONT>
+
+
+
+<TABLE cellspacing=0 border=1>
+<TR><TD><B>An aside</B>: All along, during my website construction days, I kept in mind that any text output follows a format and, thus, output sentences conform to a language.  Consequently, a grammar should describe the output rather than a bunch of ad hoc print statements in code.  This helped me formalize the study of templates because I could compare templates (output grammars) to well established ideas from formal language theory and context-free grammars.  This allowed me to show, among other things, that <TT>StringTemplate</TT> can easily generate any document describable with an XML DTD even though it is deliberately limited.  The group file format should look very much like a grammar to you.
+</TD></TR>
+</TABLE>
+
+
+<P>See the scoping rules section for information on how formal arguments affect attribute look up.
+
+<P>I use <TT>.stg</TT> file extension, which you might also want to use.
+<H2>Functionality Summary</H2>
+
+<H3>Attribute References</H3>
+
+<H4>Named attributes</H4>
+
+
+<P>The most common thing in a template besides plain text is a simple named attribute reference such as:
+
+<FONT SIZE=2><PRE>
+Your email: $email$
+</PRE></FONT>
+
+
+
+<P>The template will look up the value of <TT>email</TT> and insert it into the output stream when you ask the template to print itself out.  If <TT>email</TT> has no value, then it evaluates to the empty string and nothing is printed out for that attribute expression.
+<H4>Property references</H4>
+
+
+<P>If a named attribute is an aggregate with a property (ala JavaBeans), you may reference that property using <em>attribute</em>.<em>property</em>.  For example:
+
+<FONT SIZE=2><PRE>
+Your name: $person.name$
+Your email: $person.email$
+</PRE></FONT>
+
+
+
+<P><TT>StringTemplate</TT> ignores the actual object type stored in attribute
+<TT>person</TT> and simply invokes <TT>getName()</TT> and <TT>getEmail()</TT> via
+reflection.  As a special case, StringTemplate tries <TT>x.isFoo()</TT> for
+<TT>x.foo</TT> if <TT>x</TT> is <TT>Boolean</TT>.
+
+<P>Because the type is ignored, you can pass in whatever existing Java aggregate (class) you have such as <TT>User</TT> or <TT>Person</TT>:
+
+<FONT SIZE=2><PRE>
+User u = database.lookupPerson("parrt@jguru.com");
+st.setAttribute("person", u);
+</PRE></FONT>
+
+
+
+<P>Or, if a suitable aggregate doesn't exist, you can make a connector or "glue" object and pass that in instead:
+
+<FONT SIZE=2><PRE>
+st.setAttribute("person", new Connector());
+</PRE></FONT>
+
+
+
+<P>where <TT>Connector</TT> is defined as:
+
+<FONT SIZE=2><PRE>
+public class Connector {
+    public String getName() { return "Terence"; }
+    public String getEmail() { return "parrt@jguru.com"; }
+}
+</PRE></FONT>
+
+
+
+<P>The ability to reference aggregrate properties saves you the trouble
+of having to pull out the properties with Java code like this:
+
+<FONT SIZE=2><PRE>
+User u = database.lookupPerson("parrt@jguru.com");
+st.setAttribute("name", u.getName());
+st.setAttribute("email", u.getEmail());
+</PRE></FONT>
+
+
+
+<P>and having template:
+
+<FONT SIZE=2><PRE>
+Your name: $name$
+Your email: $email$
+</PRE></FONT>
+
+
+
+<P><B>Warning</B>: The latter is more widely applicable and totally decoupled
+from code and logic; i.e., it's "better" but much less convenient.  Be
+very careful that the property methods do not have any side-effects
+like updating a counter or whatever.  This breaks the rule of order of
+evaluation independence.
+<H4>Map key/value pair access</H4>
+
+
+<P>You may pass in instances of type <TT>HashMap</TT> and <TT>Hashtable</TT> but cannot
+pass in objects implementing the <TT>Map</TT> because that would allow all
+sorts of wacky stuff like database access.   Rather than creating an
+aggregate object (though I make it easier for you with the automatic
+aggregate creation in the next section) you can pass in a <TT>HashMap</TT>
+that has keys referencable within templates.  For example, 
+
+<FONT SIZE=2><PRE>
+StringTemplate a = new StringTemplate("$user.name$, $user.phone$");
+HashMap user = new HashMap();
+user.put("name", "Terence");
+user.put("name", "none-of-your-business");
+a.setAttribute("user", user);
+String results = a.toString();
+</PRE></FONT>
+
+
+
+<P>yields a result of "Terence, none-of-your-business".
+<H4>Automatic aggregate creation</H4>
+
+
+<P>While Java anonymous inner classes are supposed to make creating and passing around aggregates easy, it turns out they have a nasty weakness: they are created with protections such that they are not visible outside their package.  In other words, if you want to avoid creating a separate class and want to use an anonymous class, <TT>StringTemplate</TT> will receive an illegal access exception when trying to access the (public) property methods via reflection.  It stunned me too, but after hours of frustration, I can only conclude this is inescapable.  Anonymous classes are created with non-public access.  Anyway, I found a workaround that is better by augmenting <TT>StringTemplate</TT> slightly.  You may pass in an aggregrate attribute name to <TT>setAttribute()</TT> now:
+
+<FONT SIZE=2><PRE>
+StringTemplate st =
+        new StringTemplate("$items:{$it.last$, $it.first$\n}$");
+st.setAttribute("items.{first,last}", "John", "Smith");
+st.setAttribute("items.{first,last}", "Baron", "Von Munchhausen");
+String expecting =
+        "Smith, John\n" +
+        "Von Munchhausen, Baron\n";
+</PRE></FONT>
+
+
+
+<P>Note that the template, <TT>st</TT>, expects the <TT>items</TT> to be aggregates with properties <TT>first</TT> and <TT>last</TT>.  By using attribute name
+
+<FONT SIZE=2><PRE>
+items.{first,last}
+</PRE></FONT>
+
+
+
+<P>You are telling <TT>StringTemplate</TT> to take the following two arguments as properties <TT>first</TT> and <TT>last</TT>.  
+
+<P>I have created variants of the <TT>setAttribute()</TT> method to handle from 2 to 5 properties.  This is really handy. :)
+<H3>Template References</H3>
+
+
+<P>You may reference other templates to have them included just like the C language preprocessor <TT>#include</TT> construct behaves.  For example, if you are building a web page (<TT>page.st</TT>) that has a search box, you might want the search box stored in a separate template file, say, <TT>searchbox.st</TT>.  This has two advantages:
+<OL>
+<LI>You can reuse the template over and over (no cut/paste)
+</LI>
+<LI>You can change one template and all search boxes change on the whole site.
+</LI>
+
+</OL>
+
+<P>Using method call syntax, just reference the foreign template:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;body&gt;
+...
+$searchbox()$
+...
+&lt;/body&gt;
+&lt;/html&gt;
+</PRE></FONT>
+
+
+
+<P>The invoking Java code would still just create the overall page and the enclosing page template would automatically create an instance of the referenced template and insert it:
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup group =
+  new StringTemplateGroup("webpages", "/usr/local/site/templates");
+StringTemplate page = group.getInstanceOf("page");
+</PRE></FONT>
+
+
+
+<P>If the template you want to reference, say <TT>searchbox</TT>, is in a subdirectory of the <TT>StringTemplateGroup</TT> root directory called <TT>misc</TT>, then you must reference the template as: <TT>misc/searchbox()</TT>.
+
+<P>The included template may access attributes.  How can you set the attribute of an included template?  There are two ways: inheriting attributes and passing parameters.
+<H4>Accessing Attributes Of Enclosing Template</H4>
+
+
+<P>Any included template can reference the attributes of the enclosing template instance.  So if <TT>searchbox</TT> references an attribute called <TT>resource</TT>:
+
+<FONT SIZE=2><PRE>
+&lt;form ...&gt;
+...
+&lt;input type=hidden name=resource value=$resource$&gt;
+...
+&lt;/form&gt;
+</PRE></FONT>
+
+
+
+<P>you could set attribute <TT>resource</TT> in the enclosing template <TT>page</TT>:
+
+<FONT SIZE=2><PRE>
+StringTemplate page = group.getInstanceOf("page");
+page.setAttribute("resource", "faqs");
+</PRE></FONT>
+
+
+
+<P>This "inheritance" of attributes feature is particularly handy for setting generally useful attributes like <TT>siteFontTag</TT>. 
+<H4>Passing Parameters To Another Template</H4>
+
+
+<P>Another, more obvious, way to set the attributes of an included template is to pass in values as parameters, making them look like C macro invocations rather than includes.  The syntax looks like a set of attribute assignments:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;body&gt;
+...
+$searchbox(resource="faqs")$
+...
+&lt;/body&gt;
+&lt;/html&gt;
+</PRE></FONT>
+
+
+
+<P>where I am setting the attribute of the included <TT>searchbox</TT> to be the
+string literal <TT>"faqs"</TT>.
+
+<P>The right-hand-side of the assignment may be any expression such as an attribute reference or even a reference to another template like this:
+
+<FONT SIZE=2><PRE>
+$boldMe(item=copyrightNotice())$
+</PRE></FONT>
+
+
+<H3>Attribute Expressions</H3>
+
+
+<P>When setting parameters or testing IF conditionals, you may find it handy to use the plus "string concatenate" operator.  For example, when building web pages, you will find it useful to create a template called <TT>link</TT> and then use it to generate HTML link tags; you may want to change the way every link looks on your site and it's convenient to have one place to change things.  The template might look like:
+
+<FONT SIZE=2><PRE>
+&lt;a href="$url$"&gt;&lt;b&gt;$title$&lt;/b&gt;&lt;/a&gt;
+</PRE></FONT>
+
+
+
+<P>Then in a page template you might reference:
+
+<FONT SIZE=2><PRE>
+...$link(url="http://www.jguru.com", title="jGuru")$...
+</PRE></FONT>
+
+
+
+<P>or you could use attributes to set the link parameters:
+
+<FONT SIZE=2><PRE>
+...$link(url=person.homePage, title=person.name)$...
+</PRE></FONT>
+
+
+
+<P>Sometimes you may want to compute the URL; usually it is enough to concatenate strings:
+
+<FONT SIZE=2><PRE>
+...$link(url="/faq/view?ID="+faqid, title=faqtitle)$...
+</PRE></FONT>
+
+
+
+<P>where <TT>faqid</TT> and <TT>faqtitle</TT> are attributes you would have to set for
+the template that referenced <TT>link</TT>.
+
+<P>You may parenthesize any expression:
+
+<FONT SIZE=2><PRE>
+...$link(url=("/faq/view?ID="+faqid), title=faqtitle)$...
+</PRE></FONT>
+
+
+<H3>Template Application</H3>
+
+
+<P>Imagine a simple template called <TT>bold</TT>:
+
+<FONT SIZE=2><PRE>
+&lt;b&gt;$item$&lt;/b&gt;
+</PRE></FONT>
+
+
+
+<P>Just as with template <TT>link</TT> described above, you can reference it from a template by invoking it like a method call:
+
+<FONT SIZE=2><PRE>
+$bold(item=name)$
+</PRE></FONT>
+
+
+
+<P>What if you want something bold and italicized?  You could simply nest the template reference:
+
+<FONT SIZE=2><PRE>
+$bold(item=italics(item=name))$
+</PRE></FONT>
+
+
+
+<P>where template <TT>italics</TT> is defined as:
+
+<FONT SIZE=2><PRE>
+&lt;i&gt;$item$&lt;/i&gt;
+</PRE></FONT>
+
+
+
+<P>using a different attribute with the same name, <TT>item</TT>; the attributes have different values just like you would expect if these template references where Java method calls and <TT>item</TT> were a local variable.  Parameters and attribute references are scoped like a programming language.
+
+<P>Think about what you are really trying to say here.  You want to say "make name italics and then make it bold", or "apply italics to the name and then apply bold."  There is an "apply template" syntax that is a literal translation:
+
+<FONT SIZE=2><PRE>
+$name:italics():bold()$
+</PRE></FONT>
+
+
+
+<P>where the templates are applied in the order specified from left to right.  This is much more clear, particularly if you had three templates to apply:
+
+<FONT SIZE=2><PRE>
+$name:courierFont():italics():bold()$
+</PRE></FONT>
+
+
+
+<P>For this syntax to work, however, the applied templates have to reference a standard attribute because you are not setting the attribute in a parameter assignment.  In general for syntax <em>expr</em>:<em>template</em>(), an attribute called <TT>it</TT> is set to the value of <em>expr</em>.  So, the definition of <TT>bold</TT> (and analogously <TT>italics</TT>), would have to be:
+
+<FONT SIZE=2><PRE>
+&lt;b&gt;$it$&lt;/b&gt;
+</PRE></FONT>
+
+
+
+<P>to pick up the value of <TT>name</TT> in our examples above.
+<H4>Applying Templates To Multi-Valued Attributes</H4>
+
+
+<P>Where template application really shines though is when an attribute is multi-valued.  One of the most common web page generation issues is making lists of items either as bullet lists or table rows etc...  Applying a template to a multi-valued attribute means that you want the template applied to each of the values.
+
+<P>Consider a list of names (i.e., you set attribute <TT>names</TT> multiple times) that you want in a bullet list.  If you have a template called <TT>listItem</TT>:
+
+<FONT SIZE=2><PRE>
+&lt;li&gt;$it$&lt;/li&gt;
+</PRE></FONT>
+
+
+
+<P>then you can do this:
+
+<FONT SIZE=2><PRE>
+&lt;ul&gt;
+$names:listItem()$
+&lt;/ul&gt;
+</PRE></FONT>
+
+
+
+<P>and each name will appear as a bullet item. For example, if you set <TT>names</TT> to <TT>"Terence"</TT>, <TT>"Tom"</TT>, and <TT>"Jim"</TT>, then you would see:
+
+<FONT SIZE=2><PRE>
+&lt;ul&gt;
+&lt;li&gt;Terence&lt;/li&gt;
+&lt;li&gt;Tom&lt;/li&gt;
+&lt;li&gt;Jim&lt;/li&gt;
+&lt;/ul&gt;
+</PRE></FONT>
+
+
+
+<P>in the output.
+
+<P>Whenever you apply a template to an attribute or multi-valued attribute, the default attribute <TT>it</TT> is set.  Another attribute <TT>i</TT> (of type <TT>Integer</TT>) is also set to the value's index number starting from 1.  For example, if you wanted to make your own style of numbered list, you could reference <TT>i</TT> to get the index:
+
+<FONT SIZE=2><PRE>
+$names:numberedListItem()$
+</PRE></FONT>
+
+
+
+<P>where template <TT>numberedListItem</TT> is defined as:
+
+<FONT SIZE=2><PRE>
+$i$. $it$&lt;br&gt;
+</PRE></FONT>
+
+
+
+<P>In this case, the output would be:
+
+<FONT SIZE=2><PRE>
+1. Terence&lt;br&gt;
+2. Tom&lt;br&gt;
+3. Jim&lt;br&gt;
+</PRE></FONT>
+
+
+
+<P>If there is only one attribute value, then <TT>i</TT> will be 1.
+<H4>Applying Multiple Templates To Multi-Valued Attributes</H4>
+
+
+<P>The result of applying a template to a multi-valued attribute is another multi-valued attribute containing the results of the application.  You may apply another template to the results of the first template application, which comes in handy when you need to format the elements of a list before they go into the list.  For example, to bold the elements of a list do the following (given the appropriate template definitions from above):
+
+<FONT SIZE=2><PRE>
+$names:bold():listItem()$
+</PRE></FONT>
+
+ 
+
+<P>If you actually want to apply a template to the combined (string) result of a previous template application, enclose the previous application in parenthesis.  The parenthesis will force immediate evaluation of the template application, resulting in a string.  For example,
+
+<FONT SIZE=2><PRE>
+$(names:bold()):listItem()$
+</PRE></FONT>
+
+ 
+
+<P>results in a single list item full of a bunch of bolded names.  Without the parenthesis, you get a list of items that are bolded.
+<H4>Applying Alternating Templates To Multi-Valued Attributes</H4>
+
+
+<P>When generating lists of things, you often need to change the color or other formatting instructions depending on the list position.  For example, you might want to alternate the color of the background for the elements of a list.  The easiest and most natural way to specify this is with an alternating list of templates to apply to an expression of the form: <TT>$</TT><em>expr</em>:<em>t1</em>(),<em>t2</em>(),...,<em>tN</em>()<TT>$</TT>.  To make an alternating list of blue and green names, you might say:
+
+<FONT SIZE=2><PRE>
+$names:blueListItem(),greenListItem()$
+</PRE></FONT>
+
+
+
+<P>where presumably <TT>blueListItem</TT> template is an HTML <TT>&lt;table&gt;</TT> or something that lets you change background color.   <TT>names[0]</TT> would get <TT>blueListItem()</TT> applied to it, <TT>names[1]</TT> would get <TT>greenListItem()</TT>, and <TT>names[2]</TT> would get <TT>blueListItem()</TT>, etc...
+
+<P>If <TT>names</TT> is single-valued, then <TT>blueListItem()</TT> is applied and that's it.
+<H4>Applying Anonymous Templates</H4>
+
+
+<P>Some templates are so simple or so unlikely to be reused that it seems a waste of time making a separate template file and then referencing it.  <TT>StringTemplate</TT> provides <em>anonymous subtemplates</em> to handle this case.  The templates are anonymous in the sense that they are not named; they are directly applied in a single instance.
+
+<P>For example, to show a name list do the following:
+
+<FONT SIZE=2><PRE>
+&lt;ul&gt;
+$names:{&lt;li&gt;$it$&lt;/li&gt;}$
+&lt;/ul&gt;
+</PRE></FONT>
+
+
+
+<P>where anything enclosed in curlies is an anonymous subtemplate if, of course, it's within an attribute expression.  Note that in the subtemplate, I must enclose the <TT>it</TT> reference in the template expression delimiters.  You have started a new template exactly like the surrounding template and you must distinguish between text and attribute expressions.
+
+<P>You can apply multiple templates very conveniently.  Here is the bold list of names again with anonymous templates:
+
+<FONT SIZE=2><PRE>
+&lt;ul&gt;
+$names:{&lt;b&gt;$it$&lt;/b&gt;}:{&lt;li&gt;$it$&lt;/li&gt;}$
+&lt;/ul&gt;
+</PRE></FONT>
+
+
+
+<P>The output would look like:
+
+<FONT SIZE=2><PRE>
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;Terence&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Tom&lt;/b&gt;&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;Jim&lt;/b&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</PRE></FONT>
+
+
+
+<P>Anonymous templates work on single-valued attributes as well.
+<H4>Indirect template references</H4>
+
+
+<P>Sometimes the name of the template you would like to include is itself
+a variable.  So, rather than using "<TT>&lt;item:format()&gt;</TT>" you want the
+name of the template, <TT>format</TT>, to be a variable rather than a
+literal.  Just enclose the template name in parenthesis to indicate
+you want the immediate value of that attribute and then add <TT>()</TT> like
+a normal template invocation and you get "<TT>&lt;item:(someFormat)()&gt;</TT>",
+which means "look up attribute <TT>someFormat</TT> and use its value as a
+template name; appy to <TT>item</TT>."  This deliberately looks similar to
+the C function call indirection through a function pointer (e.g.,
+"<TT>(*fp)()</TT>" where fp is a pointer to a function).  A better way to look at
+it though is that the <TT>(someFormat)</TT> implies <em>immediately evaluate someFormat and use as the template name</em>.
+
+<P>Usually this "variable template" situation occurs when you have a list
+of items to format and each element may require a different template.
+Rather than have the controller code create a bunch of instances, one
+could consider it better to have <TT>StringTemplate</TT> do the creation--the
+controller just names what format to use.
+
+<P>Consider generating a list of Java declarations that are initialized to 0, false, null, etc...  One solution is to define a template for <TT>int</TT>, <TT>Object</TT>, <TT>Array</TT>, etc... declarations and then pass in an aggregate object that has the variable declaration object and the format.  In a template group file you might have:
+
+<FONT SIZE=2><PRE>
+group Java;
+
+file(variables,methods) ::= &lt;&lt;
+&lt;variables:{&lt;it.decl:(it.format)()&gt;}; separator="\n"&gt;
+&lt;methods&gt;
+&gt;&gt;
+intdecl() ::= "int &lt;it.name&gt; = 0;"
+intarray() ::= "int[] &lt;it.name&gt; = null;"
+</PRE></FONT>
+
+
+
+<P>Your code might look like:
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup group =
+        new StringTemplateGroup(new StringReader(templates),
+                AngleBracketTemplateLexer.class);
+StringTemplate f = group.getInstanceOf("file");
+f.setAttribute("variables.{decl,format}", new Decl("i","int"), "intdecl");
+f.setAttribute("variables.{decl,format}", new Decl("a","int-array"), "intarray");
+System.out.println("f="+f);
+String expecting = ""+newline+newline;
+</PRE></FONT>
+
+
+
+<P>For this simple unit test, I used the following dummy decl class:
+
+<FONT SIZE=2><PRE>
+public static class Decl {
+    String name;
+    String type;
+    public Decl(String name, String type) {this.name=name; this.type=type;}
+    public String getName() {return name;}
+    public String getType() {return type;}
+}
+</PRE></FONT>
+
+
+
+<P>The value of <TT>f.toString()</TT> is:
+
+<FONT SIZE=2><PRE>
+int i = 0;
+int[] a = null;
+</PRE></FONT>
+
+
+
+<P>Missing attributes (i.e., <TT>null</TT> valued attributes) used as indirect
+template attribute generate nothing just like referencing a missing
+attribute.
+<H3>Conditionally Included Subtemplates (IF statements)</H3>
+
+
+<P>There are many situations when you want to conditionally include some text or another template.  <TT>StringTemplate</TT> provides simple IF-statements to let you specify conditional includes.  For example, in a dynamic web page you usually want a slightly different look depending on whether or not the viewer is "logged in" or not.  Without a conditional include, you would need two templates: <TT>page_logged_in</TT> and <TT>page_logged_out</TT>.  You can use a single <TT>page</TT> definition with <TT>if(</TT><em>expr</em><TT>)</TT> attribute actions instead:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+...
+&lt;body&gt;
+$if(member)$
+$gutter/top_gutter_logged_in()$
+$else$
+$gutter/top_gutter_logged_out()$
+$endif$
+...
+&lt;/body&gt;
+&lt;/html&gt;
+</PRE></FONT>
+
+ 
+
+<P>where template <TT>top_gutter_logged_in</TT> is located in the <TT>gutter</TT> subdirectory of my <TT>StringTemplateGroup</TT>.
+
+<P>IF actions test the presence or absence of an attribute unless the
+object is a <TT>Boolean</TT>, in which case it tests the attribute for
+<TT>true</TT>/<TT>false</TT>.  The only operator allowed is "not" and means either
+"not present" or "not true".  For example,
+"<TT>$if(!member)$...$endif$</TT>".
+<H4>Whitespace in conditionals issue</H4>
+
+
+<P>There is a simple, but not perfect rule: kill a single newline <B>after</B>
+<TT>&lt;if&gt;</TT>, <TT>&lt;&lt;</TT>, <TT>&lt;else&gt;</TT>, and <TT>&lt;endif&gt;</TT> (but for <TT>&lt;endif&gt;</TT> only if it's
+on a line by itself) . Kill newlines <B>before</B> <TT>&lt;else&gt;</TT> and <TT>&lt;endif&gt;</TT>
+and <TT>&gt;&gt;</TT>.  For example,
+
+<FONT SIZE=2><PRE>
+a &lt;if(foo)&gt;big&lt;else&gt;small&lt;endif&gt; dog
+</PRE></FONT>
+
+
+
+<P>is identical to:
+
+<FONT SIZE=2><PRE>
+a &lt;if(foo)&gt;
+big
+&lt;else&gt;
+small
+&lt;endif&gt;
+ dog
+</PRE></FONT>
+
+
+
+<P>It is very difficult to get the newline rule to work "properly"
+because sometimes you want newlines and sometimes you don't.  I
+decided to chew up as many as is reasonable and then let you
+explicitly say <TT>&lt;\n&gt;</TT> when you need to.
+<H3>Template visualization</H3>
+
+
+<P>Sometimes you use or define templates improperly.  Either you set an
+attribute that is not used or forget to set one or reference the wrong
+template etc...  I have made a toy visualization tool via that shows
+both the attributes and the way <TT>StringTemplate</TT> breaks up your
+template into chunks.  It properly handles <TT>StringTemplate</TT> objects as
+attributes and other nested structures.  Here is the way to launch a
+Swing frame to view your template:
+
+<FONT SIZE=2><PRE>
+StringTemplate st = ...;
+StringTemplateTreeView viz =
+    new StringTemplateTreeView("sample",st);
+viz.setVisible(true);
+</PRE></FONT>
+
+
+
+<P>Here is a snapshot (note that due some weird font thing on my os x
+box, the first <TT>&lt;html&gt;</TT> text chunk is missing in the display.) :( The
+display is associated with the fill-a-table example below.
+
+<P> <img src="page.treeview.jpg"  > 
+
+<P>If you turn on "lint mode" via <TT>StringTemplate.setLintMode(true)</TT> then
+you may access attribute <TT>attributes</TT>, which is a text string that
+recursively dumps out types, properties, etc... It does not print out
+their values.
+<H2>Functionality Summary</H2>
+
+
+<TABLE cellspacing=0 border=1>
+<TR><TD>
+<B>Syntax</B> </TD><TD> <B>Description</B>
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>attribute</em>&gt;
+</TD><TD> Evaluates to the value of <em>attribute</em><TT>.toString()</TT> if it exists else empty string.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>multi-valued-attribute</em>&gt;
+</TD><TD> Concatenation of <TT>toString()</TT> invoked on each element.  If <em>multi-valued-attribute</em> is missing this evaluates to the empty string.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>multi-valued-attribute</em>; separator=<em>expr</em>&gt;
+</TD><TD> Concatenation of <TT>toString()</TT> invoked on each element separated by <em>expr</em>. 
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>template</em>(<em>argument-list</em>)&gt;
+</TD><TD> Include <em>template</em>.  The <em>argument-list</em> is a list of attribute assignments where each assignment is of the form <em>attribute</em>=<em>expr</em>.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>(expr)</em>(<em>argument-list</em>)&gt;
+</TD><TD> Include <em>template</em> whose name is computed via <em>expr</em>.  The <em>argument-list</em> is a list of attribute assignments where each assignment is of the form <em>attribute</em>=<em>expr</em>.  Example <TT>$(titleFont)()$</TT> looks up <TT>titleFont</TT>'s value and uses that as template name.  Can also apply an indirect template to an attribute.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>attribute</em>:<em>template</em>(<em>argument-list</em>)&gt;
+</TD><TD> Apply <em>template</em> to <em>attribute</em>.  The optional <em>argument-list</em> is evaluated before application so that you can set attributes within <em>template</em>.  The default attribute <TT>it</TT> is set to the value of <em>attribute</em>.  Example: <TT>$data:bold()</TT> applies <TT>bold()</TT> to <TT>data</TT>'s value.  If <em>attribute</em> is multi-valued, then the optional <em>argument-list</em> is evaluated before each application so that you can set attributes within <em>template</em>.  Also, the default attribute <TT>it</TT> is set to the value of each element in turn.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>attribute</em>:<em>(expr)</em>(<em>argument-list</em>)&gt;
+</TD><TD> Apply <em>template</em>, whose name is computed from <em>expr</em>, to <em>attribute</em>.  The optional <em>argument-list</em> is evaluated before application so that you can set attributes within <em>template</em>.  The default attribute <TT>it</TT> is set to the value of <em>attribute</em>.  Example <TT>$data:(name)()$</TT> looks up <TT>name</TT>'s value and uses that as template name to apply to <TT>data</TT>.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>multi-valued-attribute</em>:<em>t1</em>(<em>argument-list</em>): ... :<em>tN</em>(<em>argument-list</em>)&gt;
+</TD><TD> Apply multiple templates in order from left to right.  The result of a template application upon a multi-valued attribute is another multi-valued attribute.  The overall expression evaluates to the concatenation of all elements of the final multi-valued attribute resulting from <em>templateN</em>'s application. 
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>attribute</em>:{<em>anonymous-template</em>}&gt;
+</TD><TD> Concatenate the results of applying a template with no name to each element of <em>multi-valued-attribute</em>.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;<em>attribute</em>:<em>t1</em>(),<em>t2</em>(),...,<em>tN</em>()&gt;
+</TD><TD> Apply an alternating list of templates to the elements of <em>attribute</em>.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;if(<em>attribute</em>)&gt;<em>subtemplate</em>
+&lt;else&gt;<em>subtemplate2</em>
+&lt;endif&gt;
+</TD><TD> If <em>attribute</em> has a value or is a <TT>true</TT> <TT>Boolean</TT> object, include <em>subtemplate</em> else include <em>subtemplate2</em>.  These conditionals may be nested.
+</TD>
+</TR>
+<TR>
+<TD>
+&lt;if(!<em>attribute</em>)&gt;<em>subtemplate</em>&lt;endif&gt;
+</TD><TD> If <em>attribute</em> has no value or is a <TT>false</TT> <TT>Boolean</TT> object, include <em>subtemplate</em>.  These conditionals may be nested.
+</TD>
+</TR>
+<TR>
+<TD>
+<TT>\$</TT> or <TT>\&lt;</TT> </TD><TD> escaped delimiter prevents <TT>$</TT> or <TT>&lt;</TT> from starting an attribute
+expression and results in that single character.
+</TD>
+</TR>
+<TR>
+<TD>
+<TT>&lt;\ &gt;</TT>, <TT>&lt;\n&gt;</TT>, <TT>&lt;\t&gt;</TT>, <TT>&lt;\r&gt;</TT> </TD><TD> special characters: space, newline,
+tab, carriage return.
+</TD>
+</TR>
+<TR>
+<TD>
+<TT>&lt;! comment !&gt;</TT>, <TT>$! comment !$</TT> </TD><TD> Comments, ignored by StringTemplate.
+</TD></TR>
+</TABLE>
+
+<H2>Setting the Expression Delimiters</H2>
+
+
+<P>By default, expressions in a template are delimited by dollar signs:
+<TT>$...$</TT>.  This works great for the most common case of HTML generation
+because the attribute expressions are clearly highlighted in the text.
+Sometimes, with other formats like SQL statement generation, you may
+want to change the template expression delimiters to avoid a conflict
+and to make the expressions stand out.
+
+<P>As of 2.0, the start and stop strings are limited to either <TT>$...$</TT> or <TT>&lt;...&gt;</TT> (unless you build your own lexical analyzer to break apart templates into chunks).
+
+<P>To use the angle bracket delimiters you must create a <TT>StringTemplateGroup</TT>:
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup group =
+  new StringTemplateGroup("sqlstuff", "/tmp", AngleBracketTemplateLexer.class);
+StringTemplate query =
+  new StringTemplate(group, "SELECT &lt;column&gt; FROM &lt;table&gt;;");
+query.setAttribute("column", "name");
+query.setAttribute("table", "User");
+</PRE></FONT>
+
+
+
+<P>All templates created through the group or in anyway associated with
+the group will assume your the angle bracket delimiters.  It's smart to be
+consistent across all files of similar type such as "all HTML
+templates use <TT>$...$</TT>" and "all SQL templates use <TT>&lt;...&gt;</TT>".
+<H2>Caching</H2>
+
+
+<P>By default templates are loaded from disk just once.  During
+development, however, it is convenient to turn caching off.  Also, you
+may want to turn off caching so that you can quickly update a running
+site.  You can set a simple refresh interval using
+<TT>StringTemplateGroup.setRefreshInterval(...)</TT>.  When the interval is
+reached, all templates are thrown out.  Set interval to 0 to refresh
+constantly (no caching).  Set the interval to a huge number like
+<TT>Integer.MAX_INT</TT> to have no refreshing at all.
+<H2>Template Inheritance</H2>
+
+
+<P>Recall that a StringTemplateGroup is a collection of related templates such as all templates associated with the look of a web site. If you want to design a similar look for that site (such as for premium users), you don't really want to cut-n-paste the original template files for use in the new look. Changes to the original will not be propogated to the new look.
+
+<P>Just like you would do with a class definition, a template group may inherit templates from  another group, the <em>supergroup</em>.  If template <em>t</em> is not found in a group, it is looked up in the supergroup, if present.  This works regardless of whether you use a group file format or load templates from the disk via a <TT>StringTemplateGroup</TT> object.  Currently you cannot use the group file syntax to specify a supergroup.  I am investigating how this should work.  In the meantime, you must explicitly set the super.
+
+<P>From my unit tests, here is a simple inheritance of a template, <TT>bold</TT>:
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup supergroup = new StringTemplateGroup("super");
+StringTemplateGroup subgroup = new StringTemplateGroup("sub");
+supergroup.defineTemplate("bold", "&lt;b&gt;$it$&lt;/b&gt;");
+subgroup.setSuperGroup(supergroup);
+StringTemplate st = new StringTemplate(subgroup, "$name:bold()$");
+st.setAttribute("name", "Terence");
+String expecting = "&lt;b&gt;Terence&lt;/b&gt;";
+</PRE></FONT>
+
+
+
+<P>The supergroup has a bold definition but the subgroup does not.  Referencing <TT>$name:bold()$</TT> works because subgroup looks into its supergroup if it is not found.
+
+<P>You may override templates:
+
+<FONT SIZE=2><PRE>
+supergroup.defineTemplate("bold", "&lt;b&gt;$it$&lt;/b&gt;");
+subgroup.defineTemplate("bold", "&lt;strong&gt;$it$&lt;/strong&gt;");
+</PRE></FONT>
+
+
+
+<P>And you may refer to a template in a supergroup via <TT>super.</TT><em>template</em><TT>()</TT>:
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup group = new StringTemplateGroup(...);
+StringTemplateGroup subGroup = new StringTemplateGroup(...);
+subGroup.setSuperGroup(group);
+group.defineTemplate("page", "$font()$:text");
+group.defineTemplate("font", "Helvetica");
+subGroup.defineTemplate("font", "$super.font()$ and Times");
+StringTemplate st = subGroup.getInstanceOf("page");
+</PRE></FONT>
+
+
+
+<P>The string <TT>st.toString()</TT> results in "<TT>Helvetica and Times:text</TT>".
+
+<P>Just like object-oriented programming languages, <TT>StringTemplate</TT> has polymorphism.  That is, template names are looked up dynamically relative to the invoking templates group.  The classic demonstration of dynamic message sends in Java, for example, would be the following example that catches my students all the time: ;)
+
+<FONT SIZE=2><PRE>
+class A {
+  public void page() {bold();}
+  public void bold() {System.out.println("A.bold");}
+}
+class B extends A {
+  public void bold() {System.out.println("B.bold");}
+}
+...
+A a = new B();
+a.page();
+</PRE></FONT>
+
+
+
+<P>This prints "<TT>B.bold</TT>" not "<TT>A.bold</TT>" because the receiver determines how to answer a message not the type of the variable.  So, I have created a <TT>B</TT> object meaning that any message, such as <TT>bold()</TT>, invoked will first look in class <TT>B</TT> for <TT>bold()</TT>.
+
+<P>Similarly, a template's group determines where it starts looking for a template.  In this case, both super and sub groups define a <TT>bold</TT> template mirroring the Java above.  Because I create template <TT>st</TT> as a member of the <TT>subGroup</TT> and reference to <TT>bold</TT> starts looking in <TT>subGroup</TT> even though <TT>page</TT> is the template referring to <TT>bold</TT>.
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup group = new StringTemplateGroup("super");
+StringTemplateGroup subGroup = new StringTemplateGroup("sub");
+subGroup.setSuperGroup(group);
+group.defineTemplate("bold", "&lt;b&gt;$it$&lt;/b&gt;");
+group.defineTemplate("page", "$name:bold()$");
+subGroup.defineTemplate("bold", "&lt;strong&gt;$it$&lt;/strong&gt;");
+StringTemplate st = subGroup.getInstanceOf("page");
+st.setAttribute("name", "Ter");
+String expecting = "&lt;strong&gt;Ter&lt;/strong&gt;";
+</PRE></FONT>
+
+
+<H2>Template And Attribute Lookup Rules</H2>
+
+<H3>Template lookup</H3>
+
+
+<P>When you request a named template via <TT>StringTemplateGroup.getInstanceOf()</TT> or within a template, there is a specific sequence used to locate the template.
+
+<P>If a template, <em>t</em>, references another template and <em>t</em> is not specifically associated with any group, <em>t</em> is implicitly associated with a default group whose root directory is "<TT>.</TT>", the current directory.  The referenced template will be looked up in the current directory.
+
+<P>If a template <em>t</em> is associated with a group, but was not defined via a group file format, lookup a referenced template in the group's template table.  If not there, look for it on the disk under the group's root dir or via the <TT>CLASSPATH</TT> (it might have appeared dynamically on disk).  If not found, recursively look at any supergroup of the group.  If not found at all, record this fact and don't look again on the disk until refresh interval.
+
+<P>If the template's associated group was defined via a group file, then that group is searched first.  If not found, the template is looked up in any supergroup.  The refresh interval is not used for group files because the group file is considered complete and enduring.
+<H3>Attribute scoping rules</H3>
+
+
+<P>A <TT>StringTemplate</TT> is a list of chunks, text literals and attribute expressions, and an attributes table.  To render a template to string, the chunks are written out in order; the expressions are evaluated only when asked to during rendering.  Attributes referenced in expressions are looked up using a very specific sequence similar to an inheritance mechanism.
+
+<P>When you nest a template within another, such as when a <TT>page</TT> template references a <TT>searchbox</TT> template, the nested template may see any attributes of the enclosing instance or its enclosing instances.  This mechanism is called <em>dynamic scoping</em>.  Contrast this with <em>lexical scoping</em> used in most programming languages like Java where a method may not see the variables defined in invoking methods.  Dynamic scoping is very natural for templates.  For example, if <TT>page</TT> has an attribute/value pair <TT>font</TT>/<TT>Times</TT> then <TT>searchbox</TT> could reference <TT>$font$</TT> when nested within a <TT>page</TT> instance.
+
+<P>Reference to attribute <em>a</em> in template <em>t</em> is resolved as follows:
+<OL>
+<LI>Look in <em>t</em>'s attribute table
+</LI>
+<LI>Look in <em>t</em>'s arguments
+</LI>
+<LI>Look in <em>t</em>'s enclosing template instance
+</LI>
+
+</OL>
+
+<P>This process is recursively executed until <em>a</em> is found or there are no more enclosing template instances.
+
+<P>When using a group file format to specify templates, you must specify the formal arguments for that template.  If you try to access an attribute that is not formally defined in that template or an enclosing template, you will get a <TT>NoSuchElementException</TT>.
+
+<P>When building code generators with <TT>StringTemplate</TT>, large heavily nested template tree structures are commonplace and, due to dynamic attribute scoping, a nested template could inadvertently use an attribute from an enclosing scope.  This could lead to infinite recursion during rendering.  To prevent this, formal arguments on template <em>t</em> hide any attribute value with that name in any enclosing scope.  Here is a test case that illustrates the point.  
+
+<FONT SIZE=2><PRE>
+String templates =
+        "group test;" +newline+
+        "block(stats) ::= \"{$stats$}\""
+        ;
+StringTemplateGroup group =
+        new StringTemplateGroup(new StringReader(templates));
+StringTemplate b = group.getInstanceOf("block");
+b.setAttribute("stats", group.getInstanceOf("block"));
+String expecting ="{{}}";
+</PRE></FONT>
+
+
+
+<P>Even though <TT>block</TT> has a <TT>stats</TT> value that refers to itself, there is no recursion because each instance of <TT>block</TT> hides the <TT>stats</TT> value from above since <TT>stats</TT> is a formal argument.
+
+<P>Sometimes self-recursive (hence infinitely recursive) structures occur through programming error and they are nasty to track down.  If you turn on "lint mode", <TT>StringTemplate</TT> will attempt to find cases where a template instance is being evaluated during the evaluation of itself.  For example, here is a test case that causes and traps infinite recursion.
+
+<FONT SIZE=2><PRE>
+String templates =
+        "group test;" +newline+
+        "block(stats) ::= \"$stats$\"" +
+        "ifstat(stats) ::= \"IF true then $stats$\"\n"
+        ;
+StringTemplate.setLintMode(true);
+StringTemplateGroup group =
+        new StringTemplateGroup(new StringReader(templates));
+StringTemplate b = group.getInstanceOf("block");
+StringTemplate ifstat = group.getInstanceOf("ifstat");
+b.setAttribute("stats", ifstat); // block has if stat
+ifstat.setAttribute("stats", b); // but make the "if" contain block
+try {
+    String result = b.toString();
+}
+catch (IllegalStateException ise) {
+    ...
+}
+</PRE></FONT>
+
+
+
+<P>The nested template stack trace from <TT>ise.getMessage()</TT> will be similar to:
+
+<FONT SIZE=2><PRE>
+infinite recursion to &lt;ifstat([stats])@4&gt; referenced in &lt;block([stats])@3&gt;; stack trace:
+&lt;ifstat([stats])@4&gt;, attributes=[stats=&lt;block()@3&gt;]&gt;
+&lt;block([stats])@3&gt;, attributes=[stats=&lt;ifstat()@4&gt;], references=[stats]&gt;
+&lt;ifstat([stats])@4&gt; (start of recursive cycle)
+...
+</PRE></FONT>
+
+
+<H3>Lazy evaluation</H3>
+
+
+<P>Attributes are <em>lazily evaluated</em> in the sense that referencing <em>a</em> does not actually invoke the lookup mechanism described here until the template is asked to render itself to text.  Lazy evaluation is surprising useful in both the web and code generation worlds because such order decoupling allows code to set attributes when it is convenient or efficient not necessarily before templates reference those attributes.  For example, a complicated web page consisting of many nested templates all may reference <TT>$userName$</TT>, but the value of <TT>userName</TT> does not need to be set until right before the entire page is rendered to text via <TT>toString()</TT>.  Even applying a template to a multi-valued attribute does not actually lookup and evaluate attributes until the entire overall template tree structure is rendered.  Applying a template to an attribute yields a template not a string.  You may ask the resulting template for its attributes even though they have not been computed.
+<H2>Output Filters</H2>
+
+
+<P>2.0 introduces the notion of a <TT>StringTemplateWriter</TT>.  All text rendered from a template goes through one of these writers before being placed in the output buffer.  I added this primarily for auto-indentation for code generation, but it also could be used to remove whitespace (as a compression) from HTML output.  If you don't care about indentation, you can simply implement <TT>write()</TT>:
+
+<FONT SIZE=2><PRE>
+public interface StringTemplateWriter {
+    void pushIndentation(String indent);
+
+    String popIndentation();
+
+    void write(String str) throws IOException;
+}
+</PRE></FONT>
+
+
+
+<P>Here is a "pass through" writer that is already defined:
+
+<FONT SIZE=2><PRE>
+/** Just pass through the text */
+public class NoIndentWriter extends AutoIndentWriter {
+    public NoIndentWriter(Writer out) {
+        super(out);
+    }
+
+    public void write(String str) throws IOException {
+	    out.write(str);
+    }
+}
+</PRE></FONT>
+
+
+
+<P>Use it like this:
+
+<FONT SIZE=2><PRE>
+StringWriter out = new StringWriter();
+StringTemplateGroup group =
+                new StringTemplateGroup("test");
+group.defineTemplate("bold", "&lt;b&gt;$x$&lt;/b&gt;");
+StringTemplate nameST = new StringTemplate(group, "$name:bold(x=name)$");
+nameST.setAttribute("name", "Terence");
+// write to 'out' with no indentation
+nameST.write(new NoIndentWriter(out));
+System.out.println("output: "+out.toString());
+</PRE></FONT>
+
+
+
+<P>Instead of using <TT>nameST.toString()</TT>, which calls <TT>write</TT> with a string write and returns its value, manually invoke <TT>write</TT> with your writer.
+
+<P>If you want to always use a particular output filter, then use
+
+<FONT SIZE=2><PRE>
+StringTemplateGroup.setStringTemplateWriter(Class userSpecifiedWriterClass);
+</PRE></FONT>
+
+
+
+<P>The <TT>StringTemplate.toString()</TT> method is sensitive to the group's
+writer class.
+<H3>Auto-indentation</H3>
+
+
+<P><TT>StringTemplate</TT> 2.0 has auto-indentation on by default.  To turn it off, use <TT>NoIndentWriter</TT> rather than (the default) <TT>AutoIndentWriter</TT>.
+
+<P>At the simplest level, the indentation looks like a simple column count:
+
+<FONT SIZE=2><PRE>
+My dogs' names 
+  $names; separator="\n"$
+The last, unindented line
+</PRE></FONT>
+
+
+
+<P>will yield output like:
+
+<FONT SIZE=2><PRE>
+My dog's names
+  Fido
+  Rex
+  Stinky
+The last, unindented line
+</PRE></FONT>
+
+
+
+<P>where the last line gets "unindented" after displaying the list.  <TT>StringTemplate</TT> tracks the characters to the left of the <TT>$</TT> or <TT>&lt;</TT> rather than the column number so that if you indent with tabs versus spaces, you'll get the same indentation in the output.
+
+<P>When there are nested templates, <TT>StringTemplate</TT> tracks the combined
+indentation:
+
+<FONT SIZE=2><PRE>
+// &lt;user&gt; is indented two spaces
+main(user) ::= &lt;&lt;
+Hi
+\t$user:quote(); separator="\n"$
+&gt;&gt;
+
+quote ::= " '$it$'"
+</PRE></FONT>
+
+
+
+<P>In this case, you would get output like:
+
+<FONT SIZE=2><PRE>
+Hi
+\t 'Bob'
+\t 'Ephram'
+\t 'Mary'
+</PRE></FONT>
+
+
+
+<P>where the combined indentation is tab plus space for the attribute
+references in template <TT>quote</TT>.  Expression <TT>$user$</TT> is indented by 1 tab and hence any attribute
+generated from it (in this case the <TT>$attr$</TT> of <TT>quote()</TT>) must have
+at least the tab.
+
+<P>Consider generating nested statement lists as in C.  Any statements
+inside must be nested 4 spaces.  Here are two templates that could
+take care of this:
+
+<FONT SIZE=2><PRE>
+function(name,body) ::= &lt;&lt;
+void $name$() $body$
+&gt;&gt;
+
+slist(statements) ::= &lt;&lt;
+{
+    $statements; separator="\n"$
+}&gt;&gt;
+</PRE></FONT>
+
+
+
+<P>Your code would create a <TT>function</TT> template instance and an <TT>slist</TT>
+instance, which gets passed to the <TT>function</TT> template as attribute
+<TT>body</TT>.  The following Java code:
+
+<FONT SIZE=2><PRE>
+StringTemplate f = group.getInstanceOf("function");
+f.setAttribute("name", "foo");
+StringTemplate body = group.getInstanceOf("slist");
+body.setAttribute("statements", "i=1;");
+StringTemplate nestedSList = group.getInstanceOf("slist");
+nestedSList.setAttribute("statements", "i=2;");
+body.setAttribute("statements", nestedSList);
+body.setAttribute("statements", "i=3;");
+f.setAttribute("body", body);
+</PRE></FONT>
+
+
+
+<P>should generate something like:
+
+<FONT SIZE=2><PRE>
+void foo() {
+    i=1;
+    {
+        i=2;
+    }
+    i=3;
+}
+</PRE></FONT>
+
+
+
+<P>Indentation can only occur at the start of a line so indentation is
+only tracked in front of attribute expressions following a newline.
+
+<P>The one exception to indentation is that naturally, <TT>$if$</TT> actions do
+not cause indentation as they do not result in any output.  However,
+the subtemplates (THEN and ELSE clauses) will see indentations.  For
+example, in the following template, the two subtemplates are indented
+by exactly 1 space each:
+
+<FONT SIZE=2><PRE>
+     $if(foo)$
+ $x$
+\t\t$else
+ $y$
+$endif$
+</PRE></FONT>
+
+
+<H2>Examples</H2>
+
+
+<P>You should look at
+<TT>org.antlr.stringtemplate.test.TestStringTemplate.java</TT>, which
+contains a many tests.
+<H3>Fill-a-Table Example</H3>
+
+
+<P>The manner in which a template engine handles filling an HTML table
+with data often provides good insight into its programming and design
+strategy.  It illustrates the interaction of the model and view via
+the controller.  Using <TT>StringTemplate</TT>, the view may not access the
+model directly; rather the view is the passive recipient of data from
+the model.
+
+<P>First, imagine we have objects of type <TT>User</TT> that we will pull from a
+simulated database:
+
+<FONT SIZE=2><PRE>
+public static class User {
+    String name;
+    int age;
+    public User(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    public String getName() { return name; }
+    public int getAge() { return age; }
+}
+</PRE></FONT>
+
+
+
+<P>Our database is just a static list:
+
+<FONT SIZE=2><PRE>
+static User[] users = new User[] {
+    new User("Boris", 39),
+    new User("Natasha", 31),
+    new User("Jorge", 25),
+    new User("Vladimir", 28)
+};
+</PRE></FONT>
+
+
+
+<P>Here is my simple overall page design template, <TT>page.st</TT>:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;$title$&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;$title$&lt;/h1&gt;
+
+$body$
+
+&lt;/body&gt;
+&lt;/html&gt;
+</PRE></FONT>
+
+
+
+<P>The body attribute of <TT>page.st</TT> will be set to the following template
+<TT>users.inline.st</TT> by my web server infrastructure (part of the controller):
+
+<FONT SIZE=2><PRE>
+&lt;table border=1&gt;
+$users:{
+  &lt;tr&gt;
+    &lt;td&gt;$it.name$&lt;/td&gt;&lt;td&gt;$it.age$&lt;/td&gt;
+  &lt;/tr&gt;
+}$
+&lt;/table&gt;
+</PRE></FONT>
+
+
+
+<P>Again, <TT>it</TT> is the default attribute passed to a template when you
+apply that template to an attribute or attributes.  <TT>it.name</TT> gets
+the <TT>name</TT> property, if it exists, from the <TT>it</TT> object ala
+JavaBeans.  That is, <TT>StringTemplate</TT> uses reflection to call the
+<TT>getName()</TT> method on the incoming object.  By using reflection, I
+avoid a type dependence between model and view.
+
+<P>Now, imagine the server and templates are set up to format data.  My
+page definition is part of the controller that pulls data from the
+model (the database) and pushes into the view (the template).  That is
+all the page definition should do--interpret the data and set some
+attributes in the view.  The view only formats data and does no
+interpretation.
+
+<FONT SIZE=2><PRE>
+public static class UserListPage extends SamplePage {
+    /** This "controller" pulls from "model" and pushes to "view" */
+    public void generateBody(StringTemplate bodyST) throws Exception {
+        User[] list = users; // normally pull from database
+        // filter list if you want here (not in template)
+        bodyST.setAttribute("users", list);
+    }
+
+    public String getTitle() { return "User List"; }
+}
+</PRE></FONT>
+
+
+
+<P>Notice that the controller and model have no HTML in them at all and
+that the template has no code with side-effects or logic that can
+break the model-view separation.  If you wanted to only see users with
+age &lt; 30, you would filter the list in <TT>generateBody()</TT> rather than
+alter your template.  The template only displays information once the
+controller pulls the right data from the model.
+
+<P>Pushing factorization further, you could make a <TT>row.st</TT> component in
+order to reuse the table row HTML:
+
+<FONT SIZE=2><PRE>
+&lt;tr&gt;
+  &lt;td&gt;$it.name$&lt;/td&gt;&lt;td&gt;$it.age$&lt;/td&gt;
+&lt;/tr&gt;
+</PRE></FONT>
+
+
+
+<P>Then the user list template reduces to the more readable:
+
+<FONT SIZE=2><PRE>
+&lt;table border=1&gt;
+$users:row()$
+&lt;/table&gt;
+</PRE></FONT>
+
+
+
+<P>Naturally, you could go one step further and make another component
+for the entire table (putting it in file <TT>table.st</TT>):
+
+<FONT SIZE=2><PRE>
+&lt;table border=1&gt;
+$elements:row()$
+&lt;/table&gt;
+</PRE></FONT>
+
+
+
+<P>then the body template would simply be:
+
+<FONT SIZE=2><PRE>
+$table(elements=users)$
+</PRE></FONT>
+
+
+<H2>Complete Grammar</H2>
+
+
+<P><TT>StringTemplate</TT> has multiple grammars that describe templates at varying degrees of detail.  At the grossest level of granularity, the <TT>group.g</TT> grammar accepts a list of templates with formal template arguments.  Each of these templates is broken up into chunks of literal text and attribute expressions via <TT>template.g</TT>.  The default lexer uses <TT>$...$</TT> delimiters, but the <TT>angle.bracket.template.g</TT> lexer provides <TT>&lt;...&gt;</TT> delimiters.  Each of the attribute expression chunks is processed by <TT>action.g</TT>.  It builds trees (ASTs) representing the operation indicated in the expression.  These ASTs represent the "precompiled" templates, which are evaluated by the tree grammar <TT>eval.g</TT> each time a <TT>StringTemplate</TT> is rendered to string with <TT>toString()</TT>.
+
+<P>The grammar files are:
+<UL>
+<LI><TT>group.g</TT>: read a group file full of templates
+</LI>
+<LI><TT>template.g</TT>: break an individual template into chunks
+</LI>
+<LI><TT>angle.bracket.template.g</TT>: <TT>&lt;...&gt;</TT> template lexer
+</LI>
+<LI><TT>action.g</TT>: parse attribute expressions into ASTs
+</LI>
+<LI><TT>eval.g</TT>: evaluate expression ASTs during <TT>toString()</TT>
+</LI>
+
+</UL>
+
+<P>Anything outside of the <TT>StringTemplate</TT> start/stop delimiters is ignored.  The ANTLR grammar inside the attribute action is:
+
+<FONT SIZE=2><PRE>
+action
+    :   templatesExpr (SEMI optionList)?
+    |   "if" LPAREN ifCondition RPAREN
+    ;
+
+optionList
+    :   "separator" ASSIGN expr
+    ;
+
+ifCondition
+    :   ifAtom
+    |   NOT ifAtom
+    ;
+
+ifAtom
+    :   expr
+    ;
+
+expr:   atom (PLUS atom)*
+    ;
+
+atom:   attribute
+    |   templateInclude
+    |   LPAREN expr RPAREN  // regular old parens
+    ;
+
+templatesExpr
+    :   expr ( COLON template (COMMA template)* )*
+    ;
+
+nonAlternatingTemplateExpr
+    :   expr ( COLON template )*
+    ;
+
+template
+    :   (   namedTemplate       // foo()
+        |   anonymousTemplate   // {foo}
+        )
+    ;
+
+namedTemplate
+    :   ID argList
+    ;
+
+anonymousTemplate
+    :   ANONYMOUS_TEMPLATE
+    ;
+
+attribute
+    :   ID
+    |   objPropertyRef
+    |   STRING
+    |   INT
+    ;
+
+templateInclude
+    :   ID argList
+    |   "super" DOT ID argList
+    ;
+
+objPropertyRef
+    :   ID (DOT ID)+
+    ;
+
+argList
+    :   LPAREN RPAREN
+    |   LPAREN argumentAssignment (COMMA argumentAssignment)* RPAREN
+    ;
+
+argumentAssignment
+    :   ID ASSIGN nonAlternatingTemplateExpr
+    ;
+</PRE></FONT>
+
+
+
+<P>An identifier is:
+
+<FONT SIZE=2><PRE>
+ID  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'/')*
+    ;
+</PRE></FONT>
+
+
+
+<P>Strings are double-quoted with optional embedded escaped characters that are translated (escapes are not translated outside of strings; for example, text outside of attribute expressions do not get escape chars translated except <TT>\\$</TT>, <TT>\\&lt;</TT> and <TT>\\&gt;</TT>).
+
+<FONT SIZE=2><PRE>
+STRING
+    :   '"' (ESC_CHAR | ~'"')* '"'
+    ;
+</PRE></FONT>
+
+
+
+<P>Anonymous templates are enclosed in curlies:
+
+<FONT SIZE=2><PRE>
+ANONYMOUS_TEMPLATE
+    :   '{' (ESC_CHAR | ~'}')* '}'
+    ;
+</PRE></FONT>
+
+
+
+<P>The translated escapes are:
+
+<FONT SIZE=2><PRE>
+ESC_CHAR
+    :   '\\'
+        (   'n'
+        |   'r'
+        |   't'
+        |   'b'
+        |   'f'
+        |   '"'
+        |   '\\'
+        )
+     ;
+</PRE></FONT>
+
+
+
+<P>but other escapes are allowed and ignored.
+
+<P>The other unspecified operators are:
+
+<FONT SIZE=2><PRE>
+COMMA  : ',' ;
+DOT    : '.' ;
+ASSIGN : '=' ;
+COLON  : ':' ;
+PLUS   : '+' ;
+SEMI   : ';' ;
+NOT    : '!' ;
+LPAREN : '(' ;
+RPAREN : ')' ;
+</PRE></FONT>
+
+
+<H2>A Common Syntax Question</H2>
+
+
+<P>Why have a template like:
+ 
+
+<FONT SIZE=2><PRE>
+Check this faq entry: $link(url="/faq/view?ID="+id, title="A FAQ")$.
+</PRE></FONT>
+
+
+
+<P>instead of 
+
+<FONT SIZE=2><PRE>
+Check this faq entry: $link(url="/faq/view?ID="+$id$, title="A FAQ")$.
+</PRE></FONT>
+
+
+
+<P>using <TT>$id$</TT> instead of <TT>id</TT> for that attribute reference?  The
+simplest answer is that you are already within the scope of an
+attribute expression between the <TT>$...$</TT> and hence <TT>StringTemplate</TT>
+knows that <TT>id</TT> must be a reference to an attribute by the grammar
+alone.  The template delimiters mark the beginning and end of what
+<TT>StringTemplate</TT> cares about.
+
+<P>Another way to look at it is the following.  Surely syntax (i) makes
+the most sense:
+
+<P>(i)   <TT>SELECT $col+blort$ FROM $table$</TT>
+
+<P>(ii)  <TT>SELECT $$col$+$blort$$ FROM $table$</TT>
+
+<P>(iii) <TT>SELECT $col$+$blort$ FROM $table$</TT>
+
+<P>Syntax (ii) is rather verbose and redundant wouldn't you say?  Syntax
+(iii) doesn't even work because the + is outside the realm of
+<TT>StringTemplate</TT> delimiters.
+
+<P></BODY>
+</HTML>
