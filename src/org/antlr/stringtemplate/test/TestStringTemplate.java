@@ -130,7 +130,7 @@ public class TestStringTemplate extends TestSuite {
         catch (NoSuchElementException e) {
             error = e.getMessage();
         }
-        String expecting = "no such attribute: foo in template t or in enclosing template";
+        String expecting = "no such attribute: foo in template context [t]";
         assertEqual(error, expecting);
 
         // check setting known arg
@@ -203,7 +203,7 @@ public class TestStringTemplate extends TestSuite {
         catch (NoSuchElementException iae) {
             error = iae.getMessage();
         }
-        String expecting = "no such attribute: font in template body or in enclosing template";
+        String expecting = "no such attribute: font in template context [page body]";
         assertEqual(error, expecting);
     }
 
@@ -237,7 +237,7 @@ public class TestStringTemplate extends TestSuite {
         catch (NoSuchElementException iae) {
             error = iae.getMessage();
         }
-        String expecting = "no such attribute: font in template bold or in enclosing template";
+        String expecting = "no such attribute: font in template context [page bold]";
         assertEqual(error, expecting);
     }
 
@@ -256,7 +256,7 @@ public class TestStringTemplate extends TestSuite {
         catch (NoSuchElementException iae) {
             error = iae.getMessage();
         }
-        String expecting = "no such attribute: name in template bold";
+        String expecting = "no such attribute: name in template context [page bold]";
         assertEqual(error, expecting);
     }
 
@@ -275,7 +275,7 @@ public class TestStringTemplate extends TestSuite {
         catch (NoSuchElementException nse) {
             error = nse.getMessage();
         }
-        String expecting = "no such attribute: it in template bold";
+        String expecting = "no such attribute: it in template context [page bold]";
         assertEqual(error, expecting);
     }
 

@@ -617,7 +617,8 @@ public class StringTemplate {
         if ( formalArguments!=FormalArgument.UNKNOWN &&
              getFormalArgument(name)==null )
         {
-            throw new NoSuchElementException("no such attribute: "+name+" in template "+getName()+" or in enclosing template");
+            throw new NoSuchElementException("no such attribute: "+name+
+											 " in template context "+getEnclosingInstanceStackString());
         }
 		if ( value == null ) {
 			return;
@@ -1090,7 +1091,8 @@ public class StringTemplate {
         }
         FormalArgument formalArg = lookupFormalArgument(attribute);
         if ( formalArg == null ) {
-            throw new NoSuchElementException("no such attribute: "+attribute);
+			throw new NoSuchElementException("no such attribute: "+attribute+
+											 " in template context "+getEnclosingInstanceStackString());
         }
     }
 
@@ -1118,6 +1120,19 @@ public class StringTemplate {
         // can do the reverse, but will have lots of false warnings :(
     }
 
+	/** If an instance of x is enclosed in a y which is in a z, return
+	 *  a String of these instance names in order from topmost to lowest;
+	 *  here that would be "[z y x]".
+	 */
+    public String getEnclosingInstanceStackString() {
+		List names = new LinkedList();
+		StringTemplate p = this;
+		while ( p!=null ) {
+			names.add(0,p.getName());
+			p = p.enclosingInstance;
+		}
+		return names.toString().replaceAll(",","");
+	}
 
     /** Compute a bitset of valid cardinality for an actual attribute value.
      *  A length of 0, satisfies OPTIONAL|ZERO_OR_MORE

@@ -297,13 +297,7 @@ public ActionEvaluator() {
 				match(_t,ID);
 				_t = _t.getNextSibling();
 				
-				try {
 				value=self.getAttribute(i3.getText());
-				}
-				catch (NoSuchElementException nse) {
-				// rethrow with more precise error message
-				throw new NoSuchElementException(nse.getMessage()+" in template "+self.getName());
-				}
 				
 				break;
 			}
