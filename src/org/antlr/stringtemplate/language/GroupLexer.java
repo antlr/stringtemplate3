@@ -1,8 +1,8 @@
-// $ANTLR 2.7.5 (20051203): "group.g" -> "GroupLexer.java"$
+// $ANTLR 2.7.5rc2 (2005-01-08): "group.g" -> "GroupLexer.java"$
 
 /*
  [The "BSD licence"]
- Copyright (c) 2003-2005 Terence Parr
+ Copyright (c) 2003-2004 Terence Parr
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without

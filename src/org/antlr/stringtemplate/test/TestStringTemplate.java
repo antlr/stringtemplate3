@@ -1681,6 +1681,25 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(f.toString(), expecting);
 	}
 
+	public void testIndirectTemplateWithArgsApplication() throws Exception {
+		String templates =
+				"group dork;"+newline +
+				""+newline +
+				"test(name) ::= <<" +
+				"<(name)(a=\"foo\")>"+newline +
+				">>"+newline+
+				"first(a) ::= \"the first: <a>\""+newline +
+				"second(a) ::= \"the second <a>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate f = group.getInstanceOf("test");
+		f.setAttribute("name", "first");
+		String expecting = "the first: foo";
+		assertEqual(f.toString(), expecting);
+	}
+
 	public void testNullIndirectTemplateApplication() throws Exception {
 		String templates =
 				"group dork;"+newline +
@@ -2144,4 +2163,18 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(results, expecting);
 	}
 
+	public void testComputedPropertyName() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"variable property $propName$=$v.(propName)$");
+		t.setAttribute("v", new Decl("i","int"));
+		t.setAttribute("propName", "type");
+		String expecting="variable property type=int";
+		String result = t.toString();
+		assertEqual(errors.toString(), "");
+		assertEqual(result, expecting);
+	}
 }

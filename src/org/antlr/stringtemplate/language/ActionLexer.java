@@ -1,8 +1,8 @@
-// $ANTLR 2.7.5 (20051203): "action.g" -> "ActionLexer.java"$
+// $ANTLR 2.7.5rc2 (2005-01-08): "action.g" -> "ActionLexer.java"$
 
 /*
  [The "BSD licence"]
- Copyright (c) 2003-2005 Terence Parr
+ Copyright (c) 2003-2004 Terence Parr
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@ public ActionLexer(LexerSharedInputState state) {
 	literals = new Hashtable();
 	literals.put(new ANTLRHashString("separator", this), new Integer(13));
 	literals.put(new ANTLRHashString("if", this), new Integer(7));
-	literals.put(new ANTLRHashString("super", this), new Integer(20));
+	literals.put(new ANTLRHashString("super", this), new Integer(21));
 }
 
 public Token nextToken() throws TokenStreamException {
@@ -252,7 +252,7 @@ tryAgain:
 		}
 		}
 		{
-		_loop38:
+		_loop39:
 		do {
 			switch ( LA(1)) {
 			case 'a':  case 'b':  case 'c':  case 'd':
@@ -296,7 +296,7 @@ tryAgain:
 			}
 			default:
 			{
-				break _loop38;
+				break _loop39;
 			}
 			}
 		} while (true);
@@ -315,17 +315,17 @@ tryAgain:
 		int _saveIndex;
 		
 		{
-		int _cnt41=0;
-		_loop41:
+		int _cnt42=0;
+		_loop42:
 		do {
 			if (((LA(1) >= '0' && LA(1) <= '9'))) {
 				matchRange('0','9');
 			}
 			else {
-				if ( _cnt41>=1 ) { break _loop41; } else {throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine(), getColumn());}
+				if ( _cnt42>=1 ) { break _loop42; } else {throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine(), getColumn());}
 			}
 			
-			_cnt41++;
+			_cnt42++;
 		} while (true);
 		}
 		if ( _createToken && _token==null && _ttype!=Token.SKIP ) {
@@ -344,7 +344,7 @@ tryAgain:
 		match('"');
 		text.setLength(_saveIndex);
 		{
-		_loop44:
+		_loop45:
 		do {
 			if ((LA(1)=='\\')) {
 				mESC_CHAR(false,true);
@@ -353,7 +353,7 @@ tryAgain:
 				matchNot('"');
 			}
 			else {
-				break _loop44;
+				break _loop45;
 			}
 			
 		} while (true);
@@ -424,7 +424,7 @@ tryAgain:
 		match('{');
 		text.setLength(_saveIndex);
 		{
-		_loop47:
+		_loop48:
 		do {
 			switch ( LA(1)) {
 			case '\\':
@@ -442,7 +442,7 @@ tryAgain:
 					matchNot('}');
 				}
 			else {
-				break _loop47;
+				break _loop48;
 			}
 			}
 		} while (true);
@@ -464,7 +464,7 @@ tryAgain:
 		
 		match('{');
 		{
-		_loop50:
+		_loop51:
 		do {
 			switch ( LA(1)) {
 			case '\\':
@@ -482,7 +482,7 @@ tryAgain:
 					matchNot('}');
 				}
 			else {
-				break _loop50;
+				break _loop51;
 			}
 			}
 		} while (true);
@@ -618,8 +618,8 @@ tryAgain:
 		int _saveIndex;
 		
 		{
-		int _cnt64=0;
-		_loop64:
+		int _cnt65=0;
+		_loop65:
 		do {
 			switch ( LA(1)) {
 			case ' ':
@@ -645,10 +645,10 @@ tryAgain:
 			}
 			default:
 			{
-				if ( _cnt64>=1 ) { break _loop64; } else {throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine(), getColumn());}
+				if ( _cnt65>=1 ) { break _loop65; } else {throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine(), getColumn());}
 			}
 			}
-			_cnt64++;
+			_cnt65++;
 		} while (true);
 		}
 		_ttype = Token.SKIP;

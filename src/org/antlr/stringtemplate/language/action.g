@@ -81,6 +81,10 @@ optionList! returns [Map opts=new HashMap()]
     :   "separator" ASSIGN e:expr {opts.put("separator",#e);}
     ;
 
+templatesExpr
+    :   expr ( c:COLON^ {#c.setType(APPLY);} template (COMMA! template)* )*
+    ;
+
 ifCondition
 	:   ifAtom
 	|   NOT^ ifAtom
@@ -90,18 +94,36 @@ ifAtom
     :   expr
     ;
 
-expr:   atom (PLUS^ atom)*
+expr:   primaryExpr (PLUS^ primaryExpr)*
     ;
 
-atom:   attribute
+primaryExpr
+    :	atom
+    	( DOT^
+     	  ( ID
+          | valueExpr
+          )
+     	)*
     |   (templateInclude)=>templateInclude  // (see past parens to arglist)
-    |   eval:LPAREN^ templatesExpr RPAREN!  // parens implies "evaluate to string"
-        {#eval.setType(VALUE);}
+    |   valueExpr
     ;
 
-templatesExpr
-    :   expr ( c:COLON^ {#c.setType(APPLY);} template (COMMA! template)* )*
+valueExpr
+	:   eval:LPAREN^ templatesExpr RPAREN!
+        {#eval.setType(VALUE); #eval.setText("value");}
     ;
+
+/*
+objPropertyRef
+    :   ID
+    	( DOT^
+    	  ( ID
+          | lp:LPAREN^ expr RPAREN!
+            {#lp.setType(VALUE); #lp.setText("value");}
+          )
+    	)+
+    ;
+    */
 
 nonAlternatingTemplateExpr
     :   expr ( c:COLON^ {#c.setType(APPLY);} template )*
@@ -131,9 +153,7 @@ anonymousTemplate
         }
 	;
 
-attribute
-    :   ID
-    |   objPropertyRef
+atom:   ID
 	|	STRING
     |   INT
     ;
@@ -153,10 +173,6 @@ indirectTemplate!
     :   LPAREN e:expr RPAREN args:argList
         {#indirectTemplate = #(#[VALUE,"value"],e,args);}
 	;
-
-objPropertyRef
-    :   ID (DOT^ ID)+
-    ;
 
 argList
 	:!	LPAREN! RPAREN! {#argList = #[ARGS,"ARGS"];}

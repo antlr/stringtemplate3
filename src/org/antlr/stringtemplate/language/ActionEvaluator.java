@@ -1,8 +1,8 @@
-// $ANTLR 2.7.5 (20051203): "eval.g" -> "ActionEvaluator.java"$
+// $ANTLR 2.7.5rc2 (2005-01-08): "eval.g" -> "ActionEvaluator.java"$
 
 /*
  [The "BSD licence"]
- Copyright (c) 2003-2005 Terence Parr
+ Copyright (c) 2003-2004 Terence Parr
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -126,8 +126,8 @@ public ActionEvaluator() {
 				_t = _retTree;
 				break;
 			}
-			case ID:
 			case DOT:
+			case ID:
 			case STRING:
 			case INT:
 			{
@@ -241,6 +241,8 @@ public ActionEvaluator() {
 		org.antlr.stringtemplate.language.StringTemplateAST s = null;
 		
 		Object obj = null;
+		String propName = null;
+		Object e = null;
 		
 		
 		try {      // for error handling
@@ -252,14 +254,41 @@ public ActionEvaluator() {
 				org.antlr.stringtemplate.language.StringTemplateAST tmp4_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 				match(_t,DOT);
 				_t = _t.getFirstChild();
-				obj=attribute(_t);
+				obj=expr(_t);
 				_t = _retTree;
-				prop = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
-				match(_t,ID);
-				_t = _t.getNextSibling();
+				{
+				if (_t==null) _t=ASTNULL;
+				switch ( _t.getType()) {
+				case ID:
+				{
+					prop = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+					match(_t,ID);
+					_t = _t.getNextSibling();
+					propName = prop.getText();
+					break;
+				}
+				case VALUE:
+				{
+					AST __t23 = _t;
+					org.antlr.stringtemplate.language.StringTemplateAST tmp5_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+					match(_t,VALUE);
+					_t = _t.getFirstChild();
+					e=expr(_t);
+					_t = _retTree;
+					_t = __t23;
+					_t = _t.getNextSibling();
+					if (e!=null) {propName=e.toString();}
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(_t);
+				}
+				}
+				}
 				_t = __t21;
 				_t = _t.getNextSibling();
-				value = chunk.getObjectProperty(self,obj,prop.getText());
+				value = chunk.getObjectProperty(self,obj,propName);
 				break;
 			}
 			case ID:
@@ -323,7 +352,7 @@ public ActionEvaluator() {
 		
 		try {      // for error handling
 			AST __t6 = _t;
-			org.antlr.stringtemplate.language.StringTemplateAST tmp5_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+			org.antlr.stringtemplate.language.StringTemplateAST tmp6_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 			match(_t,INCLUDE);
 			_t = _t.getFirstChild();
 			{
@@ -343,7 +372,7 @@ public ActionEvaluator() {
 			case VALUE:
 			{
 				AST __t8 = _t;
-				org.antlr.stringtemplate.language.StringTemplateAST tmp6_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+				org.antlr.stringtemplate.language.StringTemplateAST tmp7_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 				match(_t,VALUE);
 				_t = _t.getFirstChild();
 				n=expr(_t);
@@ -393,7 +422,7 @@ public ActionEvaluator() {
 		
 		try {      // for error handling
 			AST __t14 = _t;
-			org.antlr.stringtemplate.language.StringTemplateAST tmp7_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+			org.antlr.stringtemplate.language.StringTemplateAST tmp8_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 			match(_t,TEMPLATE);
 			_t = _t.getFirstChild();
 			{
@@ -432,7 +461,7 @@ public ActionEvaluator() {
 			case VALUE:
 			{
 				AST __t16 = _t;
-				org.antlr.stringtemplate.language.StringTemplateAST tmp8_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+				org.antlr.stringtemplate.language.StringTemplateAST tmp9_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 				match(_t,VALUE);
 				_t = _t.getFirstChild();
 				n=expr(_t);
@@ -484,12 +513,12 @@ public ActionEvaluator() {
 		
 		
 		try {      // for error handling
-			AST __t23 = _t;
-			org.antlr.stringtemplate.language.StringTemplateAST tmp9_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+			AST __t25 = _t;
+			org.antlr.stringtemplate.language.StringTemplateAST tmp10_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 			match(_t,ARGS);
 			_t = _t.getFirstChild();
 			{
-			_loop25:
+			_loop27:
 			do {
 				if (_t==null) _t=ASTNULL;
 				if ((_t.getType()==ASSIGN)) {
@@ -497,12 +526,12 @@ public ActionEvaluator() {
 					_t = _retTree;
 				}
 				else {
-					break _loop25;
+					break _loop27;
 				}
 				
 			} while (true);
 			}
-			_t = __t23;
+			_t = __t25;
 			_t = _t.getNextSibling();
 		}
 		catch (RecognitionException ex) {
@@ -528,8 +557,8 @@ public ActionEvaluator() {
 			case INCLUDE:
 			case VALUE:
 			case PLUS:
-			case ID:
 			case DOT:
+			case ID:
 			case STRING:
 			case INT:
 			{
@@ -541,7 +570,7 @@ public ActionEvaluator() {
 			case NOT:
 			{
 				AST __t18 = _t;
-				org.antlr.stringtemplate.language.StringTemplateAST tmp10_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+				org.antlr.stringtemplate.language.StringTemplateAST tmp11_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 				match(_t,NOT);
 				_t = _t.getFirstChild();
 				a=ifAtom(_t);
@@ -593,8 +622,8 @@ public ActionEvaluator() {
 		
 		
 		try {      // for error handling
-			AST __t27 = _t;
-			org.antlr.stringtemplate.language.StringTemplateAST tmp11_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
+			AST __t29 = _t;
+			org.antlr.stringtemplate.language.StringTemplateAST tmp12_AST_in = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
 			match(_t,ASSIGN);
 			_t = _t.getFirstChild();
 			arg = (org.antlr.stringtemplate.language.StringTemplateAST)_t;
@@ -606,7 +635,7 @@ public ActionEvaluator() {
 				       if ( e!=null )
 				           self.rawSetAttribute(argumentContext,arg.getText(),e);
 				
-			_t = __t27;
+			_t = __t29;
 			_t = _t.getNextSibling();
 		}
 		catch (RecognitionException ex) {
@@ -633,13 +662,13 @@ public ActionEvaluator() {
 		"RPAREN",
 		"\"separator\"",
 		"ASSIGN",
-		"NOT",
-		"PLUS",
 		"COLON",
 		"COMMA",
+		"NOT",
+		"PLUS",
+		"DOT",
 		"ID",
 		"\"super\"",
-		"DOT",
 		"ANONYMOUS_TEMPLATE",
 		"STRING",
 		"INT",

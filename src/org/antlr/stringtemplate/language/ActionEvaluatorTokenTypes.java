@@ -1,8 +1,8 @@
-// $ANTLR 2.7.5 (20051203): "eval.g" -> "ActionEvaluator.java"$
+// $ANTLR 2.7.5rc2 (2005-01-08): "eval.g" -> "ActionEvaluator.java"$
 
 /*
  [The "BSD licence"]
- Copyright (c) 2003-2005 Terence Parr
+ Copyright (c) 2003-2004 Terence Parr
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -47,13 +47,13 @@ public interface ActionEvaluatorTokenTypes {
 	int RPAREN = 12;
 	int LITERAL_separator = 13;
 	int ASSIGN = 14;
-	int NOT = 15;
-	int PLUS = 16;
-	int COLON = 17;
-	int COMMA = 18;
-	int ID = 19;
-	int LITERAL_super = 20;
-	int DOT = 21;
+	int COLON = 15;
+	int COMMA = 16;
+	int NOT = 17;
+	int PLUS = 18;
+	int DOT = 19;
+	int ID = 20;
+	int LITERAL_super = 21;
 	int ANONYMOUS_TEMPLATE = 22;
 	int STRING = 23;
 	int INT = 24;

@@ -189,9 +189,16 @@ ifAtom returns [Object value=null]
 attribute returns [Object value=null]
 {
     Object obj = null;
+    String propName = null;
+    Object e = null;
 }
-    :   #( DOT obj=attribute prop:ID )
-        {value = chunk.getObjectProperty(self,obj,prop.getText());}
+    :   #( DOT obj=expr
+           ( prop:ID {propName = prop.getText();}
+           | #(VALUE e=expr)
+             {if (e!=null) {propName=e.toString();}}
+           )
+         )
+        {value = chunk.getObjectProperty(self,obj,propName);}
 
     |   i3:ID
         {
