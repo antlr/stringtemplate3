@@ -1,0 +1,128 @@
+The StringTemplate Template Engine
+
+Brought to you by that maniac that brings you
+@(http://www.antlr.org, ANTLR)!
+
+Terence Parr \
+University of San Francisco \
+{parrt@cs.usfca.edu} \
+_Copyright 2003-2005_ \
+@(http://www.stringtemplate.org) \
+({StringTemplate} released under BSD License)
+
+*Download 2.1*
+
+o @(http://www.antlr.org/download/stringtemplate-2.1.tar.gz, StringTemplate 2.1) (binaries, source, doc)
+o @(http://www.stringtemplate.org/doc/release-2.1.tml, 2.1 Release Notes)
+
+*Ports*
+
+o @(http://www.antlr.org/share/1107443152323/stringtemplate.zip, StringTemplate 2.1 C# Port) 
+o Python version coming early 2005!
+
+*Introduction*
+
+{StringTemplate} is a template engine for generating source code, web pages, emails, or any other formatted text output.  It evolved over years of
+effort developing the following sites:
+
+o @(http://www.jguru.com)
+o @(http://www.knowspam.net)
+o @(http://www.peerscope.com)
+o @(http://www.antlr.org)
+
+A template engine is a code generator that emits text using templates
+embedded with actions or data references.  Engines generally espouse a
+model-view pattern in an attempt to separate the data source and
+template.  A container such as a Servlet web server may act as a
+controller, orchestrating instantiation and controlling model-view
+interaction.  The 2.0 release makes {StringTemplate} much better at 
+code generation while not detracting from the previous HTML generation-centric
+focus.
+
+The simplest way to describe {StringTemplate} is as a "document" with
+holes in it where you can stick values.  The main distinguishing
+characteristic between it and the many other engines is
+{StringTemplate}'s strict enforcement of separation between model
+(business logic) and view (template).
+
+My recent WWW2004 paper, "@(http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf, Enforcing Strict Model-View Separation in Template Engines)", was @(http://www.www2004.org/awards.htm, nominated for best paper).
+
+StringTemplate has spawned a number of engines:
+
+o @(http://www.forward.com.au/webstringtemplates, WebStringTemplates)
+o @(http://www.adersoftware.com/index.cfm?page=templateEngine, Ader TemplateEngine)
+
+*Evaluating StringTemplate*:
+
+All template engines are trying to solve the same problem so you
+should be surprised if {StringTemplate} looked different from other
+engines.  {StringTemplate} strives to provide sufficient power while
+limiting certain functionality to enforce *strict separation* of view
+from model and controller.  Ask not about {StringTemplate}'s
+expressivity, ask about how well it enforces separation.  My 5 years
+experience building commercial sites indicates that you don't have to
+sacrifice enforcement of separation to get sufficient power.  You might find
+my @(http://www.stringtemplate.org/www2004.ppt, slides from the WWW2004 conference) a useful quick introduction.
+
+*Current release is 2.1*:
+
+o @(http://www.stringtemplate.org/doc/doc.tml, Documentation)
+o @(http://www.stringtemplate.org/doc/api/overview-summary.html, API)
+o @(http://www.stringtemplate.org/bugs.tml, Bugs/Requests/Changes)
+
+*Examples*:
+
+o @(http://www.codegeneration.net/tiki-read_article.php?articleId=65, Generating Java and XML Using StringTemplate)
+o @(http://www.stringtemplate.org/www2004.ppt, slides from the WWW2004 conference)
+o @(http://www.stringtemplate.org/MSR-StringTemplate.ppt, slides from my presentation at Microsoft Research, July 2004)
+o @(http://www.stringtemplate.org/StringTemplateEvolution.ppt, slides from my presentation at UC Berkeley's Harmonia group, December 2004)
+o @(http://homepages.ihug.com.au/~zenaan/zenaan/files/#stringtemplate, An example by Zenaan Harkness using StringTemplate with tables)
+
+o Check the documentation and the paper.
+
+*Showcase*:
+
+o @(http://www.squarespace.com, Squarespace.com web publishing site).  StringTemplate is used in their production site; templates are exposed to bloggers.  Founder Anthony Casalena says,
+  "StringTemplate was PERFECT for this.  We needed a system that would:
+(1) Be extremely fast/simple and (2) ENSURE that users can do nothing to harm our system.  Velocity would have been nearly impossible to enforce security with.  There
+were numerous attacks related to invoking classLoaders by referencing
+getClass on random objects, not to mention that the very paradigm of the
+templates caused us to write code that did not strictly enforce view vs.
+controller, further resulting in code _we_ had written that could have been
+insecure in many cases.  It wasn't just impossible to stop users, but also
+ourselves in many cases."
+
+*Publications*:
+
+The following publication was nominated for *best paper* at
+WWW 2004 conference: @(http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf, Enforcing Strict Model-View Separation in Template Engines).
+Here is the abstract:
+
+  "The mantra of every experienced web application developer is the
+same: thou shalt separate business logic from display.  Ironically,
+almost all template engines allow violation of this separation
+principle, which is the very impetus for HTML template engine
+development. This situation is due mostly to a lack of formal
+definition of separation and fear that enforcing separation
+emasculates a template's power.  I show that not only is strict
+separation a worthy design principle, but that you can enforce
+separation while providing a potent template engine.  I demonstrate my
+StringTemplate engine, used to build jGuru.com and other commercial
+sites, at work solving some nontrivial generational tasks."
+
+  "My goal is to formalize the study of template engines, thus, providing
+a common nomenclature, a means of classifying template generational
+power, and a way to leverage interesting results from formal language
+theory.  I classify three types of restricted templates analogous to
+Chomsky's type 1..3 grammar classes and formally define separation
+including the rules that embody separation."
+
+  "Because this paper provides a clear definition of model-view
+separation, template engine designers may no longer blindly claim
+enforcement of separation.  Moreover, given theoretical arguments and
+empirical evidence, programmers no longer have an excuse to entangle
+model-view."
+
+*Requires*:
+
+o @(http://www.antlr.org/download.html, ANTLR 2.7.2 or later).
