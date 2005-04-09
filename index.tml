@@ -2,8 +2,8 @@ StringTemplate: Java Template Engine
 
 _Code generation and dynamic web page generation at its finest!_
 
-Brought to you by that maniac that brings you
-@(http://www.antlr.org, ANTLR)!
+Brought to you by that maniac that brings you the
+@(http://www.antlr.org, ANTLR Parser Generator)!
 
 Terence Parr \
 University of San Francisco \
@@ -14,12 +14,12 @@ _Copyright 2003-2005_ \
 
 *Download 2.1*
 
-o @(http://www.antlr.org/download/stringtemplate-2.1.tar.gz, StringTemplate 2.1) (binaries, source, doc)
+o @(http://www.antlr.org/download/stringtemplate-2.1.tar.gz, StringTemplate template engine 2.1) (binaries, source, doc)
 o @(http://www.stringtemplate.org/doc/release-2.1.tml, 2.1 Release Notes)
 
 *Ports*
 
-o @(http://www.antlr.org/share/1107443152323/stringtemplate.zip, StringTemplate 2.1 C# Port) 
+o @(http://www.antlr.org/share/1107443152323/stringtemplate.zip, StringTemplate template engine 2.1 C# Port) 
 o Python version coming early 2005!
 
 *Introduction*
@@ -72,13 +72,14 @@ o @(http://www.stringtemplate.org/doc/doc.tml, Documentation)
 o @(http://www.stringtemplate.org/doc/api/overview-summary.html, API)
 o @(http://www.stringtemplate.org/bugs.tml, Bugs/Requests/Changes)
 
-Subscribe to the @(http://www.antlr.org:8080/mailman/listinfo/stringtemplate-interest, StringTemplate interest list) and check out the @(http://www.antlr.org:8080/pipermail/stringtemplate-interest/, list archives).
+Subscribe to the @(http://www.antlr.org:8080/mailman/listinfo/stringtemplate-interest, StringTemplate template engine interest list) and check out the @(http://www.antlr.org:8080/pipermail/stringtemplate-interest/, list archives).
 
 *Examples*:
 
 o @(http://www.codegeneration.net/tiki-read_article.php?articleId=77, Language Translation Using ANTLR and StringTemplate)
 o @(http://www.codegeneration.net/tiki-read_article.php?articleId=65, Generating Java and XML Using StringTemplate)
 o @(http://www.stringtemplate.org/www2004.ppt, slides from the WWW2004 conference)
+o @(http://www.stringtemplate.org/BEA-StringTemplate.ppt, slides from my presentation at BEA Systems, April 2005)
 o @(http://www.stringtemplate.org/MSR-StringTemplate.ppt, slides from my presentation at Microsoft Research, July 2004)
 o @(http://www.stringtemplate.org/StringTemplateEvolution.ppt, slides from my presentation at UC Berkeley's Harmonia group, December 2004)
 o @(http://www.stringtemplate.org/template-based-email-pjug-2005-03-22-final.ppt, Sean Sullivan's Portland Java User Group slides).  _Template-based Email_.  Sean says "I gave a demonstration of StringTemplate and JavaMail.  I'm sending a copy of the slides to you.  The slides are short and sweet. I gave a more extensive demo to the user group."
@@ -131,4 +132,4 @@ model-view."
 
 *Requires*:
 
-o @(http://www.antlr.org/download.html, ANTLR 2.7.2 or later).
+o @(http://www.antlr.org/download.html, ANTLR parser generator) 2.7.2 or later
