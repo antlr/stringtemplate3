@@ -19,18 +19,22 @@ o @(http://www.stringtemplate.org/doc/release-2.1.tml, 2.1 Release Notes)
 
 *Ports*
 
-o @(http://www.antlr.org/share/1107443152323/stringtemplate.zip, StringTemplate template engine 2.1 C# Port) 
-o Python version coming early 2005!
+o @(http://www.antlr.org/share/1107443152323/stringtemplate.zip, C# StringTemplate template engine 2.1) by Steve Sarandos
+o @(http://www.antlr.org/download/PyStringTemplate-2.1.tar.gz, Python StringTemplate template engine 2.1) by Marq Kole
+
+*Documentation*
+
+o @(http://www.stringtemplate.org/doc/doc.tml, Java Documentation)
+o @(http://www.stringtemplate.org/doc/python-doc.html, Python Documentation)
+o @(http://www.stringtemplate.org/doc/api/overview-summary.html, API)
+o @(http://www.stringtemplate.org/bugs.tml, Bugs/Requests/Changes)
+o @(http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf, Enforcing Strict Model-View Separation in Template Engines) [@(http://www.www2004.org/awards.htm,nominated for best paper)].
+
+Please subscribe to the @(http://www.antlr.org:8080/mailman/listinfo/stringtemplate-interest, StringTemplate template engine interest list) and check out the @(http://www.antlr.org:8080/pipermail/stringtemplate-interest/, StringTemplate list archives).
 
 *Introduction*
 
-{StringTemplate} is a java template engine (with ports for C# and Python) for generating source code, web pages, emails, or any other formatted text output.  It evolved over years of
-effort developing the following sites:
-
-o @(http://www.jguru.com)
-o @(http://www.knowspam.net)
-o @(http://www.peerscope.com)
-o @(http://www.antlr.org)
+{StringTemplate} is a java template engine (with ports for C# and Python) for generating source code, web pages, emails, or any other formatted text output.  It evolved over years of effort developing @(http://www.jguru.com, jGuru.com).  {StringTemplate} also generates the antlr.org web pages.
 
 A template engine is a code generator that emits text using templates
 embedded with actions or data references.  Engines generally espouse a
@@ -46,8 +50,6 @@ holes in it where you can stick values.  The main distinguishing
 characteristic between it and the many other engines is
 {StringTemplate}'s strict enforcement of separation between model
 (business logic) and view (template).
-
-My recent WWW2004 paper, "@(http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf, Enforcing Strict Model-View Separation in Template Engines)", was @(http://www.www2004.org/awards.htm, nominated for best paper).
 
 StringTemplate has spawned a number of engines:
 
@@ -65,14 +67,6 @@ expressivity, ask about how well it enforces separation.  My 5 years
 experience building commercial sites indicates that you don't have to
 sacrifice enforcement of separation to get sufficient power.  You might find
 my @(http://www.stringtemplate.org/www2004.ppt, slides from the WWW2004 conference) a useful quick introduction.
-
-*Current release is 2.1*:
-
-o @(http://www.stringtemplate.org/doc/doc.tml, Documentation)
-o @(http://www.stringtemplate.org/doc/api/overview-summary.html, API)
-o @(http://www.stringtemplate.org/bugs.tml, Bugs/Requests/Changes)
-
-Subscribe to the @(http://www.antlr.org:8080/mailman/listinfo/stringtemplate-interest, StringTemplate template engine interest list) and check out the @(http://www.antlr.org:8080/pipermail/stringtemplate-interest/, list archives).
 
 *Examples*:
 
