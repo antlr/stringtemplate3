@@ -468,7 +468,7 @@ that has keys referencable within templates.  For example,
 StringTemplate a = new StringTemplate("$user.name$, $user.phone$");
 HashMap user = new HashMap();
 user.put("name", "Terence");
-user.put("name", "none-of-your-business");
+user.put("phone", "none-of-your-business");
 a.setAttribute("user", user);
 String results = a.toString();
 </PRE></FONT>
