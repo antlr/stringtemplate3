@@ -7,7 +7,7 @@ Brought to you by that maniac that brings you the
 
 Terence Parr \
 University of San Francisco \
-{parrt@cs.usfca.edu} \
+{parrt at cs.usfca.edu} \
 _Copyright 2003-2005_ \
 @(http://www.stringtemplate.org) \
 ({StringTemplate} released under BSD License)
@@ -20,7 +20,9 @@ o @(http://www.stringtemplate.org/doc/release-2.1.tml, 2.1 Release Notes)
 *Ports*
 
 o @(http://www.antlr.org/share/1107443152323/stringtemplate.zip, C# StringTemplate template engine 2.1) by Steve Sarandos
-o @(http://www.antlr.org/download/PyStringTemplate-2.1.tar.gz, Python StringTemplate template engine 2.1) by Marq Kole
+o @(http://www.antlr.org/download/PyStringTemplate-2.1.tar.gz, Python StringTemplate template engine 2.1) by Marq Kole (marq.kole at xs4all dot nl)
+
+These ports need ANTLR C# or Python ports.  Grab @(http://www.antlr.org/download.html, ANTLR parser generator) 2.7.5 or later for these targets.
 
 *Documentation*
 
