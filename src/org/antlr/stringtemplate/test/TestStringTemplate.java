@@ -2189,4 +2189,18 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(errors.toString(), "");
 		assertEqual(result, expecting);
 	}
+
+	public void testNonNullButEmptyIteratorTestsFalse() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplate t = new StringTemplate(group,
+			"$if(users)$\n" +
+			"Users: $users:{$it.name$ }$\n" +
+			"$endif$");
+		t.setAttribute("users", new LinkedList());
+		String expecting="";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
 }

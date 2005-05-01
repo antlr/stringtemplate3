@@ -268,12 +268,27 @@ public class ASTExpr extends Expr {
 	 *  an operator.  Regardless, for practical reasons, I'm going to technically
 	 *  violate my rules as I currently have them defined.  Perhaps for a future
 	 *  version of the paper I will refine the rules.
+	 *
+	 *  Post 2.1, I added a check for non-null Iterators, Collections, ...
+	 *  with size==0 to return false. TJP 5/1/2005
 	 */
 	public boolean testAttributeTrue(Object a) {
-		if ( a!=null && a instanceof Boolean ) {
+		if ( a==null ) {
+			return false;
+		}
+		if ( a instanceof Boolean ) {
 			return ((Boolean)a).booleanValue();
 		}
-		return a!=null;
+		if ( a instanceof Collection ) {
+			return ((Collection)a).size()>0;
+		}
+		if ( a instanceof Map ) {
+			return ((Map)a).size()>0;
+		}
+		if ( a instanceof Iterator ) {
+			return ((Iterator)a).hasNext();
+		}
+		return true; // any other non-null object, return true--it's present
 	}
 
     /** For strings or other objects, catenate and return.
