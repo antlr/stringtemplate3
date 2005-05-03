@@ -230,13 +230,13 @@ public class ASTExpr extends Expr {
 							return value;
 						}
 						catch (IllegalAccessException iae) {
-							self.error("Can't get property "+propertyName+" using method get/is"+methodSuffix+
+							self.error("Can't access property "+propertyName+" using method get/is"+methodSuffix+
 									   " or direct field access from "+c.getName()+" instance", iae);
 						}
 					}
 					catch (NoSuchFieldException nsfe) {
-						self.error("Can't get property "+propertyName+" using method get/is"+methodSuffix+
-								   " or direct field access from "+c.getName()+" instance", nsfe);
+						throw new NoSuchElementException("Class "+c.getName()+" has no such attribute: "+propertyName+
+														 " in template context "+self.getEnclosingInstanceStackString());
 					}
 				}
 			}
