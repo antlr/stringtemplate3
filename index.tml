@@ -57,6 +57,7 @@ StringTemplate has spawned a number of engines:
 
 o @(http://www.forward.com.au/webstringtemplates, WebStringTemplates)
 o @(http://www.adersoftware.com/index.cfm?page=templateEngine, Ader TemplateEngine)
+o @(http://www.daylight.com/meetings/emug04/Dixon/cab.html, ANTES template engine by Scott Dixon)
 
 *Evaluating StringTemplate*:
 
