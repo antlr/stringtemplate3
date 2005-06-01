@@ -41,8 +41,10 @@ public interface TemplateParserTokenTypes {
 	int ELSE = 8;
 	int ENDIF = 9;
 	int EXPR = 10;
-	int ESC = 11;
-	int SUBTEMPLATE = 12;
-	int INDENT = 13;
-	int COMMENT = 14;
+	int IF_EXPR = 11;
+	int ESC = 12;
+	int SUBTEMPLATE = 13;
+	int NESTED_PARENS = 14;
+	int INDENT = 15;
+	int COMMENT = 16;
 }

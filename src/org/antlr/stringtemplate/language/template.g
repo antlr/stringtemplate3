@@ -178,7 +178,7 @@ ACTION
     	options {
     		generateAmbigWarnings=false; // $EXPR$ is ambig with $endif$ etc...
 		}
-	:	'$'! "if" (' '!)* "(" (~')')+ ")" '$'! {$setType(TemplateParser.IF);}
+	:	'$'! "if" (' '!)* "(" IF_EXPR ")" '$'! {$setType(TemplateParser.IF);}
         ( ('\r'!)? '\n'! {newline();})? // ignore any newline right after an IF
     |   '$'! "else" '$'!         {$setType(TemplateParser.ELSE);}
         ( ('\r'!)? '\n'! {newline();})? // ignore any newline right after an ELSE
@@ -201,12 +201,26 @@ EXPR:   ( ESC
     ;
 
 protected
+IF_EXPR:( ESC
+        | ('\r')? '\n' {newline();}
+        | SUBTEMPLATE
+        | NESTED_PARENS
+        | ~')'
+        )+
+    ;
+
+protected
 ESC :   '\\' ('$'|'n'|'t'|'\\'|'"'|'\''|':'|'{'|'}')
     ;
 
 protected
 SUBTEMPLATE
     :    '{' (SUBTEMPLATE|ESC|~'}')+ '}'
+    ;
+
+protected
+NESTED_PARENS
+    :    '(' (options {greedy=false;}:NESTED_PARENS|ESC|~')')+ ')'
     ;
 
 protected

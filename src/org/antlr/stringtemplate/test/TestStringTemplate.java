@@ -851,6 +851,34 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(t.toString(), "SELECT name FROM PERSON WHERE ID=231;");
 	}
 
+	public void testIFCondWithParensTemplate() throws Exception {
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			new StringTemplate(group,
+				"<if(map.(type))><type> <prop>=<map.(type)>;<endif>");
+		HashMap map = new HashMap();
+		map.put("int","0");
+		t.setAttribute("map", map);
+		t.setAttribute("prop", "x");
+		t.setAttribute("type", "int");
+		assertEqual(t.toString(), "int x=0;");
+	}
+
+	public void testIFCondWithParensDollarDelimsTemplate() throws Exception {
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".");
+		StringTemplate t =
+			new StringTemplate(group,
+				"$if(map.(type))$$type$ $prop$=$map.(type)$;$endif$");
+		HashMap map = new HashMap();
+		map.put("int","0");
+		t.setAttribute("map", map);
+		t.setAttribute("prop", "x");
+		t.setAttribute("type", "int");
+		assertEqual(t.toString(), "int x=0;");
+	}
+
 	/** As of 2.0, you can test a boolean value */
 	public void testIFBoolean() throws Exception {
 		StringTemplateGroup group =

@@ -223,8 +223,10 @@ public TemplateParser(ParserSharedInputState state) {
 		"ELSE",
 		"ENDIF",
 		"EXPR",
+		"IF_EXPR",
 		"ESC",
 		"SUBTEMPLATE",
+		"NESTED_PARENS",
 		"INDENT",
 		"COMMENT"
 	};

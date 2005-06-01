@@ -45,4 +45,6 @@ public interface AngleBracketTemplateLexerTokenTypes {
 	int SUBTEMPLATE = 12;
 	int INDENT = 13;
 	int COMMENT = 14;
+	int IF_EXPR = 15;
+	int NESTED_PARENS = 16;
 }
