@@ -123,7 +123,7 @@ A StringTemplate describes an output pattern/language like an exemplar.
  *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-    public static final String VERSION = "2.2b1";
+    public static final String VERSION = "2.2b2";
 
     /** An automatically created aggregate of properties.
      *

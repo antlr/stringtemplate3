@@ -235,8 +235,8 @@ public class ASTExpr extends Expr {
 						}
 					}
 					catch (NoSuchFieldException nsfe) {
-						throw new NoSuchElementException("Class "+c.getName()+" has no such attribute: "+propertyName+
-														 " in template context "+self.getEnclosingInstanceStackString());
+						self.error("Class "+c.getName()+" has no such attribute: "+propertyName+
+								   " in template context "+self.getEnclosingInstanceStackString(), nsfe);
 					}
 				}
 			}
