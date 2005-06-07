@@ -84,7 +84,7 @@ o @(http://homepages.ihug.com.au/~zenaan/zenaan/files/#stringtemplate, An exampl
 
 o Check the documentation and the paper.
 
-*Showcase*:
+*Showcase and testimonials*:
 
 o @(http://www.squarespace.com, Squarespace.com web publishing site).  StringTemplate is used in their production site; templates are exposed to bloggers.  Founder Anthony Casalena says,
   "StringTemplate was PERFECT for this.  We needed a system that would:
@@ -95,6 +95,9 @@ templates caused us to write code that did not strictly enforce view vs.
 controller, further resulting in code _we_ had written that could have been
 insecure in many cases.  It wasn't just impossible to stop users, but also
 ourselves in many cases."
+
+o *Martin Pike* says,
+  "I have been looking for a good, succinct templating mechanism for a long time now, so it was with some excitement that I read your paper Enforcing Model-View Separation in Template Engines'. I promptly downloaded your StringTemplatePackage to use in my latest project, which will use many templates. I have found using StringTemplate most satisfying. I am able to produce clean, obvious code quickly and easily.  I've only just started using StringTemplate (yesterday!), but was quickly effective. The mix of Jython servlets and StringTemplate make for an incredibly productive environment. I appreciate the work and the logic that is apparent in the package. It is nice to see something that has been thought out on sound principles and not just hacked together."
 
 *Publications*:
 
