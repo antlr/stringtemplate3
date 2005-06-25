@@ -460,21 +460,22 @@ public ActionEvaluator() {
 				_t = _t.getFirstChild();
 				n=expr(_t);
 				_t = _retTree;
-				argumentContext=argList(_t,null);
+				
+									StringTemplate embedded = null;
+									if ( n!=null ) {
+										String templateName = n.toString();
+										StringTemplateGroup group = self.getGroup();
+										embedded = group.getEmbeddedInstanceOf(self, templateName);
+										if ( embedded!=null ) {
+											embedded.setArgumentsAST(args);
+											templatesToApply.addElement(embedded);
+										}
+									}
+									
+				argList(_t,embedded,null);
 				_t = _retTree;
 				_t = __t16;
 				_t = _t.getNextSibling();
-				
-				if ( n!=null ) {
-					String templateName = n.toString();
-									StringTemplateGroup group = self.getGroup();
-									StringTemplate embedded = group.getEmbeddedInstanceOf(self, templateName);
-									if ( embedded!=null ) {
-										embedded.setArgumentsAST(args);
-										templatesToApply.addElement(embedded);
-									}
-				}
-				
 				break;
 			}
 			default:
@@ -493,8 +494,13 @@ public ActionEvaluator() {
 		_retTree = _t;
 	}
 	
+/** self is assumed to be the enclosing context as foo(x=y) must find y in
+ *  the template that encloses the ref to foo(x=y).  We must pass in
+ *  the embedded template (the one invoked) so we can check formal args
+ *  in rawSetArgumentAttribute.
+ */
 	public final Map  argList(AST _t,
-		Map initialContext
+		StringTemplate embedded, Map initialContext
 	) throws RecognitionException {
 		Map argumentContext=null;
 		
@@ -516,7 +522,7 @@ public ActionEvaluator() {
 			do {
 				if (_t==null) _t=ASTNULL;
 				if ((_t.getType()==ASSIGN)) {
-					argumentAssignment(_t,argumentContext);
+					argumentAssignment(_t,embedded,argumentContext);
 					_t = _retTree;
 				}
 				else {
@@ -606,7 +612,7 @@ public ActionEvaluator() {
 	}
 	
 	public final void argumentAssignment(AST _t,
-		Map argumentContext
+		StringTemplate embedded, Map argumentContext
 	) throws RecognitionException {
 		
 		org.antlr.stringtemplate.language.StringTemplateAST argumentAssignment_AST_in = (_t == ASTNULL) ? null : (org.antlr.stringtemplate.language.StringTemplateAST)_t;
@@ -627,7 +633,7 @@ public ActionEvaluator() {
 			_t = _retTree;
 			
 				       if ( e!=null )
-				           self.rawSetAttribute(argumentContext,arg.getText(),e);
+				           self.rawSetArgumentAttribute(embedded,argumentContext,arg.getText(),e);
 				
 			_t = __t29;
 			_t = _t.getNextSibling();

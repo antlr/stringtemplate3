@@ -158,18 +158,22 @@ Object n = null;
                 templatesToApply.addElement(anonymous);
                 }
 
-            |   #( VALUE n=expr argumentContext=argList[null] )
-                {
-                if ( n!=null ) {
-                	String templateName = n.toString();
-					StringTemplateGroup group = self.getGroup();
-					StringTemplate embedded = group.getEmbeddedInstanceOf(self, templateName);
-					if ( embedded!=null ) {
-						embedded.setArgumentsAST(#args);
-						templatesToApply.addElement(embedded);
+            |   #(  VALUE n=expr
+					// Hmm...this might be a NOP...evaluates later I guess
+					{
+					StringTemplate embedded = null;
+					if ( n!=null ) {
+						String templateName = n.toString();
+						StringTemplateGroup group = self.getGroup();
+						embedded = group.getEmbeddedInstanceOf(self, templateName);
+						if ( embedded!=null ) {
+							embedded.setArgumentsAST(#args);
+							templatesToApply.addElement(embedded);
+						}
 					}
-                }
-                }
+					}
+                    argList[embedded,null]
+                 )
             )
          )
     ;
@@ -210,7 +214,12 @@ attribute returns [Object value=null]
     |   s:STRING {value=s.getText();}
     ;
 
-argList[Map initialContext]
+/** self is assumed to be the enclosing context as foo(x=y) must find y in
+ *  the template that encloses the ref to foo(x=y).  We must pass in
+ *  the embedded template (the one invoked) so we can check formal args
+ *  in rawSetArgumentAttribute.
+ */
+argList[StringTemplate embedded, Map initialContext]
     returns [Map argumentContext=null]
 {
     argumentContext = initialContext;
@@ -218,17 +227,17 @@ argList[Map initialContext]
         argumentContext=new HashMap();
     }
 }
-    :   #( ARGS (argumentAssignment[argumentContext])* )
+    :   #( ARGS (argumentAssignment[embedded,argumentContext])* )
 	;
 
-argumentAssignment[Map argumentContext]
+argumentAssignment[StringTemplate embedded, Map argumentContext]
 {
     Object e = null;
 }
 	:	#( ASSIGN arg:ID e=expr
 	       {
 	       if ( e!=null )
-	           self.rawSetAttribute(argumentContext,arg.getText(),e);
+	           self.rawSetArgumentAttribute(embedded,argumentContext,arg.getText(),e);
 	       }
 	     )
 	;

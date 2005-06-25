@@ -307,9 +307,9 @@ public class ASTExpr extends Expr {
      *  to a string yet.  It may need attributes that will be available after
      *  this is inserted into another template.
      */
-    public StringTemplate getTemplateInclude(StringTemplate enclosing,
-                                         String templateName,
-                                         StringTemplateAST argumentsAST)
+	public StringTemplate getTemplateInclude(StringTemplate enclosing,
+											 String templateName,
+											 StringTemplateAST argumentsAST)
     {
         StringTemplateGroup group = enclosing.getGroup();
         StringTemplate embedded = group.getEmbeddedInstanceOf(enclosing, templateName);
@@ -462,21 +462,42 @@ public class ASTExpr extends Expr {
         }
     }
 
+	/** Evaluate an argument list within the context of the enclosing
+	 *  template but store the values in the context of self, the
+	 *  new embedded template.  For example, bold(item=item) means
+	 *  that bold.item should get the value of enclosing.item.
+	 */
     protected void evaluateArguments(StringTemplate self) {
         StringTemplateAST argumentsAST = self.getArgumentsAST();
         if ( argumentsAST==null || argumentsAST.getFirstChild()==null ) {
             // return immediately if missing tree or no actual args
             return;
         }
+
+		// Evaluate args in the context of the enclosing template, but we
+		// need the predefined args like 'it', 'attr', and 'i' to be
+		// available as well so we put a dummy ST between the enclosing
+		// context and the embedded context.  The dummy has the predefined
+		// context as does the embedded.
+		StringTemplate enclosing = self.getEnclosingInstance();
+		StringTemplate argContextST = new StringTemplate(self.getGroup(), "");
+		argContextST.setName("<invoke "+self.getName()+" arg context>");
+		argContextST.setEnclosingInstance(enclosing);
+		argContextST.setArgumentContext(self.getArgumentContext());
+
         ActionEvaluator eval =
-                new ActionEvaluator(self,this,null);
+                new ActionEvaluator(argContextST,this,null);
+		/*
+		System.out.println("eval args: "+argumentsAST.toStringList());
+		System.out.println("ctx is "+self.getArgumentContext());
+		*/
         try {
             // using any initial argument context (such as when obj is set),
             // evaluate the arg list like bold(item=obj).  Since we pass
             // in any existing arg context, that context gets filled with
             // new values.  With bold(item=obj), context becomes:
             // {[obj=...],[item=...]}.
-            Map ac = eval.argList(argumentsAST, self.getArgumentContext());
+            Map ac = eval.argList(argumentsAST, self, self.getArgumentContext());
             self.setArgumentContext(ac);
         }
         catch (RecognitionException re) {

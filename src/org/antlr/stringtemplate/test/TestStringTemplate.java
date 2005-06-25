@@ -203,7 +203,7 @@ public class TestStringTemplate extends TestSuite {
         catch (NoSuchElementException iae) {
             error = iae.getMessage();
         }
-        String expecting = "no such attribute: font in template context [page body]";
+        String expecting = "template body has no such attribute: font in template context [page <invoke body arg context>]";
         assertEqual(error, expecting);
     }
 
@@ -237,7 +237,7 @@ public class TestStringTemplate extends TestSuite {
         catch (NoSuchElementException iae) {
             error = iae.getMessage();
         }
-        String expecting = "no such attribute: font in template context [page bold]";
+        String expecting = "template bold has no such attribute: font in template context [page <invoke bold arg context>]";
         assertEqual(error, expecting);
     }
 
@@ -524,7 +524,6 @@ public class TestStringTemplate extends TestSuite {
     public void testChangingAttrValueTemplateApplicationToVector() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
-        StringTemplate italics = group.defineTemplate("italics", "<i>$x$</i>");
         StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
         StringTemplate t = new StringTemplate(group, "$names:bold(x=it)$");
         t.setAttribute("names", "Terence");
@@ -2228,6 +2227,47 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("users", new LinkedList());
 		String expecting="";
 		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testDoNotInheritAttributesThroughFormalArgs() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name) ::= \"<stat()>\"" +newline+
+				"stat(name) ::= \"x=y; // <name>\""+newline
+				;
+		// name is not visible in stat because of the formal arg called name.
+		// somehow, it must be set.
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		String expecting = "x=y; // ";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	public void testArgEvaluationContext() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name) ::= \"<stat(name=name)>\"" +newline+
+				"stat(name) ::= \"x=y; // <name>\""+newline
+				;
+		// template's name is not visible in stat because of the formal
+		// arg called name in template stat.  However, we can set it's value
+		// with an explicit name=name.  This looks weird, but makes total
+		// sense as the rhs is evaluated in the context of method and the lhs
+		// is evaluated in the context of stat's arg list.
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		String expecting = "x=y; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
 		assertEqual(result, expecting);
 	}
 

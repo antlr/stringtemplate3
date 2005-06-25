@@ -500,7 +500,8 @@ public class StringTemplate {
 			else {
 				// second attribute, must convert existing to ArrayList
 				v = new ArrayList(); // make list to hold multiple values
-				rawSetAttribute(this.attributes, name, v); // make it pt to list now
+				// make it point to list now
+				rawSetAttribute(this.attributes, name, v);
 				v.add(o);  // add previous single-valued attribute
 				if ( value instanceof List ) {
 					// flatten incoming list into existing
@@ -608,22 +609,51 @@ public class StringTemplate {
     }
 
     /** Map a value to a named attribute.  Throw NoSuchElementException if
-     *  the named attribute is not formally defined in this specific template
-     *  and a formal argument list exists.  This is public because eval.g
-     *  needs to use it. :(
+     *  the named attribute is not formally defined in self's specific template
+     *  and a formal argument list exists.
      */
-    public void rawSetAttribute(Map attributes, String name, Object value) {
-        if ( debugMode ) debug(getName()+".rawSetAttribute("+name+", "+value+")");
-        if ( formalArguments!=FormalArgument.UNKNOWN &&
-             getFormalArgument(name)==null )
-        {
-            throw new NoSuchElementException("no such attribute: "+name+
-											 " in template context "+getEnclosingInstanceStackString());
-        }
+	protected void rawSetAttribute(Map attributes,
+								   String name,
+								   Object value)
+	{
+		if ( debugMode ) debug(getName()+".rawSetAttribute("+name+", "+value+")");
+		if ( formalArguments!=FormalArgument.UNKNOWN &&
+			getFormalArgument(name)==null )
+		{
+			// a normal call to setAttribute with unknown attribute
+			throw new NoSuchElementException("no such attribute: "+name+
+											 " in template context "+
+											 getEnclosingInstanceStackString());
+		}
 		if ( value == null ) {
 			return;
 		}
-        attributes.put(name, value);
+		attributes.put(name, value);
+	}
+
+	/** Argument evaluation such as foo(x=y), x must
+	 *  be checked against foo's argument list not this's (which is
+ 	 *  the enclosing context).  So far, only eval.g uses arg self as
+	 *  something other than this.
+	 */
+	public void rawSetArgumentAttribute(StringTemplate embedded,
+										Map attributes,
+										String name,
+										Object value)
+	{
+		if ( debugMode ) debug(getName()+".rawSetAttribute("+name+", "+value+")");
+		if ( embedded.formalArguments!=FormalArgument.UNKNOWN &&
+			 embedded.getFormalArgument(name)==null )
+		{
+			throw new NoSuchElementException("template "+embedded.getName()+
+											 " has no such attribute: "+name+
+											 " in template context "+
+											 getEnclosingInstanceStackString());
+		}
+		if ( value == null ) {
+			return;
+		}
+		attributes.put(name, value);
 	}
 
 	public Object getAttribute(String name) {
