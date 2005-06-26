@@ -2255,7 +2255,7 @@ public class TestStringTemplate extends TestSuite {
 				"method(name) ::= \"<stat(name=name)>\"" +newline+
 				"stat(name) ::= \"x=y; // <name>\""+newline
 				;
-		// template's name is not visible in stat because of the formal
+		// attribute name is not visible in stat because of the formal
 		// arg called name in template stat.  However, we can set it's value
 		// with an explicit name=name.  This looks weird, but makes total
 		// sense as the rhs is evaluated in the context of method and the lhs
@@ -2266,6 +2266,42 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		String expecting = "x=y; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	public void testPassThroughAttributes() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name) ::= \"<stat(...)>\"" +newline+
+				"stat(name) ::= \"x=y; // <name>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		String expecting = "x=y; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	public void testPassThroughAttributes2() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name) ::= <<"+newline+
+				"<stat(value=\"34\",...)>" +newline+
+				">>"+newline+
+				"stat(name,value) ::= \"x=<value>; // <name>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		String expecting = "x=34; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
 		assertEqual(result, expecting);

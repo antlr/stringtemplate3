@@ -61,17 +61,6 @@ tokens {
 	}
 }
 
-/*
-test!: (    a:action
-            {
-                System.out.println(#a.toStringList());
-                StringTemplateLanguageEvaluator eval =
-                    new StringTemplateLanguageEvaluator();
-                eval.expr(#a);
-            }
-        )+ ;
-
-        */
 action returns [Map opts=null]
 	:	templatesExpr (SEMI! opts=optionList)?
 	|	"if"^ LPAREN! ifCondition RPAREN!
@@ -112,18 +101,6 @@ valueExpr
 	:   eval:LPAREN^ templatesExpr RPAREN!
         {#eval.setType(VALUE); #eval.setText("value");}
     ;
-
-/*
-objPropertyRef
-    :   ID
-    	( DOT^
-    	  ( ID
-          | lp:LPAREN^ expr RPAREN!
-            {#lp.setType(VALUE); #lp.setText("value");}
-          )
-    	)+
-    ;
-    */
 
 nonAlternatingTemplateExpr
     :   expr ( c:COLON^ {#c.setType(APPLY);} template )*
@@ -182,6 +159,7 @@ argList
 
 argumentAssignment
 	:	ID ASSIGN^ nonAlternatingTemplateExpr
+	|	DOTDOTDOT
 	;
 
 
@@ -237,6 +215,7 @@ COLON  : ':' ;
 PLUS   : '+' ;
 SEMI   : ';' ;
 NOT	   : '!' ;
+DOTDOTDOT : "..." ;
 
 WS	:	(' '|'\t'|'\r'|'\n'{newline();})+ {$setType(Token.SKIP);}
 	;

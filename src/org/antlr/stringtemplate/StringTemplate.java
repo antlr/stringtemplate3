@@ -252,6 +252,8 @@ public class StringTemplate {
      */
     protected Map formalArguments = FormalArgument.UNKNOWN;
 
+	protected boolean passThroughAttributes = false;
+
 	/** What group originally defined the prototype for this template?
 	 *  This affects the set of templates I can refer to.
 	 */
@@ -738,7 +740,10 @@ public class StringTemplate {
             }
         }
 
-        if ( o==null && self.getFormalArgument(attribute)!=null ) {
+        if ( o==null &&
+			 !passThroughAttributes &&
+			 self.getFormalArgument(attribute)!=null )
+		{
             // if you've defined attribute as formal arg for this
             // template and it has no value, do not look up the
             // enclosing dynamic scopes.  This avoids potential infinite
@@ -893,6 +898,15 @@ public class StringTemplate {
         }
         formalArguments.put(name, a);
     }
+
+	/** Normally if you call template y from x, y cannot see any attributes
+	 *  of x that are defined as formal parameters of y.  Setting this
+	 *  passThroughAttributes to true, will override that and allow a
+	 *  template to see through the formal arg list to inherited values.
+	 */
+	public void setPassThroughAttributes(boolean passThroughAttributes) {
+		this.passThroughAttributes = passThroughAttributes;
+	}
 
     // U T I L I T Y  R O U T I N E S
 

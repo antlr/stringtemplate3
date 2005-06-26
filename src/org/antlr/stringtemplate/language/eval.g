@@ -240,5 +240,6 @@ argumentAssignment[StringTemplate embedded, Map argumentContext]
 	           self.rawSetArgumentAttribute(embedded,argumentContext,arg.getText(),e);
 	       }
 	     )
+	|	DOTDOTDOT {embedded.setPassThroughAttributes(true);}
 	;
 
