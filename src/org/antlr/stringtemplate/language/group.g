@@ -97,8 +97,18 @@ template[StringTemplateGroup g]
 	;
 
 args[StringTemplate st]
-    :	name:ID {st.defineFormalArgument(name.getText());}
-        (COMMA name2:ID {st.defineFormalArgument(name2.getText());})*
+{
+	String defaultValue = null;
+	StringTemplate defaultValueST = null;
+
+}
+    :	name:ID ( ASSIGN s:TEMPLATE {defaultValue=s.getText();} )?
+    	{
+    	st.defineFormalArgument(name.getText(), defaultValue);
+    	}
+        ( COMMA name2:ID ( ASSIGN s2:TEMPLATE {defaultValue=s2.getText();} )?
+          {st.defineFormalArgument(name2.getText(), defaultValue);}
+        )*
 	;
 
 /*
@@ -140,6 +150,7 @@ DEFINED_TO_BE:  "::=" ;
 SEMI:   ';' ;
 STAR:   '*' ;
 PLUS:   '+' ;
+ASSIGN:   '=' ;
 OPTIONAL : '?' ;
 
 // Single-line comments

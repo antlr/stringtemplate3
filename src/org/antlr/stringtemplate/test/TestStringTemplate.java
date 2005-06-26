@@ -2307,4 +2307,82 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testDefaultArgument() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name) ::= <<"+newline+
+				"<stat(...)>" +newline+
+				">>"+newline+
+				"stat(name,value=\"99\") ::= \"x=<value>; // <name>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		String expecting = "x=99; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	public void testDefaultArgumentAsTemplate() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name,size) ::= <<"+newline+
+				"<stat(...)>" +newline+
+				">>"+newline+
+				"stat(name,value=\"<name>\") ::= \"x=<value>; // <name>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		b.setAttribute("size", "2");
+		String expecting = "x=foo; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	public void testDefaultArgumentAsTemplate2() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name,size) ::= <<"+newline+
+				"<stat(...)>" +newline+
+				">>"+newline+
+				"stat(name,value=<< [<name>] >>) ::= \"x=<value>; // <name>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		b.setAttribute("size", "2");
+		String expecting = "x= [foo] ; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	public void testDoNotUseDefaultArgument() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name) ::= <<"+newline+
+				"<stat(value=\"34\",...)>" +newline+
+				">>"+newline+
+				"stat(name,value=\"99\") ::= \"x=<value>; // <name>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		String expecting = "x=34; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
 }

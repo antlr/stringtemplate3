@@ -1,5 +1,7 @@
 package org.antlr.stringtemplate.language;
 
+import org.antlr.stringtemplate.StringTemplate;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -45,20 +47,20 @@ public class FormalArgument {
      */
     public static Map UNKNOWN = new HashMap();
 
-    protected String name;
+    public String name;
     //protected int cardinality = REQUIRED;
 
-    public FormalArgument(String name) {
-        this.name = name;
-    }
+	/** If they specified name="value", store the template here */
+	public StringTemplate defaultValueST;
 
-    public String getName() {
-        return name;
-    }
+	public FormalArgument(String name) {
+		this.name = name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public FormalArgument(String name, StringTemplate defaultValueST) {
+		this.name = name;
+		this.defaultValueST = defaultValueST;
+	}
 
     public static String getCardinalityName(int cardinality) {
         switch (cardinality) {
@@ -71,6 +73,9 @@ public class FormalArgument {
     }
 
     public String toString() {
-        return getName();
+		if ( defaultValueST!=null ) {
+			return name+"="+defaultValueST;
+		}
+        return name;
     }
 }

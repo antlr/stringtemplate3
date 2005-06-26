@@ -764,7 +764,6 @@ public class StringTemplate {
             o = valueFromEnclosing;
 		}
 
-
 		return o;
     }
 
@@ -864,9 +863,22 @@ public class StringTemplate {
 
     // F o r m a l  A r g  S t u f f
 
-    public Map getFormArguments() {
-        return formalArguments;
-    }
+	public Map getFormArguments() {
+		return formalArguments;
+	}
+
+	public int numberOfFormArgumentsWithDefaultValues() {
+		int n = 0;
+		Set argNames = formalArguments.keySet();
+		for (Iterator it = argNames.iterator(); it.hasNext();) {
+			String argName = (String) it.next();
+			FormalArgument arg = (FormalArgument)formalArguments.get(argName);
+			if ( arg.defaultValueST!=null ) {
+				n++;
+			}
+		}
+		return n;
+	}
 
     public void setFormalArguments(Map args) {
         formalArguments = args;
@@ -891,8 +903,18 @@ public class StringTemplate {
         setFormalArguments(new HashMap());
     }
 
-    public void defineFormalArgument(String name) {
-        FormalArgument a = new FormalArgument(name);
+	public void defineFormalArgument(String name) {
+		defineFormalArgument(name,null);
+	}
+
+    public void defineFormalArgument(String name, String defaultValue) {
+		StringTemplate defaultValueST = null;
+		if ( defaultValue!=null ) {
+			defaultValueST = new StringTemplate(getGroup(), defaultValue);
+			defaultValueST.setEnclosingInstance(this);
+			defaultValueST.setName("<"+name+" default value subtemplate>");
+		}
+        FormalArgument a = new FormalArgument(name,defaultValueST);
         if ( formalArguments==FormalArgument.UNKNOWN ) {
             formalArguments = new HashMap();
         }
