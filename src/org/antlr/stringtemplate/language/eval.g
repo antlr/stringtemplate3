@@ -211,7 +211,17 @@ attribute returns [Object value=null]
 
     |   i:INT {value=new Integer(i.getText());}
 
-    |   s:STRING {value=s.getText();}
+    |   s:STRING
+    	{
+    	// evaluate all strings as templates :)
+    	value=s.getText();
+		if ( s.getText()!=null ) {
+			StringTemplate valueST =new StringTemplate(self.getGroup(), s.getText());
+			valueST.setEnclosingInstance(self);
+			valueST.setName("<string literal value subtemplate>");
+			value = valueST;
+    	}
+    	}
     ;
 
 /** self is assumed to be the enclosing context as foo(x=y) must find y in

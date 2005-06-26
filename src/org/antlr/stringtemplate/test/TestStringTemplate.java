@@ -1104,7 +1104,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate v =
 				new StringTemplate(
 						group,
-						// $A:{$attr:foo(x="\{dog\}\"")$ is nested}$
+						// $A:{$attr:foo(x="\{dog\}\"")$ is cool}$
 						"$A:{$it:foo(x=\"\\{dog\\}\\\"\")$ is cool}$"
 				);
 		t.setAttribute("A", "ick");
@@ -2381,7 +2381,43 @@ public class TestStringTemplate extends TestSuite {
 		b.setAttribute("name", "foo");
 		String expecting = "x=34; // foo";
 		String result = b.toString();
-		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
+	public void testArgumentsAsTemplates() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name,size) ::= <<"+newline+
+				"<stat(value=\"<size>\")>" +newline+
+				">>"+newline+
+				"stat(value) ::= \"x=<value>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		b.setAttribute("size", "34");
+		String expecting = "x=34;";
+		String result = b.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testArgumentsAsTemplatesDefaultDelimiters() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"method(name,size) ::= <<"+newline+
+				"$stat(value=\"$size$\")$" +newline+
+				">>"+newline+
+				"stat(value) ::= \"x=$value$;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate b = group.getInstanceOf("method");
+		b.setAttribute("name", "foo");
+		b.setAttribute("size", "34");
+		String expecting = "x=34;";
+		String result = b.toString();
 		assertEqual(result, expecting);
 	}
 
