@@ -126,6 +126,7 @@ anonymousTemplate
         anonymous.setGroup(self.getGroup());
         anonymous.setEnclosingInstance(self);
         anonymous.setTemplate(t.getText());
+        anonymous.setName("{...}");
         #t.setStringTemplate(anonymous);
         }
 	;

@@ -353,10 +353,13 @@ public class ASTExpr extends Expr {
         try {
             if ( o instanceof StringTemplate ) {
                 StringTemplate stToWrite = (StringTemplate)o;
-                if ( stToWrite.getEnclosingInstance()==null ) {
-					// failsafe: perhaps enclosing instance not set
-					stToWrite.setEnclosingInstance(self);
-				}
+				// failsafe: perhaps enclosing instance not set
+				// Or, it could be set to another context!  This occurs
+				// when you store a template instance as an attribute of more
+				// than one template (like both a header file and C file when
+				// generating C code).  It must execute within the context of
+				// the enclosing template.
+				stToWrite.setEnclosingInstance(self);
                 // if self is found up the enclosing instance chain, then
                 // infinite recursion
                 if ( StringTemplate.inLintMode() &&

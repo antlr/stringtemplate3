@@ -723,7 +723,8 @@ public class StringTemplate {
 	 *  This method is not static so people can overrided functionality.
      */
     public Object get(StringTemplate self, String attribute) {
-        //System.out.println("get("+self.getEnclosingInstanceStackString()+", "+attribute+")");
+		//System.out.println("### get("+self.getEnclosingInstanceStackString()+", "+attribute+")");
+		//System.out.println("attributes="+(self.attributes!=null?self.attributes.keySet().toString():"none"));
 		if ( self==null ) {
 			return null;
 		}
@@ -909,7 +910,6 @@ public class StringTemplate {
 		if ( argumentContext==null ) {
 			argumentContext = new HashMap();
 		}
-		Map formalArguments = getFormArguments();
 		if ( formalArguments!=FormalArgument.UNKNOWN ) {
 			Set argNames = formalArguments.keySet();
 			for (Iterator it = argNames.iterator(); it.hasNext();) {
@@ -1242,7 +1242,8 @@ public class StringTemplate {
 		List names = new LinkedList();
 		StringTemplate p = this;
 		while ( p!=null ) {
-			names.add(0,p.getName()+(p.passThroughAttributes?"(...)":""));
+			String name = p.getName();
+			names.add(0,name+(p.passThroughAttributes?"(...)":""));
 			p = p.enclosingInstance;
 		}
 		return names.toString().replaceAll(",","");
@@ -1291,28 +1292,32 @@ public class StringTemplate {
 
     public String toDebugString() {
         StringBuffer buf = new StringBuffer();
-        buf.append("template-"+getName()+":");
-        buf.append("chunks=");;
-        buf.append(chunks.toString());
+        buf.append("template-"+getTemplateDeclaratorString()+":");
+        buf.append("chunks=");
+		if ( chunks!=null ) {
+        	buf.append(chunks.toString());
+		}
         buf.append("attributes=[");
-        Set attrNames = attributes.keySet();
-        int n=0;
-        for (Iterator iter = attrNames.iterator(); iter.hasNext();) {
-            if ( n>0 ) {
-                buf.append(',');
-            }
-            String name = (String) iter.next();
-            buf.append(name+"=");
-            Object value = attributes.get(name);
-            if ( value instanceof StringTemplate ) {
-                buf.append(((StringTemplate)value).toDebugString());
-            }
-            else {
-                buf.append(value);
-            }
-            n++;
-        }
-        buf.append("]");
+		if ( attributes!=null ) {
+			Set attrNames = attributes.keySet();
+			int n=0;
+			for (Iterator iter = attrNames.iterator(); iter.hasNext();) {
+				if ( n>0 ) {
+					buf.append(',');
+				}
+				String name = (String) iter.next();
+				buf.append(name+"=");
+				Object value = attributes.get(name);
+				if ( value instanceof StringTemplate ) {
+					buf.append(((StringTemplate)value).toDebugString());
+				}
+				else {
+					buf.append(value);
+				}
+				n++;
+			}
+			buf.append("]");
+		}
         return buf.toString();
     }
 
