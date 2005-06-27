@@ -2326,6 +2326,22 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testDefaultArgument2() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"stat(name,value=\"99\") ::= \"x=<value>; // <name>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("stat");
+		b.setAttribute("name", "foo");
+		String expecting = "x=99; // foo";
+		String result = b.toString();
+		//System.err.println("result='"+result+"'");
+		assertEqual(result, expecting);
+	}
+
 	public void testDefaultArgumentAsTemplate() throws Exception {
 		String templates =
 				"group test;" +newline+
@@ -2417,6 +2433,20 @@ public class TestStringTemplate extends TestSuite {
 		b.setAttribute("name", "foo");
 		b.setAttribute("size", "34");
 		String expecting = "x=34;";
+		String result = b.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testDefaultArgsWhenNotInvoked() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"b(name=\"foo\") ::= \".<name>.\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate b = group.getInstanceOf("b");
+		String expecting = ".foo.";
 		String result = b.toString();
 		assertEqual(result, expecting);
 	}

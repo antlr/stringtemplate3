@@ -472,9 +472,7 @@ public class ASTExpr extends Expr {
 	 */
     protected void evaluateArguments(StringTemplate self) {
         StringTemplateAST argumentsAST = self.getArgumentsAST();
-        if ( (argumentsAST==null || argumentsAST.getFirstChild()==null) &&
-			 self.numberOfFormArgumentsWithDefaultValues()==0 )
-		{
+        if ( argumentsAST==null || argumentsAST.getFirstChild()==null )	{
             // return immediately if missing tree or no actual args
             return;
         }
@@ -508,34 +506,7 @@ public class ASTExpr extends Expr {
         catch (RecognitionException re) {
             self.error("can't evaluate tree: "+argumentsAST.toStringList(), re);
         }
-
-		Map argContext = self.getArgumentContext();
-		// define any default values for attributes w/o values
-		// If the argContext has no value, we look for a FormalArg that
-		// has defaultValueST set.
-		Map formalArguments = self.getFormArguments();
-		if ( formalArguments!=FormalArgument.UNKNOWN ) {
-			Set argNames = formalArguments.keySet();
-			for (Iterator it = argNames.iterator(); it.hasNext();) {
-				String argName = (String) it.next();
-				if ( argContext.get(argName)==null ) {
-					FormalArgument arg =
-						(FormalArgument)formalArguments.get(argName);
-					if ( arg.defaultValueST!=null ) {
-						// evaluate default value by creating a new
-						// instance enclosed within the argument context
-						//
-						// NO ORDER is assumed so you cannot rely on
-						// other arguments having values.
-						StringTemplate defaultEvalST =
-							arg.defaultValueST.getInstanceOf();
-						defaultEvalST.setEnclosingInstance(argContextST);
-						argContext.put(argName, defaultEvalST);
-					}
-				}
-			}
-		}
-    }
+	}
 
 	/** Do a standard conversion of array attributes to Lists.
 	 */

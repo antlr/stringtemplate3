@@ -252,6 +252,8 @@ public class StringTemplate {
      */
     protected Map formalArguments = FormalArgument.UNKNOWN;
 
+	protected int numberOfDefaultArgumentValues = 0;
+
 	protected boolean passThroughAttributes = false;
 
 	/** What group originally defined the prototype for this template?
@@ -327,9 +329,10 @@ public class StringTemplate {
         to.pattern = from.pattern;
 		to.chunks = from.chunks;
         to.formalArguments = from.formalArguments;
+		to.numberOfDefaultArgumentValues = from.numberOfDefaultArgumentValues;
 		to.name = from.name;
 		to.group = from.group;
-        to.listener = from.listener;
+		to.listener = from.listener;
     }
 
     /** Make an instance of this template; it contains an exact copy of
@@ -355,7 +358,9 @@ public class StringTemplate {
         // set the parent for this template
         this.enclosingInstance = enclosingInstance;
         // make the parent track this template as an embedded template
-        this.enclosingInstance.addEmbeddedInstance(this);
+        if ( enclosingInstance!=null ) {
+			this.enclosingInstance.addEmbeddedInstance(this);
+		}
     }
 
     public void addEmbeddedInstance(StringTemplate embeddedInstance) {
@@ -671,6 +676,7 @@ public class StringTemplate {
 	public int write(StringTemplateWriter out) throws IOException {
 		int n = 0;
         setPredefinedAttributes();
+		setDefaultArgumentValues();
 		for (int i=0; chunks!=null && i<chunks.size(); i++) {
 			Expr a = (Expr)chunks.get(i);
 			int chunkN = a.write(this, out);
@@ -717,7 +723,7 @@ public class StringTemplate {
 	 *  This method is not static so people can overrided functionality.
      */
     public Object get(StringTemplate self, String attribute) {
-        //System.out.println("get("+self.getName()+", "+attribute+")");
+        //System.out.println("get("+self.getEnclosingInstanceStackString()+", "+attribute+")");
 		if ( self==null ) {
 			return null;
 		}
@@ -741,7 +747,7 @@ public class StringTemplate {
         }
 
         if ( o==null &&
-			 !passThroughAttributes &&
+			 !self.passThroughAttributes &&
 			 self.getFormalArgument(attribute)!=null )
 		{
             // if you've defined attribute as formal arg for this
@@ -867,7 +873,8 @@ public class StringTemplate {
 		return formalArguments;
 	}
 
-	public int numberOfFormArgumentsWithDefaultValues() {
+	/*
+	public int getNumberOfFormArgumentsWithDefaultValues() {
 		int n = 0;
 		Set argNames = formalArguments.keySet();
 		for (Iterator it = argNames.iterator(); it.hasNext();) {
@@ -879,10 +886,51 @@ public class StringTemplate {
 		}
 		return n;
 	}
+	*/
 
     public void setFormalArguments(Map args) {
         formalArguments = args;
     }
+
+	/** Set any default argument values that were not set by the
+	 *  invoking template or by setAttribute directly.  Note
+	 *  that the default values may be templates.  Their evaluation
+	 *  context is the template itself and, hence, can see attributes
+	 *  within the template, any arguments, and any values inherited
+	 *  by the template.
+	 *
+	 *  Default values are stored in the argument context rather than
+	 *  the template attributes table just for consistency's sake.
+	 */
+	public void setDefaultArgumentValues() {
+		if ( numberOfDefaultArgumentValues==0 ) {
+			return;
+		}
+		if ( argumentContext==null ) {
+			argumentContext = new HashMap();
+		}
+		Map formalArguments = getFormArguments();
+		if ( formalArguments!=FormalArgument.UNKNOWN ) {
+			Set argNames = formalArguments.keySet();
+			for (Iterator it = argNames.iterator(); it.hasNext();) {
+				String argName = (String) it.next();
+				// use the default value then
+				FormalArgument arg =
+					(FormalArgument)formalArguments.get(argName);
+				if ( arg.defaultValueST!=null ) {
+					Object existingValue = getAttribute(argName);
+					if ( existingValue==null ) { // value unset?
+						// evaluate default value by creating a new
+						// instance enclosed within the argument context
+						StringTemplate defaultEvalST =
+							arg.defaultValueST.getInstanceOf();
+						defaultEvalST.setEnclosingInstance(this);
+						argumentContext.put(argName, defaultEvalST);
+					}
+				}
+			}
+		}
+	}
 
 	/** From this template upward in the enclosing template tree,
      *  recursively look for the formal parameter.
@@ -910,8 +958,8 @@ public class StringTemplate {
     public void defineFormalArgument(String name, String defaultValue) {
 		StringTemplate defaultValueST = null;
 		if ( defaultValue!=null ) {
+			numberOfDefaultArgumentValues++;
 			defaultValueST = new StringTemplate(getGroup(), defaultValue);
-			defaultValueST.setEnclosingInstance(this);
 			defaultValueST.setName("<"+name+" default value subtemplate>");
 		}
         FormalArgument a = new FormalArgument(name,defaultValueST);
@@ -1194,7 +1242,7 @@ public class StringTemplate {
 		List names = new LinkedList();
 		StringTemplate p = this;
 		while ( p!=null ) {
-			names.add(0,p.getName());
+			names.add(0,p.getName()+(p.passThroughAttributes?"(...)":""));
 			p = p.enclosingInstance;
 		}
 		return names.toString().replaceAll(",","");
