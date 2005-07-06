@@ -88,6 +88,20 @@ public class StringTemplateGroup {
 	 */
 	protected Class userSpecifiedWriter;
 
+	/** A Map<Class,Object> that allows people to register a renderer for
+	 *  a particular kind of object to be displayed for any template in this
+	 *  group.  For example, a date should be formatted differently depending
+	 *  on the locale.  You can set Date.class to an object whose
+	 *  toString(Object) method properly formats a Date attribute
+	 *  according to locale.  Or you can have a different renderer object
+	 *  for each locale.
+	 *
+	 *  These render objects are used way down in the evaluation chain
+	 *  right before an attribute's toString() method would normally be
+	 *  called in ASTExpr.write().
+ 	 */
+	protected Map attributeRenderers;
+
 	/** Where to report errors.  All string templates in this group
 	 *  use this error handler by default.
 	 */
@@ -541,6 +555,45 @@ public class StringTemplateGroup {
 			stw = new AutoIndentWriter(w);
 		}
 		return stw;
+	}
+
+	/** Specify a complete map of what object classes should map to which
+	 *  renderer objects for every template in this group (that doesn't
+	 *  override it per template).
+	 */
+	public void setAttributeRenderers(Map renderers) {
+		this.attributeRenderers = renderers;
+	}
+
+	/** Register a renderer for all objects of a particular type for all
+	 *  templates in this group.
+	 */
+	public void registerRenderer(Class attributeClassType, Object renderer) {
+		if ( attributeRenderers==null ) {
+			attributeRenderers = new HashMap();
+		}
+		attributeRenderers.put(attributeClassType, renderer);
+	}
+
+	/** What renderer is registered for this attributeClassType for
+	 *  this group?  If not found, as superGroup if it has one.
+	 */
+	public AttributeRenderer getAttributeRenderer(Class attributeClassType) {
+		if ( attributeRenderers==null ) {
+			if ( superGroup==null ) {
+				return null; // no renderers and no parent?  Stop.
+			}
+			// no renderers; consult super group
+			return superGroup.getAttributeRenderer(attributeClassType);
+		}
+
+		AttributeRenderer renderer =
+			(AttributeRenderer)attributeRenderers.get(attributeClassType);
+		if ( renderer==null ) {
+			// no renderer registered for this class, check super group
+			renderer = superGroup.getAttributeRenderer(attributeClassType);
+		}
+		return renderer;
 	}
 
 	public void error(String msg) {

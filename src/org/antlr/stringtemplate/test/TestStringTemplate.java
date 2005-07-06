@@ -27,14 +27,13 @@
 */
 package org.antlr.stringtemplate.test;
 
-import org.antlr.stringtemplate.StringTemplateGroup;
-import org.antlr.stringtemplate.StringTemplate;
-import org.antlr.stringtemplate.StringTemplateErrorListener;
-import org.antlr.stringtemplate.StringTemplateWriter;
+import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
 
 import java.io.*;
 import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /** Test the various functionality of StringTemplate. Seems to run only
  *  on unix due to \r\n vs \n issue.  David Scurrah says:
@@ -2448,6 +2447,67 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate b = group.getInstanceOf("b");
 		String expecting = ".foo.";
 		String result = b.toString();
+		assertEqual(result, expecting);
+	}
+
+	public class DateRenderer implements AttributeRenderer {
+		public String toString(Object o) {
+			SimpleDateFormat f = new SimpleDateFormat ("yyyy.MM.dd");
+			return f.format(((Calendar)o).getTime());
+		}
+	}
+
+	public class DateRenderer2 implements AttributeRenderer {
+		public String toString(Object o) {
+			SimpleDateFormat f = new SimpleDateFormat ("MM/dd/yyyy");
+			return f.format(((Calendar)o).getTime());
+		}
+	}
+
+	public void testRendererForST() throws Exception {
+		StringTemplate st =new StringTemplate(
+				"date: <created>",
+				AngleBracketTemplateLexer.class);
+		st.setAttribute("created",
+						new GregorianCalendar(2005, 07-1, 05));
+		st.registerRenderer(GregorianCalendar.class, new DateRenderer());
+		String expecting = "date: 2005.07.05";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testRendererForGroup() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"dateThing(created) ::= \"date: <created>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("dateThing");
+		st.setAttribute("created",
+						new GregorianCalendar(2005, 07-1, 05));
+		group.registerRenderer(GregorianCalendar.class, new DateRenderer());
+		String expecting = "date: 2005.07.05";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testOverriddenRenderer() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"dateThing(created) ::= \"date: <created>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("dateThing");
+		st.setAttribute("created",
+						new GregorianCalendar(2005, 07-1, 05));
+		group.registerRenderer(GregorianCalendar.class, new DateRenderer());
+		st.registerRenderer(GregorianCalendar.class, new DateRenderer2());
+		String expecting = "date: 07/05/2005";
+		String result = st.toString();
 		assertEqual(result, expecting);
 	}
 

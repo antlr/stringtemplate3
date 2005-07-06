@@ -385,9 +385,7 @@ public class ASTExpr extends Expr {
                 if ( separator!=null ) {
                     separatorString = computeSeparator(self, out, separator);
                 }
-                int i = 0;
                 while ( iter.hasNext() ) {
-                    i++;
                     Object iterValue = iter.next();
                     int charWrittenForValue =
 						write(self, iterValue, out, separator);
@@ -411,7 +409,14 @@ public class ASTExpr extends Expr {
                 }
             }
             else {
-                n = out.write( o.toString() );
+				AttributeRenderer renderer =
+					self.getAttributeRenderer(o.getClass());
+				if ( renderer!=null ) {
+					n = out.write( renderer.toString(o) );
+				}
+				else {
+                	n = out.write( o.toString() );
+				}
 				return n;
             }
         }

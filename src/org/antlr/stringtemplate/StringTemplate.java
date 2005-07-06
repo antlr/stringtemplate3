@@ -123,7 +123,7 @@ A StringTemplate describes an output pattern/language like an exemplar.
  *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-    public static final String VERSION = "2.2b3";
+    public static final String VERSION = "2.2b4";
 
     /** An automatically created aggregate of properties.
      *
@@ -252,8 +252,17 @@ public class StringTemplate {
      */
     protected Map formalArguments = FormalArgument.UNKNOWN;
 
+	/** How many formal arguments to this template have default values
+	 *  specified?
+	 */
 	protected int numberOfDefaultArgumentValues = 0;
 
+	/** Normally, formal parameters hide any attributes inherited from the
+	 *  enclosing template with the same name.  This is normally what you
+	 *  want, but makes it hard to invoke another template passing in all
+	 *  the data.  Use notation now: <otherTemplate(...)> to say "pass in
+	 *  all data".  Works great.  Can also say <otherTemplate(foo="xxx",...)>
+	 */
 	protected boolean passThroughAttributes = false;
 
 	/** What group originally defined the prototype for this template?
@@ -277,6 +286,16 @@ public class StringTemplate {
      *  You can have multiple
 	 */
     protected Map attributes;
+
+	/** A Map<Class,Object> that allows people to register a renderer for
+	 *  a particular kind of object to be displayed in this template.  This
+	 *  overrides any renderer set for this template's group.
+	 *
+	 *  Most of the time this map is not used because the StringTemplateGroup
+	 *  has the general renderer map for all templates in that group.
+	 *  Sometimes though you want to override the group's renderers.
+ 	 */
+	protected Map attributeRenderers;
 
 	/** A list of alternating string and ASTExpr references.
 	 *  This is compiled to when the template is loaded/defined and walked to
@@ -978,6 +997,40 @@ public class StringTemplate {
 		this.passThroughAttributes = passThroughAttributes;
 	}
 
+	/** Specify a complete map of what object classes should map to which
+	 *  renderer objects.
+	 */
+	public void setAttributeRenderers(Map renderers) {
+		this.attributeRenderers = renderers;
+	}
+
+	/** Register a renderer for all objects of a particular type.  This
+	 *  overrides any renderer set in the group for this class type.
+	 */
+	public void registerRenderer(Class attributeClassType, Object renderer) {
+		if ( attributeRenderers==null ) {
+			attributeRenderers = new HashMap();
+		}
+		attributeRenderers.put(attributeClassType, renderer);
+	}
+
+	/** What renderer is registered for this attributeClassType for
+	 *  this template.  If not found, the template's group is queried.
+	 */
+	public AttributeRenderer getAttributeRenderer(Class attributeClassType) {
+		if ( attributeRenderers==null ) {
+			// we have no renderer overrides for the template, check group
+			return group.getAttributeRenderer(attributeClassType);
+		}
+		AttributeRenderer renderer =
+			(AttributeRenderer)attributeRenderers.get(attributeClassType);
+		if ( renderer==null ) {
+			// no renderer override registered for this class, check group
+			renderer = group.getAttributeRenderer(attributeClassType);
+		}
+		return renderer;
+	}
+
     // U T I L I T Y  R O U T I N E S
 
     public void error(String msg) {
@@ -1370,12 +1423,11 @@ public class StringTemplate {
 		// Write the output to a StringWriter
 		// TODO seems slow to create all these objects, can I use a singleton?
 		StringTemplateWriter wr = group.getStringTemplateWriter(out);
-        //StringTemplateWriter buf = new AutoIndentWriter(out);
         try {
             write(wr);
         }
         catch (IOException io) {
-            error("Got IOException writing to StringWriter????");
+            error("Got IOException writing to writer "+wr.getClass().getName());
         }
         return out.toString();
     }
