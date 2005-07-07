@@ -717,13 +717,15 @@ public class StringTemplate {
 		return n;
 	}
 
-    /** Resolve an attribute reference.  It can be in three possible places:
+    /** Resolve an attribute reference.  It can be in four possible places:
      *
      *  1. the attribute list for the current template
      *  2. if self is an embedded template, somebody invoked us possibly
      *     with arguments--check the argument context
      *  3. if self is an embedded template, the attribute list for the enclosing
      *     instance (recursively up the enclosing instance chain)
+	 *  4. if nothing is found in the enclosing instance chain, then it might
+	 *     be a map defined in the group or the its supergroup etc...
      *
      *  Attribute references are checked for validity.  If an attribute has
      *  a value, its validity was checked before template rendering.
@@ -788,6 +790,12 @@ public class StringTemplate {
                 checkNullAttributeAgainstFormalArguments(self, attribute);
             }
             o = valueFromEnclosing;
+		}
+
+		// not found and no enclosing instance to look at
+		else if ( o==null && self.enclosingInstance==null ) {
+			// It might be a map in the group or supergroup...
+			o = self.group.getMap(attribute);
 		}
 
 		return o;

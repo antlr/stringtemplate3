@@ -51,8 +51,13 @@ public class StringTemplateGroup {
 	/** What is the group name */
 	protected String name;
 
-    /** Maps template name to StringTemplate object */
-    protected Map templates = new HashMap();
+	/** Maps template name to StringTemplate object */
+	protected Map templates = new HashMap();
+
+	/** Maps map names to HashMap objects.  This is the list of maps
+	 *  defined by the user like typeInitMap ::= ["int":"0"]
+	 */
+	protected Map maps = new HashMap();
 
     /** How to pull apart a template into chunks? */
     protected Class templateLexerClass = DefaultTemplateLexer.class;
@@ -594,6 +599,24 @@ public class StringTemplateGroup {
 			renderer = superGroup.getAttributeRenderer(attributeClassType);
 		}
 		return renderer;
+	}
+
+	public Map getMap(String name) {
+		if ( maps==null ) {
+			if ( superGroup==null ) {
+				return null;
+			}
+			return superGroup.getMap(name);
+		}
+		Map m = (Map)maps.get(name);
+		if ( m==null && superGroup!=null ) {
+			m = superGroup.getMap(name);
+		}
+		return m;
+	}
+
+	public void defineMap(String name, Map mapping) {
+		maps.put(name, mapping);
 	}
 
 	public void error(String msg) {

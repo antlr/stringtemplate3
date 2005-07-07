@@ -2511,4 +2511,55 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testMap() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
+				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("type", "int");
+		st.setAttribute("name", "x");
+		String expecting = "int x = 0;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testMapHiddenByFormalArg() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
+				"var(typeInit,type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("type", "int");
+		st.setAttribute("name", "x");
+		String expecting = "int x = ;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testMapDefaultValue() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"default\":\"null\"] "+newline+
+				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("type", "UserRecord");
+		st.setAttribute("name", "x");
+		String expecting = "UserRecord x = null;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
 }

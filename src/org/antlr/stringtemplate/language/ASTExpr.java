@@ -46,7 +46,8 @@ import antlr.RecognitionException;
 public class ASTExpr extends Expr {
     public static final String DEFAULT_ATTRIBUTE_NAME = "it";
     public static final String DEFAULT_ATTRIBUTE_NAME_DEPRECATED = "attr";
-    public static final String DEFAULT_INDEX_VARIABLE_NAME = "i";
+	public static final String DEFAULT_INDEX_VARIABLE_NAME = "i";
+	public static final String DEFAULT_MAP_VALUE_NAME = "_default_";
 
     /** How to refer to the surrounding template object;
      *  this is attribute name to use.
@@ -205,6 +206,11 @@ public class ASTExpr extends Expr {
         else if ( isValidMapInstance(c) ) {
             Map map = (Map)o;
             value = map.get(propertyName);
+			if ( value==null ) {
+				// no property defined; if a map in this group
+				// then there may be a default value
+				value = map.get(DEFAULT_MAP_VALUE_NAME);
+			}
         }
 
         else {

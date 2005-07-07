@@ -68,7 +68,7 @@ public void reportError(RecognitionException e) {
 
 group[StringTemplateGroup g]
 	:	"group" name:ID {g.setName(name.getText());} SEMI
-	    (template[g])*
+	    ( template[g] | mapdef[g] )+
     ;
 
 template[StringTemplateGroup g]
@@ -90,26 +90,29 @@ template[StringTemplateGroup g]
 	    LPAREN
 	        (args[st]|{st.defineEmptyFormalArgumentList();})
 	    RPAREN
-	    DEFINED_TO_BE t:TEMPLATE {st.setTemplate(t.getText());}
+	    DEFINED_TO_BE
+	    (	t:STRING     {st.setTemplate(t.getText());}
+	    |	bt:BIGSTRING {st.setTemplate(bt.getText());}
+	    )
 
 	|   alias:ID DEFINED_TO_BE target:ID
 	    {g.defineTemplateAlias(alias.getText(), target.getText());}
 	;
 
 args[StringTemplate st]
+    :	arg[st] ( COMMA arg[st] )*
+	;
+
+arg[StringTemplate st]
 {
 	String defaultValue = null;
-	StringTemplate defaultValueST = null;
-
 }
-    :	name:ID ( ASSIGN s:TEMPLATE {defaultValue=s.getText();} )?
-    	{
-    	st.defineFormalArgument(name.getText(), defaultValue);
-    	}
-        ( COMMA name2:ID ( ASSIGN s2:TEMPLATE {defaultValue=s2.getText();} )?
-          {st.defineFormalArgument(name2.getText(), defaultValue);}
-        )*
-	;
+	:	name:ID
+		(	ASSIGN s:STRING 	{defaultValue=s.getText();}
+		|	ASSIGN bs:BIGSTRING	{defaultValue=bs.getText();}
+		)?
+        {st.defineFormalArgument(name.getText(), defaultValue);}
+    ;
 
 /*
 suffix returns [int cardinality=FormalArgument.REQUIRED]
@@ -119,6 +122,38 @@ suffix returns [int cardinality=FormalArgument.REQUIRED]
 	|
     ;
     */
+
+mapdef[StringTemplateGroup g]
+{
+Map m=null;
+}
+	:	name:ID
+	    DEFINED_TO_BE m=map
+	    {
+	    if ( g.getMap(name.getText())!=null ) {
+	        g.error("redefinition of map: "+name.getText());
+	    }
+	    else if ( g.isDefinedInThisGroup(name.getText()) ) {
+	        g.error("redefinition of template as map: "+name.getText());
+	    }
+	    else {
+	    	g.defineMap(name.getText(), m);
+	    }
+	    }
+	;
+
+map returns [Map mapping=new HashMap()]
+	:   LBRACK keyValuePair[mapping] (COMMA keyValuePair[mapping])* RBRACK
+	;
+
+keyValuePair[Map mapping]
+	:	key1:STRING COLON s1:STRING 	{mapping.put(key1.getText(), s1.getText());}
+	|	key2:STRING COLON s2:BIGSTRING  {mapping.put(key2.getText(), s2.getText());}
+	|	"default" COLON s3:STRING
+	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, s3.getText());}
+	|	"default" COLON s4:BIGSTRING
+	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, s4.getText());}
+	;
 
 class GroupLexer extends Lexer;
 
@@ -130,9 +165,12 @@ options {
 ID	:	('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_')*
 	;
 
-TEMPLATE
+STRING
 	:	'"'! ( '\\'! '"' | '\\' ~'"' | ~'"' )+ '"'!
-	|	"<<"!
+	;
+
+BIGSTRING
+	:	"<<"!
 	 	(options {greedy=true;}:('\r'!)?'\n'! {newline();})? // consume 1st \n
 		(	options {greedy=false;}  // stop when you see the >>
 		:	{LA(3)=='>'&&LA(4)=='>'}? '\r'! '\n'! {newline();} // kill last \r\n
@@ -145,9 +183,12 @@ TEMPLATE
 
 LPAREN: '(' ;
 RPAREN: ')' ;
+LBRACK: '[' ;
+RBRACK: ']' ;
 COMMA:  ',' ;
 DEFINED_TO_BE:  "::=" ;
 SEMI:   ';' ;
+COLON:  ':' ;
 STAR:   '*' ;
 PLUS:   '+' ;
 ASSIGN:   '=' ;
