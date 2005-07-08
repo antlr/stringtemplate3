@@ -2600,5 +2600,27 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testEmptyGroupTemplate() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"foo() ::= \"\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate a = group.getInstanceOf("foo");
+		String expecting = "";
+		String result = a.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void test8BitEuroChars() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"Danish: Å char"
+			);
+		e = e.getInstanceOf();
+		String expecting = "Danish: Å char";
+		assertEqual(e.toString(), expecting);
+	}
 
 }
