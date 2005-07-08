@@ -62,7 +62,12 @@ options {
 protected StringTemplateGroup group;
 
 public void reportError(RecognitionException e) {
-	group.error("template parse error", e);
+	if ( group!=null ) {
+	    group.error("template parse error", e);
+	}
+	else {
+	    System.err.println("template parse error: "+e);
+	}
 }
 }
 

@@ -2562,4 +2562,43 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testMapViaEnclosingTemplates() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
+				"intermediate(type,name) ::= \"<var(...)>\""+newline+
+				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("intermediate");
+		st.setAttribute("type", "int");
+		st.setAttribute("name", "x");
+		String expecting = "int x = 0;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testMapViaEnclosingTemplates2() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
+				"intermediate(stuff) ::= \"<stuff>\""+newline+
+				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate interm = group.getInstanceOf("intermediate");
+		StringTemplate var = group.getInstanceOf("var");
+		var.setAttribute("type", "int");
+		var.setAttribute("name", "x");
+		interm.setAttribute("stuff", var);
+		String expecting = "int x = 0;";
+		String result = interm.toString();
+		assertEqual(result, expecting);
+	}
+
+
 }
