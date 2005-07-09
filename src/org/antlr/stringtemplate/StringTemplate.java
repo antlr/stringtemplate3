@@ -846,7 +846,8 @@ public class StringTemplate {
 			new ActionLexer(new StringReader(action.toString()));
 		ActionParser parser =
 			new ActionParser(lexer, this);
-        parser.setASTNodeClass("org.antlr.stringtemplate.language.StringTemplateAST");
+		parser.setASTNodeClass("org.antlr.stringtemplate.language.StringTemplateAST");
+		lexer.setTokenObjectClass("org.antlr.stringtemplate.language.StringTemplateToken");
 		ASTExpr a = null;
 		try {
 			Map options = parser.action();
@@ -980,6 +981,16 @@ public class StringTemplate {
 
 	public void defineFormalArgument(String name) {
 		defineFormalArgument(name,null);
+	}
+
+	public void defineFormalArguments(List names) {
+		if ( names==null ) {
+			return;
+		}
+		for (int i = 0; i < names.size(); i++) {
+			String name = (String) names.get(i);
+			defineFormalArgument(name);
+		}
 	}
 
     public void defineFormalArgument(String name, String defaultValue) {

@@ -416,9 +416,9 @@ public class TestStringTemplate extends TestSuite {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
-        StringTemplate t = new StringTemplate(group, "$(first+last):bold()$");
-        t.setAttribute("first", "Joe");
-        t.setAttribute("last", "Schmoe");
+        StringTemplate t = new StringTemplate(group, "$(f+l):bold()$");
+        t.setAttribute("f", "Joe");
+        t.setAttribute("l", "Schmoe");
         //System.out.println(t);
         String expecting="<b>JoeSchmoe</b>";
         assertEqual(t.toString(), expecting);
@@ -775,9 +775,9 @@ public class TestStringTemplate extends TestSuite {
 
     public void testApplyAnonymousTemplateToAggregateAttribute() throws Exception {
         StringTemplate st =
-                new StringTemplate("$items:{$it.last$, $it.first$\n}$");
-        st.setAttribute("items.{first,last}", "Ter", "Parr");
-        st.setAttribute("items.{first,last}", "Tom", "Burns");
+                new StringTemplate("$items:{$it.lastName$, $it.firstName$\n}$");
+        st.setAttribute("items.{firstName,lastName}", "Ter", "Parr");
+        st.setAttribute("items.{firstName,lastName}", "Tom", "Burns");
         String expecting =
                 "Parr, Ter"+newline +
                 "Burns, Tom"+newline;
@@ -2620,6 +2620,149 @@ public class TestStringTemplate extends TestSuite {
 			);
 		e = e.getInstanceOf();
 		String expecting = "Danish: Å char";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testFirstOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:first()$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		String expecting = "Ter";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testRestOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:rest(); separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		String expecting = "Tom, Sriram";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLastOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:last()$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		String expecting = "Sriram";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testCombinedOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:rest():first()$" // gets 2nd element
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		String expecting = "Tom";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testFirstWithOneAttributeOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:first()$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		String expecting = "Ter";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLastWithOneAttributeOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:last()$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		String expecting = "Ter";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLastWithLengthOneListAttributeOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:last()$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", new ArrayList() {{add("Ter");}});
+		String expecting = "Ter";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testRestWithOneAttributeOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:rest()$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		String expecting = "";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testRestWithLengthOneListAttributeOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:rest()$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", new ArrayList() {{add("Ter");}});
+		String expecting = "";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testApplyTemplateWithSingleFormalArgs() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"test(names) ::= <<<names:bold(item=it); separator=\", \"> >>"+newline+
+				"bold(item) ::= <<*<item>*>>"+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "*Ter*, *Tom* ";
+		String result = e.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testApplyTemplateWithNoFormalArgs() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"test(names) ::= <<<names:bold(); separator=\", \"> >>"+newline+
+				"bold() ::= <<*<it>*>>"+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "*Ter*, *Tom* ";
+		String result = e.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testAnonTemplateArgs() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:{n| $n$}; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "Ter, Tom";
 		assertEqual(e.toString(), expecting);
 	}
 

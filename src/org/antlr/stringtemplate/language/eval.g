@@ -130,10 +130,22 @@ templateApplication returns [Object value=null]
 Object a=null;
 Vector templatesToApply=new Vector();
 }
-    :   #(  APPLY a=expr (template[templatesToApply])+
-            {value = chunk.applyListOfAlternatingTemplates(self,a,templatesToApply);}
+    :   #(  APPLY a=expr
+    		(	value=function[a]
+    		|	(template[templatesToApply])+
+	            {value = chunk.applyListOfAlternatingTemplates(self,a,templatesToApply);}
+    		)
          )
     ;
+
+function[Object a] returns [Object value=null]
+    :	#(	FUNCTION
+    		(	"first" 	{value=chunk.first(a);}
+    		|	"rest" 		{value=chunk.rest(a);}
+    		|	"last"  	{value=chunk.last(a);}
+    		)
+    	 )
+	;
 
 template[Vector templatesToApply]
 {

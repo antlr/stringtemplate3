@@ -41,11 +41,13 @@ options {
 
 tokens {
     APPLY;  // template application
+    MULTI_APPLY;  // parallel array template application
     ARGS;   // subtree is a list of (possibly empty) arguments
     INCLUDE;// isolated template include (no attribute)
     CONDITIONAL="if";
     VALUE;  // used for (foo): #(VALUE foo)
     TEMPLATE;
+    FUNCTION;
 }
 
 {
@@ -71,8 +73,20 @@ optionList! returns [Map opts=new HashMap()]
     ;
 
 templatesExpr
-    :   expr ( c:COLON^ {#c.setType(APPLY);} template (COMMA! template)* )*
+    :   (parallelArrayTemplateApplication)=> parallelArrayTemplateApplication
+    |	expr
+    	(	c:COLON^ {#c.setType(APPLY);}
+    		(	template (COMMA! template)*
+    		|	function
+    		)
+    	)*
     ;
+
+parallelArrayTemplateApplication
+	:	expr (COMMA! expr)+
+		c:COLON^ {#c.setType(MULTI_APPLY);}
+		anonymousTemplate
+	;
 
 ifCondition
 	:   ifAtom
@@ -88,7 +102,7 @@ expr:   primaryExpr (PLUS^ primaryExpr)*
 
 primaryExpr
     :	atom
-    	( DOT^
+    	( DOT^ // ignore warning on DOT ID
      	  ( ID
           | valueExpr
           )
@@ -103,12 +117,20 @@ valueExpr
     ;
 
 nonAlternatingTemplateExpr
-    :   expr ( c:COLON^ {#c.setType(APPLY);} template )*
+    :   expr ( c:COLON^ {#c.setType(APPLY);} (template|function) )*
     ;
 
+function
+	:	(	"first" LPAREN! RPAREN!	// first()
+   	 	|	"rest"  LPAREN! RPAREN! // rest()
+    	|	"last"  LPAREN! RPAREN! // last()
+    	)
+        {#function = #(#[FUNCTION],function);}
+	;
+
 template
-    :   (   namedTemplate       // foo()
-        |   anonymousTemplate   // {foo}
+    :   (   namedTemplate       	// foo()
+        |   anonymousTemplate   	// {foo}
         )
         {#template = #(#[TEMPLATE],template);}
     ;
@@ -126,6 +148,7 @@ anonymousTemplate
         anonymous.setGroup(self.getGroup());
         anonymous.setEnclosingInstance(self);
         anonymous.setTemplate(t.getText());
+        anonymous.defineFormalArguments(((StringTemplateToken)t).args);
         anonymous.setName("{...}");
         #t.setStringTemplate(anonymous);
         }
@@ -186,7 +209,33 @@ STRING
 	;
 
 ANONYMOUS_TEMPLATE
-	:	'{'! (ESC_CHAR[false] | NESTED_ANONYMOUS_TEMPLATE | ~'}')* '}'!
+{
+List args=null;
+StringTemplateToken t = null;
+}
+	:	'{'!
+	        ( (TEMPLATE_ARGS)=> args=TEMPLATE_ARGS (options{greedy=true;}:WS_CHAR!)?
+	          {
+	          // create a special token to track args
+	          t = new StringTemplateToken(ANONYMOUS_TEMPLATE,$getText,args);
+	          $setToken(t);
+	          }
+	        |
+	        )
+	        (ESC_CHAR[false] | NESTED_ANONYMOUS_TEMPLATE | ~'}')*
+	        {
+	        if ( t!=null ) {
+	        	t.setText($getText);
+	        }
+	        }
+	    '}'!
+	;
+
+protected
+TEMPLATE_ARGS returns [List args=new ArrayList()]
+	:!	(WS_CHAR)? a:ID {args.add(a.getText());}
+	    (options{greedy=true;}:(WS_CHAR)? ',' (WS_CHAR)? a2:ID {args.add(a2.getText());})*
+	    (WS_CHAR)? '|'
 	;
 
 protected
@@ -221,3 +270,7 @@ DOTDOTDOT : "..." ;
 WS	:	(' '|'\t'|'\r'|'\n'{newline();})+ {$setType(Token.SKIP);}
 	;
 
+protected
+WS_CHAR
+	:	' '|'\t'|'\r'|'\n'{newline();}
+	;

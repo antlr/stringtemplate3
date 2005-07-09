@@ -136,6 +136,18 @@ public class ASTExpr extends Expr {
                 embedded.setEnclosingInstance(self);
                 embedded.setArgumentsAST(args);
                 argumentContext = new HashMap();
+				Map formalArgs = embedded.getFormArguments();
+				if ( formalArgs!=null && formalArgs.size()==1 ) {
+					// exactly 1 arg, give that the value of "it" as a convenience
+					// like they said $list:template(arg=it)$
+					Set argNames = formalArgs.keySet();
+					String soleArgName = (String)argNames.toArray()[0];
+					argumentContext.put(soleArgName, ithValue);
+					/*
+					System.out.println("setting "+embedded.getName()+"'s arg "+
+									   soleArgName+" to "+ithValue);
+					*/
+				}
                 argumentContext.put(DEFAULT_ATTRIBUTE_NAME, ithValue);
                 argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, ithValue);
                 argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(i+1));
@@ -583,6 +595,79 @@ public class ASTExpr extends Expr {
 			return o;
 		}
 		return iter;
+	}
+
+	/** Return the first attribute if multiple valued or the attribute
+	 *  itself if single-valued.  Used in <names:first()>
+	 */
+	public Object first(Object attribute) {
+		if ( attribute==null ) {
+			return null;
+		}
+		Object f = attribute;
+		attribute = convertAnythingIteratableToIterator(attribute);
+		if ( attribute instanceof Iterator ) {
+			Iterator it = (Iterator)attribute;
+			if ( it.hasNext() ) {
+				f = it.next();
+			}
+		}
+
+		return f;
+	}
+
+	/** Return the everything but the first attribute if multiple valued
+	 *  or null if single-valued.  Used in <names:rest()>.  This creates
+	 *  a List object to hold the n-1 elements and so it's not particularly
+	 *  efficient.
+	 */
+	public Object rest(Object attribute) {
+		if ( attribute==null ) {
+			return null;
+		}
+		Object theRest = attribute;
+		attribute = convertAnythingIteratableToIterator(attribute);
+		if ( attribute instanceof Iterator ) {
+			Iterator it = (Iterator)attribute;
+			List r = new ArrayList();
+			if ( it.hasNext() ) {
+				it.next(); // skip first element
+				while ( it.hasNext() ) { // add all the others
+					Object value = it.next();
+					r.add(value);
+				}
+			}
+			if ( r.size()==0 ) {
+				theRest=null;
+			}
+			theRest = r;
+		}
+		else {
+			theRest = null; // rest of single-valued attribute is null
+		}
+
+		return theRest;
+	}
+
+	/** Return the last attribute if multiple valued or the attribute
+	 *  itself if single-valued.  Used in <names:last()>.  This is pretty
+	 *  slow as it iterates until the last element.  Ultimately, I could
+	 *  make a special case for a List or Vector.
+	 */
+	public Object last(Object attribute) {
+		if ( attribute==null ) {
+			return null;
+		}
+		Object last = attribute;
+		attribute = convertAnythingIteratableToIterator(attribute);
+		if ( attribute instanceof Iterator ) {
+			Iterator it = (Iterator)attribute;
+			while ( it.hasNext() ) {
+				last = it.next();
+			}
+		}
+
+		return last;
 	}
 
     public static boolean isValidMapInstance(Class type) {
