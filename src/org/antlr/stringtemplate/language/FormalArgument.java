@@ -5,6 +5,7 @@ import org.antlr.stringtemplate.StringTemplate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.LinkedHashMap;
 
 /** Represents the name of a formal argument
  *  defined in a template:
@@ -45,7 +46,7 @@ public class FormalArgument {
      *  must be distinguished from the case where a template can specify
      *  args and there just aren't any such as the t() template above.
      */
-    public static Map UNKNOWN = new HashMap();
+    public static LinkedHashMap UNKNOWN = new LinkedHashMap();
 
     public String name;
     //protected int cardinality = REQUIRED;

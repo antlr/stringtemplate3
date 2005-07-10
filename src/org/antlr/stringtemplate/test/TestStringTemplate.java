@@ -1562,9 +1562,9 @@ public class TestStringTemplate extends TestSuite {
         ifstat.setAttribute("stats", b); // but make "if" contain block
         String expecting = "IF true then ";
         String expectingError =
-                "infinite recursion to <ifstat([stats])@4> referenced in <block([attributes, stats])@3>; stack trace:"+newline +
+                "infinite recursion to <ifstat([stats])@4> referenced in <block([stats, attributes])@3>; stack trace:"+newline +
                 "<ifstat([stats])@4>, attributes=[stats=<block()@3>]>"+newline +
-                "<block([attributes, stats])@3>, attributes=[attributes, stats=<ifstat()@4>], references=[stats]>"+newline +
+                "<block([stats, attributes])@3>, attributes=[attributes, stats=<ifstat()@4>], references=[stats]>"+newline +
                 "<ifstat([stats])@4> (start of recursive cycle)"+newline +
                 "...";
         // note that attributes attribute doesn't show up in ifstat() because
@@ -2625,7 +2625,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testFirstOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:first()$"
+				"$first(names)$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2637,7 +2637,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testRestOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:rest(); separator=\", \"$"
+				"$rest(names); separator=\", \"$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2649,7 +2649,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testLastOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:last()$"
+				"$last(names)$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2660,8 +2660,54 @@ public class TestStringTemplate extends TestSuite {
 	}
 
 	public void testCombinedOp() throws Exception {
+		// replace first of yours with first of mine
 		StringTemplate e = new StringTemplate(
-				"$names:rest():first()$" // gets 2nd element
+				"$first(mine)+rest(yours); separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("mine", "1");
+		e.setAttribute("mine", "2");
+		e.setAttribute("mine", "3");
+		e.setAttribute("yours", "a");
+		e.setAttribute("yours", "b");
+		String expecting = "1, b";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testCatListAndSingleAttribute() throws Exception {
+		// replace first of yours with first of mine
+		StringTemplate e = new StringTemplate(
+				"$mine+yours; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("mine", "1");
+		e.setAttribute("mine", "2");
+		e.setAttribute("mine", "3");
+		e.setAttribute("yours", "a");
+		String expecting = "1, 2, 3, a";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testCatListAndEmptyAttributes() throws Exception {
+		// + is overloaded to be cat strings and cat lists so the
+		// two operands (from left to right) determine which way it
+		// goes.  In this case, x+mine is a list so everything from their
+		// to the right becomes list cat.
+		StringTemplate e = new StringTemplate(
+				"$x+mine+y+yours+z; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("mine", "1");
+		e.setAttribute("mine", "2");
+		e.setAttribute("mine", "3");
+		e.setAttribute("yours", "a");
+		String expecting = "1, 2, 3, a";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testNestedOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$first(rest(names))$" // gets 2nd element
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2673,7 +2719,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testFirstWithOneAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:first()$"
+				"$first(names)$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2683,7 +2729,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testLastWithOneAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:last()$"
+				"$last(names)$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2693,7 +2739,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testLastWithLengthOneListAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:last()$"
+				"$last(names)$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", new ArrayList() {{add("Ter");}});
@@ -2703,7 +2749,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testRestWithOneAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:rest()$"
+				"$rest(names)$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2713,7 +2759,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testRestWithLengthOneListAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names:rest()$"
+				"$rest(names)$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", new ArrayList() {{add("Ter");}});
@@ -2764,6 +2810,231 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		String expecting = "Ter, Tom";
 		assertEqual(e.toString(), expecting);
+	}
+
+	public void testFirstWithCatAttribute() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$first(names+phones)$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		String expecting = "Ter";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testCat2Attributes() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names+phones; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		String expecting = "Ter, Tom, 1, 2";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testCat3Attributes() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names+phones+salaries; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		e.setAttribute("salaries", "big");
+		e.setAttribute("salaries", "huge");
+		String expecting = "Ter, Tom, 1, 2, big, huge";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testSingleExprTemplateArgument() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"test(name) ::= \"<bold(name)>\""+newline+
+				"bold(item) ::= \"*<item>*\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("name", "Ter");
+		String expecting = "*Ter*";
+		String result = e.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testSingleExprTemplateArgumentInApply() throws Exception {
+		// when you specify a single arg on a template application
+		// it overrides the setting of the iterated value "it" to that
+		// same single formal arg.  Your arg hides the implicitly set "it".
+		String templates =
+				"group test;" +newline+
+				"test(names,x) ::= \"<names:bold(x)>\""+newline+
+				"bold(item) ::= \"*<item>*\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("x", "ick");
+		String expecting = "*ick**ick*";
+		String result = e.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testSoleFormalTemplateArgumentInMultiApply() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"test(names) ::= \"<names:bold(),italics()>\""+newline+
+				"bold(x) ::= \"*<x>*\""+newline+
+				"italics(y) ::= \"_<y>_\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "*Ter*_Tom_";
+		String result = e.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testSingleExprTemplateArgumentError() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"test(name) ::= \"<bold(name)>\""+newline+
+				"bold(item,ick) ::= \"*<item>*\""+newline
+				;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class, errors);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("name", "Ter");
+		String result = e.toString();
+		String expecting = "template bold must have exactly one formal arg in template context [test <invoke bold arg context>]";
+		assertEqual(errors.toString(), expecting);
+	}
+
+	public void testInvokeIndirectTemplateWithSingleFormalArgs() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"test(templateName,arg) ::= \"<(templateName)(arg)>\""+newline+
+				"bold(x) ::= <<*<x>*>>"+newline+
+				"italics(y) ::= <<_<y>_>>"+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("templateName", "italics");
+		e.setAttribute("arg", "Ter");
+		String expecting = "_Ter_";
+		String result = e.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testParallelAttributeIteration() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$\n}$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		e.setAttribute("salaries", "big");
+		e.setAttribute("salaries", "huge");
+		String expecting = "Ter@1: big"+newline+"Tom@2: huge"+newline;
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testParallelAttributeIterationWithDifferentSizes() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$}; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		e.setAttribute("salaries", "big");
+		String expecting = "Ter@1: big, Tom@2: , Sriram@: ";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testParallelAttributeIterationWithSingletons() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$}; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("phones", "1");
+		e.setAttribute("salaries", "big");
+		String expecting = "Ter@1: big";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testParallelAttributeIterationWithMismatchArgListSizes() throws Exception {
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplate e = new StringTemplate(
+				"$names,phones,salaries:{n,p | $n$@$p$}; separator=\", \"$"
+			);
+		e.setErrorListener(errors);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		e.setAttribute("salaries", "big");
+		String expecting = "Ter@1, Tom@2";
+		assertEqual(e.toString(), expecting);
+		String errorExpecting = "number of arguments [n, p] mismatch between attribute list and anonymous template in context [anonymous]";
+		assertEqual(errors.toString(), errorExpecting);
+	}
+
+	public void testParallelAttributeIterationWithMissingArgs() throws Exception {
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplate e = new StringTemplate(
+				"$names,phones,salaries:{$n$@$p$}; separator=\", \"$"
+			);
+		e.setErrorListener(errors);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "2");
+		e.setAttribute("salaries", "big");
+		e.toString(); // generate the error
+		String errorExpecting = "missing arguments in anonymous template in context [anonymous]";
+		assertEqual(errors.toString(), errorExpecting);
+	}
+
+	public void testParallelAttributeIterationWithDifferentSizesTemplateRefInsideToo() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"page(names,phones,salaries) ::= "+newline+
+				"	<<$names,phones,salaries:{n,p,s | $value(n)$@$value(p)$: $value(s)$}; separator=\", \"$>>"+newline +
+				"value(x=\"n/a\") ::= \"$x$\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate p = group.getInstanceOf("page");
+		p.setAttribute("names", "Ter");
+		p.setAttribute("names", "Tom");
+		p.setAttribute("names", "Sriram");
+		p.setAttribute("phones", "1");
+		p.setAttribute("phones", "2");
+		p.setAttribute("salaries", "big");
+		String expecting = "Ter@1: big, Tom@2: n/a, Sriram@n/a: n/a";
+		assertEqual(p.toString(), expecting);
 	}
 
 }

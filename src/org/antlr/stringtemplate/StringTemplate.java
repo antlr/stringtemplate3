@@ -178,6 +178,8 @@ public class StringTemplate {
         }
     }
 
+	public static final String ANONYMOUS_ST_NAME = "anonymous";
+
     static boolean debugMode = false;
 
     /** track probable issues like setting attribute that is not referenced. */
@@ -186,7 +188,7 @@ public class StringTemplate {
     protected List referencedAttributes = null;
 
 	/** What's the name of this template? */
-    protected String name = "anonymous";
+    protected String name = ANONYMOUS_ST_NAME;
 
     private static int templateCounter=0;
     private static synchronized int getNextTemplateCounter() {
@@ -250,7 +252,7 @@ public class StringTemplate {
      *  When actually rendering the template, the cardinality is checked.
      *  This is a Map<String,FormalArgument>.
      */
-    protected Map formalArguments = FormalArgument.UNKNOWN;
+    protected LinkedHashMap formalArguments = FormalArgument.UNKNOWN;
 
 	/** How many formal arguments to this template have default values
 	 *  specified?
@@ -660,14 +662,13 @@ public class StringTemplate {
 	/** Argument evaluation such as foo(x=y), x must
 	 *  be checked against foo's argument list not this's (which is
  	 *  the enclosing context).  So far, only eval.g uses arg self as
-	 *  something other than this.
+	 *  something other than "this".
 	 */
 	public void rawSetArgumentAttribute(StringTemplate embedded,
 										Map attributes,
 										String name,
 										Object value)
 	{
-		if ( debugMode ) debug(getName()+".rawSetAttribute("+name+", "+value+")");
 		if ( embedded.formalArguments!=FormalArgument.UNKNOWN &&
 			 embedded.getFormalArgument(name)==null )
 		{
@@ -898,26 +899,11 @@ public class StringTemplate {
 
     // F o r m a l  A r g  S t u f f
 
-	public Map getFormArguments() {
+	public Map getFormalArguments() {
 		return formalArguments;
 	}
 
-	/*
-	public int getNumberOfFormArgumentsWithDefaultValues() {
-		int n = 0;
-		Set argNames = formalArguments.keySet();
-		for (Iterator it = argNames.iterator(); it.hasNext();) {
-			String argName = (String) it.next();
-			FormalArgument arg = (FormalArgument)formalArguments.get(argName);
-			if ( arg.defaultValueST!=null ) {
-				n++;
-			}
-		}
-		return n;
-	}
-	*/
-
-    public void setFormalArguments(Map args) {
+    public void setFormalArguments(LinkedHashMap args) {
         formalArguments = args;
     }
 
@@ -976,7 +962,7 @@ public class StringTemplate {
     }
 
     public void defineEmptyFormalArgumentList() {
-        setFormalArguments(new HashMap());
+        setFormalArguments(new LinkedHashMap());
     }
 
 	public void defineFormalArgument(String name) {
@@ -1002,7 +988,7 @@ public class StringTemplate {
 		}
         FormalArgument a = new FormalArgument(name,defaultValueST);
         if ( formalArguments==FormalArgument.UNKNOWN ) {
-            formalArguments = new HashMap();
+            formalArguments = new LinkedHashMap();
         }
         formalArguments.put(name, a);
     }
@@ -1266,7 +1252,7 @@ public class StringTemplate {
             StringTemplate self,
             String attribute)
     {
-        if ( self.getFormArguments()==FormalArgument.UNKNOWN ) {
+        if ( self.getFormalArguments()==FormalArgument.UNKNOWN ) {
             // bypass unknown arg lists
             if ( self.enclosingInstance!=null ) {
                 checkNullAttributeAgainstFormalArguments(

@@ -78,6 +78,7 @@ expr returns [Object value=null]
     |   value=templateApplication
     |   value=attribute
     |   value=templateInclude
+    |	value=function
     |   #(VALUE e=expr)
         // convert to string (force early eval)
         {
@@ -129,22 +130,39 @@ templateApplication returns [Object value=null]
 {
 Object a=null;
 Vector templatesToApply=new Vector();
+List attributes = new ArrayList();
 }
     :   #(  APPLY a=expr
-    		(	value=function[a]
-    		|	(template[templatesToApply])+
-	            {value = chunk.applyListOfAlternatingTemplates(self,a,templatesToApply);}
-    		)
+    		(template[templatesToApply])+
+	        {value = chunk.applyListOfAlternatingTemplates(self,a,templatesToApply);}
          )
+    |	#(	MULTI_APPLY (a=expr {attributes.add(a);} )+
+			anon:ANONYMOUS_TEMPLATE
+			{
+			StringTemplate anonymous = anon.getStringTemplate();
+			templatesToApply.addElement(anonymous);
+			value = chunk.applyTemplateToListOfAttributes(self,
+														  attributes,
+														  anon.getStringTemplate());
+			}
+    	 )
     ;
 
-function[Object a] returns [Object value=null]
+function returns [Object value=null]
+{
+Object a;
+}
     :	#(	FUNCTION
-    		(	"first" 	{value=chunk.first(a);}
-    		|	"rest" 		{value=chunk.rest(a);}
-    		|	"last"  	{value=chunk.last(a);}
+    		(	"first" a=singleFunctionArg	{value=chunk.first(a);}
+    		|	"rest" 	a=singleFunctionArg	{value=chunk.rest(a);}
+    		|	"last"  a=singleFunctionArg	{value=chunk.last(a);}
     		)
+
     	 )
+	;
+
+singleFunctionArg returns [Object value=null]
+	:	#( SINGLEVALUEARG value=expr )
 	;
 
 template[Vector templatesToApply]
@@ -170,8 +188,7 @@ Object n = null;
                 templatesToApply.addElement(anonymous);
                 }
 
-            |   #(  VALUE n=expr
-					// Hmm...this might be a NOP...evaluates later I guess
+            |   #(  VALUE n=expr args2:.
 					{
 					StringTemplate embedded = null;
 					if ( n!=null ) {
@@ -179,12 +196,11 @@ Object n = null;
 						StringTemplateGroup group = self.getGroup();
 						embedded = group.getEmbeddedInstanceOf(self, templateName);
 						if ( embedded!=null ) {
-							embedded.setArgumentsAST(#args);
+							embedded.setArgumentsAST(#args2);
 							templatesToApply.addElement(embedded);
 						}
 					}
 					}
-                    argList[embedded,null]
                  )
             )
          )
@@ -250,18 +266,55 @@ argList[StringTemplate embedded, Map initialContext]
     }
 }
     :   #( ARGS (argumentAssignment[embedded,argumentContext])* )
+    |	singleTemplateArg[embedded,argumentContext]
+	;
+
+singleTemplateArg[StringTemplate embedded, Map argumentContext]
+{
+    Object e = null;
+}
+	:	#( SINGLEVALUEARG e=expr )
+	    {
+	    if ( e!=null ) {
+	    	String soleArgName = null;
+	    	// find the sole defined formal argument for embedded
+	    	boolean error = false;
+			Map formalArgs = embedded.getFormalArguments();
+			if ( formalArgs!=null ) {
+				Set argNames = formalArgs.keySet();
+				if ( argNames.size()==1 ) {
+					soleArgName = (String)argNames.toArray()[0];
+					//System.out.println("sole formal arg of "+embedded.getName()+" is "+soleArgName);
+				}
+				else {
+					error=true;
+				}
+			}
+			else {
+				error=true;
+			}
+			if ( error ) {
+				self.error("template "+embedded.getName()+
+				           " must have exactly one formal arg in template context "+
+						   self.getEnclosingInstanceStackString());
+		   	}
+		   	else {
+		   		self.rawSetArgumentAttribute(embedded,argumentContext,soleArgName,e);
+		   	}
+	    }
+	    }
 	;
 
 argumentAssignment[StringTemplate embedded, Map argumentContext]
 {
     Object e = null;
 }
-	:	#( ASSIGN arg:ID e=expr
-	       {
-	       if ( e!=null )
-	           self.rawSetArgumentAttribute(embedded,argumentContext,arg.getText(),e);
-	       }
-	     )
+	:	#( ASSIGN arg:ID e=expr )
+	    {
+	    if ( e!=null ) {
+			self.rawSetArgumentAttribute(embedded,argumentContext,arg.getText(),e);
+		}
+	    }
 	|	DOTDOTDOT {embedded.setPassThroughAttributes(true);}
 	;
 

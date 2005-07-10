@@ -101,7 +101,80 @@ public class ASTExpr extends Expr {
 
     // HELP ROUTINES CALLED BY EVALUATOR TREE WALKER
 
-    public Object applyListOfAlternatingTemplates(StringTemplate self,
+	/** For <names,phones:{n,p | ...}> treat the names, phones as lists
+	 *  to be walked in lock step as n=names[i], p=phones[i].
+	 */
+	public Object applyTemplateToListOfAttributes(StringTemplate self,
+												  List attributes,
+												  StringTemplate templateToApply)
+	{
+		if ( attributes==null || templateToApply==null || attributes.size()==0 ) {
+			return null; // do not apply if missing templates or empty values
+		}
+		Map argumentContext = null;
+		List results = new ArrayList();
+
+		// convert all attributes to iterators even if just one value
+		for (int a = 0; a < attributes.size(); a++) {
+			Object o = (Object) attributes.get(a);
+			o = convertAnythingToIterator(o);
+			attributes.set(a, o); // alter the list in place
+		}
+
+		int numAttributes = attributes.size();
+
+		// ensure arguments line up
+		Map formalArguments = templateToApply.getFormalArguments();
+		if ( formalArguments==null || formalArguments.size()==0 ) {
+			self.error("missing arguments in anonymous"+
+					   " template in context "+self.getEnclosingInstanceStackString());
+			return null;
+		}
+		Object[] formalArgumentNames = formalArguments.keySet().toArray();
+		if ( formalArgumentNames.length!=numAttributes ) {
+			self.error("number of arguments "+formalArguments.keySet()+
+					   " mismatch between attribute list and anonymous"+
+					   " template in context "+self.getEnclosingInstanceStackString());
+			// truncate arg list to match smaller size
+			int shorterSize = Math.min(formalArgumentNames.length, numAttributes);
+			numAttributes = shorterSize;
+			Object[] newFormalArgumentNames = new Object[shorterSize];
+			System.arraycopy(formalArgumentNames, 0,
+							 newFormalArgumentNames, 0,
+							 shorterSize);
+			formalArgumentNames = newFormalArgumentNames;
+		}
+
+		// keep walking while at least one attribute has values
+		while ( true ) {
+			argumentContext = new HashMap();
+			// get a value for each attribute in list; put into arg context
+			// to simulate template invocation of anonymous template
+			int numEmpty = 0;
+			for (int a = 0; a < numAttributes; a++) {
+				Iterator it = (Iterator) attributes.get(a);
+				if ( it.hasNext() ) {
+					String argName = (String)formalArgumentNames[a];
+					Object iteratedValue = it.next();
+					argumentContext.put(argName, iteratedValue);
+				}
+				else {
+					numEmpty++;
+				}
+			}
+			if ( numEmpty==numAttributes ) {
+				break;
+			}
+			StringTemplate embedded = templateToApply.getInstanceOf();
+			embedded.setEnclosingInstance(self);
+			embedded.setArgumentContext(argumentContext);
+			results.add(embedded);
+		}
+
+		return results;
+	}
+
+	public Object applyListOfAlternatingTemplates(StringTemplate self,
                                                   Object attributeValue,
                                                   List templatesToApply)
     {
@@ -136,17 +209,22 @@ public class ASTExpr extends Expr {
                 embedded.setEnclosingInstance(self);
                 embedded.setArgumentsAST(args);
                 argumentContext = new HashMap();
-				Map formalArgs = embedded.getFormArguments();
-				if ( formalArgs!=null && formalArgs.size()==1 ) {
-					// exactly 1 arg, give that the value of "it" as a convenience
-					// like they said $list:template(arg=it)$
-					Set argNames = formalArgs.keySet();
-					String soleArgName = (String)argNames.toArray()[0];
-					argumentContext.put(soleArgName, ithValue);
-					/*
-					System.out.println("setting "+embedded.getName()+"'s arg "+
-									   soleArgName+" to "+ithValue);
-					*/
+				Map formalArgs = embedded.getFormalArguments();
+				if ( formalArgs!=null ) {
+					String soleArgName = null;
+					boolean isAnonymous =
+						embedded.getName().equals(StringTemplate.ANONYMOUS_ST_NAME);
+					if ( formalArgs.size()==1 || (isAnonymous&&formalArgs.size()>0) ) {
+						if ( isAnonymous && formalArgs.size()>1 ) {
+							embedded.error("too many arguments on {...} template: "+formalArgs);
+						}
+						// if exactly 1 arg or anonymous, give that the value of
+						// "it" as a convenience like they said
+						// $list:template(arg=it)$
+						Set argNames = formalArgs.keySet();
+						soleArgName = (String)argNames.toArray()[0];
+						argumentContext.put(soleArgName, ithValue);
+					}
 				}
                 argumentContext.put(DEFAULT_ATTRIBUTE_NAME, ithValue);
                 argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, ithValue);
@@ -309,7 +387,8 @@ public class ASTExpr extends Expr {
 		return true; // any other non-null object, return true--it's present
 	}
 
-    /** For strings or other objects, catenate and return.
+    /** For strings or other objects, catenate and return.  If either is iterable,
+	 *  return new iterator that combines both.
      */
     public Object add(Object a, Object b) {
         if ( a==null ) { // a null value means don't do cat, just return other value
@@ -318,6 +397,13 @@ public class ASTExpr extends Expr {
         else if ( b==null ) {
             return a;
         }
+		a = convertAnythingIteratableToIterator(a);
+		b = convertAnythingIteratableToIterator(b);
+		if ( a instanceof Iterator || b instanceof Iterator ) {
+			Iterator it1 = convertAnythingToIterator(a);
+			Iterator it2 = convertAnythingToIterator(b);
+			return new CatIterator(it1,it2);
+		}
         return a.toString() + b.toString();
     }
 
@@ -597,6 +683,25 @@ public class ASTExpr extends Expr {
 		return iter;
 	}
 
+	private static Iterator convertAnythingToIterator(Object o) {
+		Iterator iter = null;
+		if ( o instanceof Collection ) {
+			iter = ((Collection)o).iterator();
+		}
+		else if ( o instanceof Map ) {
+			iter = ((Map)o).values().iterator();
+		}
+		else if ( o instanceof Iterator ) {
+			iter = (Iterator)o;
+		}
+		if ( iter==null ) {
+			List singleton = new ArrayList(1);
+			singleton.add(o);
+			return singleton.iterator();
+		}
+		return iter;
+	}
+
 	/** Return the first attribute if multiple valued or the attribute
 	 *  itself if single-valued.  Used in <names:first()>
 	 */
@@ -617,9 +722,7 @@ public class ASTExpr extends Expr {
 	}
 
 	/** Return the everything but the first attribute if multiple valued
-	 *  or null if single-valued.  Used in <names:rest()>.  This creates
-	 *  a List object to hold the n-1 elements and so it's not particularly
-	 *  efficient.
+	 *  or null if single-valued.  Used in <names:rest()>.
 	 */
 	public Object rest(Object attribute) {
 		if ( attribute==null ) {
@@ -629,21 +732,17 @@ public class ASTExpr extends Expr {
 		attribute = convertAnythingIteratableToIterator(attribute);
 		if ( attribute instanceof Iterator ) {
 			Iterator it = (Iterator)attribute;
-			List r = new ArrayList();
-			if ( it.hasNext() ) {
-				it.next(); // skip first element
-				while ( it.hasNext() ) { // add all the others
-					Object value = it.next();
-					r.add(value);
-				}
+			if ( !it.hasNext() ) {
+				return null; // if not even one value return null
 			}
-			if ( r.size()==0 ) {
-				theRest=null;
+			it.next(); // ignore first value
+			if ( !it.hasNext() ) {
+				return null; // if not more than one value, return null
 			}
-			theRest = r;
+			theRest = it;    // return suitably altered iterator
 		}
 		else {
-			theRest = null; // rest of single-valued attribute is null
+			theRest = null;  // rest of single-valued attribute is null
 		}
 
 		return theRest;

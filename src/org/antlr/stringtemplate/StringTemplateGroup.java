@@ -642,7 +642,7 @@ public class StringTemplateGroup {
             StringTemplate st = (StringTemplate)templates.get(tname);
 			if ( st!=NOT_FOUND_ST ) {
                 formalArgs = formalArgs.getInstanceOf();
-                formalArgs.setAttribute("args", st.getFormArguments());
+                formalArgs.setAttribute("args", st.getFormalArguments());
                 buf.append(tname+"("+formalArgs+") ::= ");
                 buf.append("<<");
 				buf.append(st.getTemplate());

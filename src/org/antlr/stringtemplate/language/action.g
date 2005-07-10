@@ -48,6 +48,7 @@ tokens {
     VALUE;  // used for (foo): #(VALUE foo)
     TEMPLATE;
     FUNCTION;
+    SINGLEVALUEARG;
 }
 
 {
@@ -75,10 +76,7 @@ optionList! returns [Map opts=new HashMap()]
 templatesExpr
     :   (parallelArrayTemplateApplication)=> parallelArrayTemplateApplication
     |	expr
-    	(	c:COLON^ {#c.setType(APPLY);}
-    		(	template (COMMA! template)*
-    		|	function
-    		)
+    	(	c:COLON^ {#c.setType(APPLY);} template (COMMA! template)*
     	)*
     ;
 
@@ -108,6 +106,7 @@ primaryExpr
           )
      	)*
     |   (templateInclude)=>templateInclude  // (see past parens to arglist)
+    |	function
     |   valueExpr
     ;
 
@@ -117,14 +116,15 @@ valueExpr
     ;
 
 nonAlternatingTemplateExpr
-    :   expr ( c:COLON^ {#c.setType(APPLY);} (template|function) )*
+    :   expr ( c:COLON^ {#c.setType(APPLY);} template )*
     ;
 
 function
-	:	(	"first" LPAREN! RPAREN!	// first()
-   	 	|	"rest"  LPAREN! RPAREN! // rest()
-    	|	"last"  LPAREN! RPAREN! // last()
+	:	(	"first"
+   	 	|	"rest"
+    	|	"last"
     	)
+    	singleArg
         {#function = #(#[FUNCTION],function);}
 	;
 
@@ -149,7 +149,6 @@ anonymousTemplate
         anonymous.setEnclosingInstance(self);
         anonymous.setTemplate(t.getText());
         anonymous.defineFormalArguments(((StringTemplateToken)t).args);
-        anonymous.setName("{...}");
         #t.setStringTemplate(anonymous);
         }
 	;
@@ -167,19 +166,23 @@ templateInclude
         {#templateInclude = #(#[INCLUDE,"include"], templateInclude);}
     ;
 
-/** Match (foo)() and (foo+".terse")()
-    breaks encapsulation
- */
+/** Match (foo)() and (foo+".terse")() */
 indirectTemplate!
     :   LPAREN e:expr RPAREN args:argList
         {#indirectTemplate = #(#[VALUE,"value"],e,args);}
 	;
 
 argList
-	:!	LPAREN! RPAREN! {#argList = #[ARGS,"ARGS"];}
+	:!	LPAREN! RPAREN! {#argList = #[ARGS,"ARGS"];}  // view()
+	|	(singleArg)=>singleArg						  // bold(name)
 	|	LPAREN! argumentAssignment (COMMA! argumentAssignment)* RPAREN!
         {#argList = #(#[ARGS,"ARGS"],#argList);}
 	;
+
+singleArg
+	:	LPAREN! nonAlternatingTemplateExpr RPAREN!
+        {#singleArg = #(#[SINGLEVALUEARG,"SINGLEVALUEARG"],#singleArg);}
+    ;
 
 argumentAssignment
 	:	ID ASSIGN^ nonAlternatingTemplateExpr
