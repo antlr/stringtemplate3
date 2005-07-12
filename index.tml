@@ -12,10 +12,10 @@ _Copyright 2003-2005_ \
 @(http://www.stringtemplate.org) \
 ({StringTemplate} released under BSD License)
 
-*Download 2.1*
+*Download 2.2* (Beta 4 testing release)
 
-o @(http://www.antlr.org/download/stringtemplate-2.1.tar.gz, StringTemplate template engine 2.1) (binaries, source, doc)
-o @(http://www.stringtemplate.org/doc/release-2.1.tml, 2.1 Release Notes)
+o @(http://www.antlr.org/download/stringtemplate-2.2b4.tar.gz, StringTemplate template engine 2.2) (binaries, source, doc)
+o @(http://www.stringtemplate.org/doc/release-2.2.tml, 2.2 Release Notes)
 
 *Ports*
 
