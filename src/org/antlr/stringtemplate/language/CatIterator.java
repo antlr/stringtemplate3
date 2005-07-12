@@ -28,4 +28,20 @@ public class CatIterator implements Iterator {
 	public void remove() {
 		throw new RuntimeException("unimplemented method: CatIterator remove()");
 	}
+
+	/** The result of asking for the string of an iterator is the list of elements
+	 *  and so this is just the cat'd list of both elements
+	 */
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+		while (a.hasNext()) {
+			Object o = (Object) a.next();
+			buf.append(o.toString());
+		}
+		while (b.hasNext()) {
+			Object o = (Object) b.next();
+			buf.append(o.toString());
+		}
+		return buf.toString();
+	}
 }

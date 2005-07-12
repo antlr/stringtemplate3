@@ -387,8 +387,8 @@ public class ASTExpr extends Expr {
 		return true; // any other non-null object, return true--it's present
 	}
 
-    /** For strings or other objects, catenate and return.  If either is iterable,
-	 *  return new iterator that combines both.
+    /** Return new iterator that combines both attributes as a single, longer
+	 *  multi-valued attribute.
      */
     public Object add(Object a, Object b) {
         if ( a==null ) { // a null value means don't do cat, just return other value
@@ -397,14 +397,9 @@ public class ASTExpr extends Expr {
         else if ( b==null ) {
             return a;
         }
-		a = convertAnythingIteratableToIterator(a);
-		b = convertAnythingIteratableToIterator(b);
-		if ( a instanceof Iterator || b instanceof Iterator ) {
-			Iterator it1 = convertAnythingToIterator(a);
-			Iterator it2 = convertAnythingToIterator(b);
-			return new CatIterator(it1,it2);
-		}
-        return a.toString() + b.toString();
+		Iterator it1 = convertAnythingToIterator(a);
+		Iterator it2 = convertAnythingToIterator(b);
+		return new CatIterator(it1,it2);
     }
 
     /** Call a string template with args and return result.  Do not convert

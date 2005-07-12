@@ -622,16 +622,16 @@ public class TestStringTemplate extends TestSuite {
         assertEqual(a.toString(), expecting);
     }
 
-    public void testStringCatenationOnSingleValuedAttribute() throws Exception {
+    public void testStringCatenationOnSingleValuedAttributeViaTemplateLiteral() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
-        StringTemplate a = new StringTemplate(group, "$name+\" Parr\":bold()$");
-        StringTemplate b = new StringTemplate(group, "$bold(it=name+\" Parr\")$");
-        a.setAttribute("name", "Terence");
+        //StringTemplate a = new StringTemplate(group, "$\" Parr\":bold()$");
+        StringTemplate b = new StringTemplate(group, "$bold(it=\"$name$ Parr\")$");
+        //a.setAttribute("name", "Terence");
         b.setAttribute("name", "Terence");
         String expecting = "<b>Terence Parr</b>";
-		assertEqual(a.toString(), expecting);
+		//assertEqual(a.toString(), expecting);
 		assertEqual(b.toString(), expecting);
     }
 
