@@ -49,6 +49,7 @@ tokens {
     TEMPLATE;
     FUNCTION;
     SINGLEVALUEARG;
+    LIST; // [a,b,c]
 }
 
 {
@@ -81,9 +82,9 @@ templatesExpr
     ;
 
 parallelArrayTemplateApplication
-	:	expr (COMMA! expr)+
-		c:COLON^ {#c.setType(MULTI_APPLY);}
-		anonymousTemplate
+	:	expr (COMMA! expr)+ c:COLON anonymousTemplate
+        {#parallelArrayTemplateApplication =
+        	#(#[MULTI_APPLY,"MULTI_APPLY"],parallelArrayTemplateApplication);}
 	;
 
 ifCondition
@@ -108,6 +109,7 @@ primaryExpr
     |   (templateInclude)=>templateInclude  // (see past parens to arglist)
     |	function
     |   valueExpr
+    |	list
     ;
 
 valueExpr
@@ -156,6 +158,12 @@ anonymousTemplate
 atom:   ID
 	|	STRING
     |   INT
+    |	ANONYMOUS_TEMPLATE
+    ;
+
+list:	lb:LBRACK^ {#lb.setType(LIST); #lb.setText("value");}
+          expr (COMMA! expr)*
+        RBRACK!
     ;
 
 templateInclude
@@ -259,6 +267,8 @@ ESC_CHAR[boolean doEscape]
 		)
 	;
 
+LBRACK: '[' ;
+RBRACK: ']' ;
 LPAREN : '(' ;
 RPAREN : ')' ;
 COMMA  : ',' ;

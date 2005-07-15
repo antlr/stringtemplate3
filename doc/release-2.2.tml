@@ -37,9 +37,9 @@ An error is generated if you have too many args for the number of
 parallel lists.  Iteration proceeds while at least one of the
 attributes ({names} or {phones}, in this case) has values.
 
-o added '{+}' cat operator for multi-valued attributes, yielding
-single, longer multi-valued attribute.  {$mine+yours$} is a new list
-with both elements; all of {mine} first then all of {yours}.
+o added "[a,b,c,...]" list operator to create multi-valued attributes,
+yielding single, longer multi-valued attribute.  {$[mine,yours]$} is a
+new list with both elements; all of {mine} first then all of {yours}.
 
 o any template invocation assumes sole formal argument name if just
 one formal argument defined in target template.  For example, if you
@@ -64,7 +64,7 @@ if {users} is single-valued.  This introduces a function-like syntax,
 which necessitated the "_assign to sole formal arg_" functionality
 above that supports things like {bold(name)}.  You can combine
 operations to say things like {first(rest(names))} to get second
-element.  Can say {first(mine+yours)} to get the first of a combine
+element.  Can say {first([mine,yours])} to get the first of a combine
 list.  These operators work on any iterable object.  [_backward
 incompatible if you used first,last,tail as an attribute or template
 name_]
@@ -111,17 +111,17 @@ You can set the renderer for a class either at the group level or the
 individual template level.  Thanks to Anton Keks for his suggestion and sample
 implementation.
 
-o literal arguments are now templates not just strings. :)
-  You can even use {<<...>>} literals as argument now.
+o template arguments can be anonymous templates now or simple strings.
   From the bug list:
 <<
 Template inclusion expressions won't accept a nested template
 as an argument.  I'd like to be able to write <foo(bar={...})>, which
 would mean the same thing as <foo(bar="":{...})>.
 >>
-Now you can do {<foo(bar="<firstName> <lastName>")>}.
+Now you can do {<foo(bar={<firstName> <lastName>})>}.
 
-o added default values for formal arguments like
+o added default values (strings or anonymous templates like explicit
+template arguments) for formal arguments like
 <<
 bold(x="empty") ::= ...
 >>
@@ -156,6 +156,8 @@ it up in user object whereas {$user.foo$} looks for literally property
 {foo} in {user} object.
 
 #### Bug Fixes
+
+o fields that were arrays didn't get treated as iterable objects
 
 o When you invoke foo(x=y), x must be an attribute of foo (well if you
 have formal args defined that is) and y is evaluated within the

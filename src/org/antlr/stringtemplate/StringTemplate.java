@@ -934,12 +934,11 @@ public class StringTemplate {
 				if ( arg.defaultValueST!=null ) {
 					Object existingValue = getAttribute(argName);
 					if ( existingValue==null ) { // value unset?
-						// evaluate default value by creating a new
-						// instance enclosed within the argument context
-						StringTemplate defaultEvalST =
-							arg.defaultValueST.getInstanceOf();
-						defaultEvalST.setEnclosingInstance(this);
-						argumentContext.put(argName, defaultEvalST);
+						// if no value for attribute, set arg context
+						// to the default value.  We don't need an instance
+						// here because no attributes can be set in
+						// the arg templates by the user.
+						argumentContext.put(argName, arg.defaultValueST);
 					}
 				}
 			}
@@ -979,14 +978,11 @@ public class StringTemplate {
 		}
 	}
 
-    public void defineFormalArgument(String name, String defaultValue) {
-		StringTemplate defaultValueST = null;
+    public void defineFormalArgument(String name, StringTemplate defaultValue) {
 		if ( defaultValue!=null ) {
 			numberOfDefaultArgumentValues++;
-			defaultValueST = new StringTemplate(getGroup(), defaultValue);
-			defaultValueST.setName("<"+name+" default value subtemplate>");
 		}
-        FormalArgument a = new FormalArgument(name,defaultValueST);
+        FormalArgument a = new FormalArgument(name,defaultValue);
         if ( formalArguments==FormalArgument.UNKNOWN ) {
             formalArguments = new LinkedHashMap();
         }
@@ -1261,7 +1257,7 @@ public class StringTemplate {
             }
             return;
         }
-        FormalArgument formalArg = lookupFormalArgument(attribute);
+        FormalArgument formalArg = self.lookupFormalArgument(attribute);
         if ( formalArg == null ) {
 			throw new NoSuchElementException("no such attribute: "+attribute+
 											 " in template context "+getEnclosingInstanceStackString());

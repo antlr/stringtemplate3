@@ -110,11 +110,21 @@ args[StringTemplate st]
 
 arg[StringTemplate st]
 {
-	String defaultValue = null;
+	StringTemplate defaultValue = null;
 }
 	:	name:ID
-		(	ASSIGN s:STRING 	{defaultValue=s.getText();}
-		|	ASSIGN bs:BIGSTRING	{defaultValue=bs.getText();}
+		(	ASSIGN s:STRING
+			{
+			defaultValue=new StringTemplate("$_val_$");
+			defaultValue.setAttribute("_val_", s.getText());
+			defaultValue.defineFormalArgument("_val_");
+			defaultValue.setName("<"+st.getName()+"'s arg "+name.getText()+" default value subtemplate>");
+			}
+		|	ASSIGN bs:ANONYMOUS_TEMPLATE
+			{
+			defaultValue=new StringTemplate(st.getGroup(), bs.getText());
+			defaultValue.setName("<"+st.getName()+"'s arg "+name.getText()+" default value subtemplate>");
+			}
 		)?
         {st.defineFormalArgument(name.getText(), defaultValue);}
     ;
@@ -185,6 +195,20 @@ BIGSTRING
 		)*
         ">>"!
 	;
+
+ANONYMOUS_TEMPLATE
+{
+List args=null;
+StringTemplateToken t = null;
+}
+	:	'{'!
+		(	options {greedy=false;}  // stop when you see the >>
+		:	('\r')? '\n' {newline();}                          // else keep
+		|	.
+		)*
+	    '}'!
+	;
+
 
 LPAREN: '(' ;
 RPAREN: ')' ;

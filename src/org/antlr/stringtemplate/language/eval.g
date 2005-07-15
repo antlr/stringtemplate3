@@ -79,6 +79,7 @@ expr returns [Object value=null]
     |   value=attribute
     |   value=templateInclude
     |	value=function
+    |	value=list
     |   #(VALUE e=expr)
         // convert to string (force early eval)
         {
@@ -99,6 +100,25 @@ expr returns [Object value=null]
         value = buf.toString();
         }
     ;
+
+/** create a new list of expressions as a new multi-value attribute */
+list returns [Object value=null]
+{
+Object e = null;
+List elements = new ArrayList();
+value = new CatIterator(elements);
+}
+	:	#(	LIST
+			(	e=expr
+			  	{
+			  	if ( e!=null ) {
+					e = ASTExpr.convertAnythingToIterator(e);
+			  		elements.add(e);
+			  	}
+			  	}
+			)+
+		 )
+	;
 
 templateInclude returns [Object value=null]
 {
@@ -136,7 +156,7 @@ List attributes = new ArrayList();
     		(template[templatesToApply])+
 	        {value = chunk.applyListOfAlternatingTemplates(self,a,templatesToApply);}
          )
-    |	#(	MULTI_APPLY (a=expr {attributes.add(a);} )+
+    |	#(	MULTI_APPLY (a=expr {attributes.add(a);} )+ COLON
 			anon:ANONYMOUS_TEMPLATE
 			{
 			StringTemplate anonymous = anon.getStringTemplate();
@@ -241,12 +261,16 @@ attribute returns [Object value=null]
 
     |   s:STRING
     	{
-    	// evaluate all strings as templates :)
     	value=s.getText();
-		if ( s.getText()!=null ) {
-			StringTemplate valueST =new StringTemplate(self.getGroup(), s.getText());
+    	}
+
+    |   at:ANONYMOUS_TEMPLATE
+    	{
+    	value=at.getText();
+		if ( at.getText()!=null ) {
+			StringTemplate valueST =new StringTemplate(self.getGroup(), at.getText());
 			valueST.setEnclosingInstance(self);
-			valueST.setName("<string literal value subtemplate>");
+			valueST.setName("<anonymous template argument>");
 			value = valueST;
     	}
     	}

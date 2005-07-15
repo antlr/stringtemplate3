@@ -627,7 +627,7 @@ public class TestStringTemplate extends TestSuite {
                 new StringTemplateGroup("test");
         StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
         //StringTemplate a = new StringTemplate(group, "$\" Parr\":bold()$");
-        StringTemplate b = new StringTemplate(group, "$bold(it=\"$name$ Parr\")$");
+        StringTemplate b = new StringTemplate(group, "$bold(it={$name$ Parr})$");
         //a.setAttribute("name", "Terence");
         b.setAttribute("name", "Terence");
         String expecting = "<b>Terence Parr</b>";
@@ -2347,7 +2347,7 @@ public class TestStringTemplate extends TestSuite {
 				"method(name,size) ::= <<"+newline+
 				"<stat(...)>" +newline+
 				">>"+newline+
-				"stat(name,value=\"<name>\") ::= \"x=<value>; // <name>\""+newline
+				"stat(name,value={<name>}) ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
@@ -2367,7 +2367,7 @@ public class TestStringTemplate extends TestSuite {
 				"method(name,size) ::= <<"+newline+
 				"<stat(...)>" +newline+
 				">>"+newline+
-				"stat(name,value=<< [<name>] >>) ::= \"x=<value>; // <name>\""+newline
+				"stat(name,value={ [<name>] }) ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
@@ -2403,7 +2403,7 @@ public class TestStringTemplate extends TestSuite {
 		String templates =
 				"group test;" +newline+
 				"method(name,size) ::= <<"+newline+
-				"<stat(value=\"<size>\")>" +newline+
+				"<stat(value={<size>})>" +newline+
 				">>"+newline+
 				"stat(value) ::= \"x=<value>;\""+newline
 				;
@@ -2422,7 +2422,7 @@ public class TestStringTemplate extends TestSuite {
 		String templates =
 				"group test;" +newline+
 				"method(name,size) ::= <<"+newline+
-				"$stat(value=\"$size$\")$" +newline+
+				"$stat(value={$size$})$" +newline+
 				">>"+newline+
 				"stat(value) ::= \"x=$value$;\""+newline
 				;
@@ -2662,7 +2662,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testCombinedOp() throws Exception {
 		// replace first of yours with first of mine
 		StringTemplate e = new StringTemplate(
-				"$first(mine)+rest(yours); separator=\", \"$"
+				"$[first(mine),rest(yours)]; separator=\", \"$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("mine", "1");
@@ -2677,7 +2677,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testCatListAndSingleAttribute() throws Exception {
 		// replace first of yours with first of mine
 		StringTemplate e = new StringTemplate(
-				"$mine+yours; separator=\", \"$"
+				"$[mine,yours]; separator=\", \"$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("mine", "1");
@@ -2694,7 +2694,7 @@ public class TestStringTemplate extends TestSuite {
 		// goes.  In this case, x+mine is a list so everything from their
 		// to the right becomes list cat.
 		StringTemplate e = new StringTemplate(
-				"$x+mine+y+yours+z; separator=\", \"$"
+				"$[x,mine,y,yours,z]; separator=\", \"$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("mine", "1");
@@ -2814,7 +2814,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testFirstWithCatAttribute() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$first(names+phones)$"
+				"$first([names,phones])$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2825,9 +2825,22 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public void testJustCat() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$[names,phones]$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		String expecting = "TerTom12";
+		assertEqual(e.toString(), expecting);
+	}
+
 	public void testCat2Attributes() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names+phones; separator=\", \"$"
+				"$[names,phones]; separator=\", \"$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2838,9 +2851,22 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public void testCat2AttributesWithApply() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$[names,phones]:{a|$a$.}$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		String expecting = "Ter.Tom.1.2.";
+		assertEqual(e.toString(), expecting);
+	}
+
 	public void testCat3Attributes() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$names+phones+salaries; separator=\", \"$"
+				"$[names,phones,salaries]; separator=\", \"$"
 			);
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
@@ -2851,6 +2877,25 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("salaries", "huge");
 		String expecting = "Ter, Tom, 1, 2, big, huge";
 		assertEqual(e.toString(), expecting);
+	}
+
+	public void testListAsTemplateArgument() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"test(names,phones) ::= \"<foo([names,phones])>\""+newline+
+				"foo(items) ::= \"<items:{a | *<a>*}>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("test");
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		String expecting = "*Ter**Tom**1**2*";
+		String result = e.toString();
+		assertEqual(result, expecting);
 	}
 
 	public void testSingleExprTemplateArgument() throws Exception {
@@ -3035,6 +3080,14 @@ public class TestStringTemplate extends TestSuite {
 		p.setAttribute("salaries", "big");
 		String expecting = "Ter@1: big, Tom@2: n/a, Sriram@n/a: n/a";
 		assertEqual(p.toString(), expecting);
+	}
+
+	public void testAnonTemplateOnLeftOfApply() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"${foo}:{($it$)}$"
+			);
+		String expecting = "(foo)";
+		assertEqual(e.toString(), expecting);
 	}
 
 }

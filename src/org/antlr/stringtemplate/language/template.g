@@ -197,7 +197,8 @@ EXPR:   ( ESC
         | ('\r')? '\n' {newline();}
         | SUBTEMPLATE
         | '=' TEMPLATE
-        | '=' ~('"'|'<')
+        | '=' SUBTEMPLATE
+        | '=' ~('"'|'<'|'{')
         | ~'$'
         )+
     ;
