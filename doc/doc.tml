@@ -10,7 +10,7 @@ _Copyright 2003-2005_ \
 @(http://www.stringtemplate.org) \
 (StringTemplate released under BSD License)
 
-Version 2.1, January 22, 2005
+Version 2.2, July ??, 2005
 
 Note that the {TestStringTemplates.java} file has many tests that are
 an excellent set of examples.  Also, I highly recommend you read the
@@ -19,25 +19,30 @@ an excellent set of examples.  Also, I highly recommend you read the
 Model-View Separation in Template Engines).  There are some more
 examples including nested menu generation that will be of interest.
 
-#### Acknowledgements
-
-Tom Burns (CEO jGuru.com) co-designed {StringTemplate} and listened to
-me think out loud incessantly.  I would also like to thank Monty
-Zukowski for planting the {template} "meme" in my head back in the mid
-1990's.  Loring Craymer and Monty both are helping me hone these ideas
-for use in source-to-source language translation.  Matthew Ford has done a
-huge amount of thinking about StringTemplate and has submitted numerous
-suggestions and patches.  Anthony Casalena at @(http://www.squarespace.com) has been a big help beta-testing {StringTemplate}.
-
 #### Introduction
 
-A {StringTemplate} is a "document" with holes in it where you can
-stick values.  {StringTemplate} breaks up your template into chunks of
-text and attribute expressions, which are by default enclosed in
-dollar signs {$}_attribute-expression_{$} (to make them easy to see in
-HTML files).  {StringTemplate} ignores everything outside of attribute
-expressions, treating it as just text to spit out when you call
-{StringTemplate.toString()}.  For example, the following template has two chunks, a literal and a reference to attribute {name}:
+Most programs that emit source code or other text output are
+unstructured blobs of generation logic interspersed with print
+statements. The primary reason is the lack of suitable tools and
+formalisms. The proper formalism is that of an output grammar because
+you are not generating random characters--you are generating sentences
+in an output language. This is analogous to using a grammar to
+describe the structure of input sentences. Rather than building a
+parser by hand, most programmers will use a parser
+generator. Similarly, we need some form of _unparser generator_ to
+generate text. The most convenient manifestation of the output grammar
+is a template engine such as {StringTemplate}.
+
+A template engine is a simply a code generator that emits text using
+templates, which are really just "documents with holes" in them where
+you can stick values.  {StringTemplate} breaks up your template into
+chunks of text and attribute expressions, which are by default
+enclosed in dollar signs {$}_attribute-expression_{$} (to make them
+easy to see in HTML files).  {StringTemplate} ignores everything
+outside of attribute expressions, treating it as just text to spit out
+when you call {StringTemplate.toString()}.  For example, the following
+template has two chunks, a literal and a reference to attribute
+{name}:
 
 <<
 Hello, $name$
@@ -57,28 +62,176 @@ library with two primary classes of interest: {StringTemplate} and
 Java code, you can load a template from a file, and you can load a
 single file with many templates (a template group file).
 
-{StringTemplate} evolved over years developing the following sites:
+#### Motivation And Philosophy
 
-o @(http://www.jguru.com)
-o @(http://www.knowspam.net)
-o @(http://www.peerscope.com)
-o @(http://www.antlr.org)
+{StringTemplate} was born and evolved during the development of
+@(http://www.jGuru.com).  The need for such dynamically-generated web
+pages has led to the development of numerous other template engines in
+an attempt to make web application development easier, improve
+flexibility, reduce maintenance costs, and allow parallel code and
+HTML development.  These enticing benefits, which have driven the
+proliferation of template engines, *derive entirely from a single
+principle*: separating the specification of a page's business logic
+and data computations from the specification of how a page displays
+such information.  These template engines are in a sense are a
+reaction to the completely entangled specifications encouraged by JSP
+(Java Server Pages).  With separate encapsulated specifications,
+template engines promote component reuse, pluggable site "looks",
+single-points-of-change for common components, and high overall system
+clarity.  In the code generation realm, model-view separation
+guarantees retargetability.
 
-The need for dynamically-generated web pages, such as the book description pages at Amazon.com, has led to the development of numerous template engines in an attempt to make web application development easier, improve flexibility, reduce maintenance costs, and allow parallel code and HTML development.  These enticing benefits, which have driven the proliferation of template engines, derive entirely from a single principle: separating the specification of a page's business logic and data computations from the specification of how a page displays such information. With separate encapsulated specifications, template engines promote component reuse, pluggable site "looks", single-points-of-change for common components, and high overall system clarity.  
+When developing StringTemplate, I recalled Frederick Brook's book,
+"Mythical Man Month", where he identified _conceptual integrity_ as a
+crucial product ingredient.  For example, in UNIX everything is a
+stream.  My concept, if you will, is _strict model-view separation_.
+My mission statement is therefore:
 
-StringTemplate distinguishes itself by strictly enforcing the separation of business logic from display. After examining hundreds of template files that I created over years of development, I found that I needed only the following four basic canonical operations:
+  "StringTemplate shall be as simple, consistent, and powerful as
+possible without sacrificing strict model-view separation."
+
+I ruthlessly evaluate all potential features and functionality against
+this standard.  Over the years, however, I have made certain
+concessions to practicality that infringe ever-so-slightly into
+potential model-view entanglement.  That said, StringTemplate still
+seems to enforce separation while providing excellent
+functionality.
+
+I let my needs dictate the language and tool feature set.  The tool
+evolved as my needs evolved.  I have done almost no feature
+"backtracking".  Further, I have worked really hard to make this
+little language self-consistent and consistent with existing
+syntax/metaphors from other languages.  There are very few special
+cases and attribute/template scoping rules make a lot of sense even if
+they are unfamiliar or strange at first glance.  Everything in the
+language exists to solve a very real need.
+
+After examining hundreds of template files that I created over years
+of jGuru.com (and now in ANTLR v3) development, I found that I needed
+only the following four basic canonical operations (with some
+variations):
 
 o attribute reference; e.g., {$phoneNumber$}
 o template reference (like #include or macro expansion); e.g., {$searchbox()$}
 o conditional include of subtemplate (an IF statement); e.g., {$if(title)$<title>$title$</title>$endif$}
 o template application to list of attributes; e.g., {$names:bold()$}
 
-where template references can be recursive.  Things like setting variables, loops, arbitrary method calls into the model etc... are simply unnecessary and lead to entangled specifications.
+where template references can be recursive.  
 
-While {StringTemplate} evolved while I was building websites, in the back of my mind I kept wondering how useful it would be in my research area (parser generators and other code
-generators).  With the 2.0 release I have augmented {StringTemplate}
-to better support text code generators such as auto-indentation and
-template group files.  Along with the group file format, you will see formal arguments for templates so that many previously-undetected errors can be trapped such as referencing an attribute that is not set by the controller.
+Language theory supports my premise that even a minimal StringTemplate
+engine with only these features is very powerful--such an engine can
+generate the context-free languages (see
+@(http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf, Enforcing
+Strict Model-View Separation in Template Engines)); e.g., most
+programming languages are context-free as are any XML pages
+whose form can be expressed with a DTD.
+
+The normal imperative programming language features like setting
+variables, loops, arbitrary method calls into the model etc... are
+simply unnecessary and lead to entangled specifications.  Why
+criticize JSP for providing a Turing-complete programming language
+mixed in with the templates and then go off and invent yet another
+Turing-complete language, thus, providing JSP with simply an
+unfamiliar programming language?  The fact that StringTemplate does
+not allow side-effects via such features as assignment statements
+should make you suspicious of engines that do allow it.  I guarantee
+that the templates in ANTLR v3's code generator are vastly more
+complicated than any web page anywhere and I have yet to need a single
+assignment expression.  If your template looks like a program, it
+probably is--you have totally entangled your model and view.
+
+Many engines miss the key elements while providing all sorts of
+unnecessary features like assignment statements that in fact support
+model-view entanglement.  In practice, I have found that certain
+language semantics are absolutely required such as recursion for
+generative programming and language translation.  A template engine
+without recursion, for example, seems unlikely to be capable of
+generating recursive output structures such as nested tables or nested
+code blocks.
+
+Another distinctive {StringTemplate} language feature lacking in other
+engines is _lazy-evaluation_.  {StringTemplate}'s attributes are
+lazily evaluated in the sense that referencing attribute "{a}" does
+not actually invoke the data lookup mechanism until the template is
+asked to render itself to text.  Lazy evaluation is surprising useful
+in both the web and code generation worlds because such order
+decoupling allows code to set attributes when it is convenient or
+efficient not necessarily before a template is created that references
+those attributes.  For example, a complicated web page consisting of
+many nested templates all may reference {$userName$}, but the value of
+{userName} does not need to be set by the model until right before the
+entire page is rendered to text via {toString()}.  Even applying a
+template to a multi-valued attribute does not actually lookup and
+evaluate attributes until the entire overall template tree structure
+is rendered.  Applying a template to an attribute yields a template
+not a string.
+
+{StringTemplate} implements a "poor man's" form of lazy evaluation by
+simply requiring that all attributes be computed _a priori_.  That is,
+all attributes must be computed and pushed into a template before it
+is written to text; this is the so-called "_push method_" whereas most
+template engines use the "_pull method_".  The pull method is more
+conventional but introduces _order-of-computation dependencies_.
+Imagine a simple web page that displays a list of names (using
+some mythical template engine notation):
+
+<<
+<html>
+<body>
+<ol>
+$foreach n in names$
+  <li>$n$</li>
+$end$
+</ol>
+There are $numberNames$ names.
+</body>
+</html>
+>>
+
+Using the pull method, the reference to {names} invokes
+{model.getNames()}, which presumably loads a list of names from the
+database.  The reference to {numberNames} invokes
+{model.getNumberNames()} which necessarily uses the internal data
+structure computed by {getNames()} to compute {names.size()} or
+whatever.  Now, suppose a designer moves the {numberNames} reference
+to the {<title>} tag *before* the reference to {names} in the
+{foreach} forces loading of the names from the database. You now get a
+null pointer exception at worst or a blank title at best.  I'm stunned
+that other template engine authors with whom I've spoken think this is
+ok.  Any time I can get the computer to do something automatically for
+me that removes an entire class of programming errors, I'll take it!
+Automatic garbage collection is the obvious analogy here.
+
+The the pull method requires that programmers do a topological sort in
+their minds anticipating any order that a programmer or designer could
+induce.  To ensure attribute computation safety, I have shown
+trivially in my academic paper that _pull_ reduces to _push_ in the
+worst case.  With a complicated mesh of templates, you will miss a
+dependency, thus, creating a really nasty, difficult-to-find bug.
+
+Just so you know, I've never been a big fan of functional languages
+and I laughed really hard when I realized (while writing the academic
+paper) that I had implemented a functional language.  The nature of
+the problem simply dictated a particular solution.  We are generating
+sentences in an output language so we should use something akin to a
+grammar.  Output grammars are inconvenient so tool builders created
+template engines.  Restricted template engines that enforce the
+universally-agreed-upon goal of strict model-view separation also look
+remarkably like output grammars as I have shown.  So, the very nature
+of the language generation problem dictates the solution: a template
+engine that is restricted to support a mutually-recursive set of
+templates with side-effect-free and order-independent attribute
+references.
+
+A final note.  I have examined perhaps 20 other template engines and I
+find the following fact interesting: either a template engine has
+simple document-with-holes sort of templates or the engine has a full
+Turing-complete language ala JSP.  StringTemplate is much more
+powerful than the simple document-with-holes approach, but it is
+nowhere near as free form as the vast majority of engines.  We
+programmers often get caught up in cool implementations and boy do we
+love to build languages, however, we should focus on what *should* be
+built not what *can* be built.
 
 #### Defining Templates
 
@@ -193,7 +346,14 @@ This is inconvenient and I may add the invoking template's path prefix automatic
 
 #### StringTemplate Group Files
 
-2.0 introduces the notion of a group file that has two main attractions.  First, it allows you to define lots of small templates more conveniently because they may all be defined within a single file.  Second, you may specify formal template arguments that help {StringTemplate} detect errors (such as setting unknown attributes) and make the templates easier to read.  Here is a sample group file (I'm using {<...>} delimiters) with two templates, {vardef} and {method}, that could be used to generate C files:
+{StringTemplate} 2.0 introduced the notion of a group file that has
+two main attractions.  First, it allows you to define lots of small
+templates more conveniently because they may all be defined within a
+single file.  Second, you may specify formal template arguments that
+help {StringTemplate} detect errors (such as setting unknown
+attributes) and make the templates easier to read.  Here is a sample
+group file (I'm using {<...>} delimiters) with two templates, {vardef}
+and {method}, that could be used to generate C files:
 
 <<
 group simple;
@@ -223,9 +383,76 @@ System.out.println(t);
 
 The output would be: "{int foo;}".
 
+### Formal argument default values
+
+Sometimes it is convenient to have default values for formal arguments
+that are used when no value is set by the model.  For example, when
+generating a parser in Java from ANTLR, I want the super class of the
+generated object to be {Parser} unless the ANTLR user uses an option
+to set the super class to some custom class.  For example, here is a
+partial {parser} template definition:
+
+<<
+parser(name, rules, superClass="Parser") ::= ...
+>>
+
+Any argument may be given a default value by following the name with
+an equals sign and a string or an anonymous template.
+
 ### Formal argument error handling
 
-When using a group file format to specify templates, you must specify the formal arguments for that template.  If you try to set an attribute that is not specifically formally defined that template, you will get a {NoSuchElementException}.
+When using a group file format to specify templates, you must specify
+the formal arguments for that template.  If you try to set an
+attribute via {setAttribute} that is not specifically formally defined
+in that template, you will get a {NoSuchElementException}.
+
+If you reference an attribute that is not formally defined in that
+template or any enclosing template, you also get a
+{NoSuchElementException} exception.
+
+### Maps
+
+There are situations where you need to translate a string in one
+language to a string in another language.  For example, you might want
+to translate {integer} to {int} when translating Pascal to C.  You
+could pass a {Map} (hashtable) from the model into the templates, but
+then you have output literals in your model!  The only solution is to
+have {StringTemplate} support mappings.  For example, here is how
+ANTLR v3 knows how to initialize local variables to their default
+values:
+
+<<
+typeInitMap ::= [
+        "int":"0",
+        "long":"0",
+        "float":"0.0",
+        "double":"0.0",
+        "boolean":"false",
+        "byte":"0",
+        "short":"0",
+        "char":"0",
+        default:"null" // anything other than an atomic type
+]
+>>
+
+To use the map in a template, refer to it as you would an attribute.
+For example, {<typeInitMap.int>} which returns "0".  If your type name
+is an attribute not a constant like {int}, then use an indirect field
+access: {<typeInitMap.(typeName)>}.
+
+Maps are defined in the group's scope and are visible if no attribute
+hides them.  For example, if you define a formal argument called
+{typeInitMap} in template {foo} then {foo} cannot see the map defined
+in the group (though you could pass it in as another parameter).  If a
+name is not an attribute and it's not in the group's maps table, then
+the super group is consulted etc...  You may not redefine a map and it
+may not have the same name as a template in that group.  The {default}
+value is used if you use a key as a property that doesn't exist.  For
+example {<typeInitMap.foo>} returns "{null}".
+
+You'll note that the square brackets will denote _data structure_ in
+other areas too such as {[a,b,c,...]} which makes a singe multi-valued
+attribute out of other attributes so you can iterate across them.
 
 ### Newline handling
 
@@ -286,15 +513,31 @@ foo() ::= "rodent"
 
 <<
 group
-    :	"group" name:ID SEMI (template)*
+    :	"group" ID ';' (template|mapdef)*
     ;
 
 template
-    :	name:ID LPAREN (args)? RPAREN DEFINED_TO_BE TEMPLATE
-    |   ID DEFINED_TO_BE ID // alias one template to be another
+    :	ID '(" (args)? ')' "::=" TEMPLATE
+    |   ID "::=" ID // alias one template to be another
     ;
 
-args:	ID (COMMA ID)*
+args:	arg (',' arg)*
+    ;
+
+arg :   ID '=' STRING             // "..."
+    |   ID '=' ANONYMOUS_TEMPLATE // {...}
+    ;
+
+mapdef
+    : ID "::=" map
+    ;
+
+map :   '[' keyValuePair (',' keyValuePair)* ']'
+    ;
+
+keyValuePair
+    :   STRING ':' STRING
+    |   "default" ':' STRING
     ;
 >>
 
@@ -321,7 +564,9 @@ The template will look up the value of {email} and insert it into the output str
 
 ## Property references
 
-If a named attribute is an aggregate with a property (ala JavaBeans), you may reference that property using _attribute_._property_.  For example:
+If a named attribute is an aggregate with a property (ala JavaBeans)
+or a simple data field, you may reference that property using
+_attribute_._property_.  For example:
 
 <<
 Your name: $person.name$
@@ -333,7 +578,14 @@ Your email: $person.email$
 reflection.  As a special case, StringTemplate tries {x.isFoo()} for
 {x.foo} if {x} is {Boolean}.
 
-Because the type is ignored, you can pass in whatever existing Java aggregate (class) you have such as {User} or {Person}:
+If the property is not accessible ala JavaBeans, {StringTemplate}
+attempts to find a field with the property name.  In the above
+example, {StringTemplate} would look for fields {name} and {email}
+without the capitalization used with JavaBeans property access
+methods.
+
+Because the type is ignored, you can pass in whatever existing Java
+aggregate (class) you have such as {User} or {Person}:
 
 <<
 User u = database.lookupPerson("parrt@jguru.com");
@@ -377,7 +629,20 @@ very careful that the property methods do not have any side-effects
 like updating a counter or whatever.  This breaks the rule of order of
 evaluation independence.
 
-## Map key/value pair access
+# Indirect property names
+
+Sometimes the property name is itself in which case you need to use
+indirect property access notation:
+
+<<
+$person.(propertyName)$
+>>
+
+where {propertyName} is an attribute whose value is the name of a
+property to fetch from {person}.  Using the examples from above,
+{propertyName} could hold the value of either {name} or {email}.
+
+# Map key/value pair access
 
 You may pass in instances of type {HashMap} and {Hashtable} but cannot
 pass in objects implementing the {Map} because that would allow all
@@ -395,11 +660,22 @@ a.setAttribute("user", user);
 String results = a.toString();
 >>
 
-yields a result of "Terence, none-of-your-business".
+yields a result of "{Terence, none-of-your-business}".
 
 ## Automatic aggregate creation
 
-While Java anonymous inner classes are supposed to make creating and passing around aggregates easy, it turns out they have a nasty weakness: they are created with protections such that they are not visible outside their package.  In other words, if you want to avoid creating a separate class and want to use an anonymous class, {StringTemplate} will receive an illegal access exception when trying to access the (public) property methods via reflection.  It stunned me too, but after hours of frustration, I can only conclude this is inescapable.  Anonymous classes are created with non-public access.  Anyway, I found a workaround that is better by augmenting {StringTemplate} slightly.  You may pass in an aggregrate attribute name to {setAttribute()} now:
+While Java anonymous inner classes are supposed to make creating and
+passing around aggregates easy, it turns out they have a nasty
+weakness: they are created with protections such that they are not
+visible outside their package.  In other words, if you want to avoid
+creating a separate class and want to use an anonymous class,
+{StringTemplate} will receive an illegal access exception when trying
+to access the (public) property methods via reflection.  It stunned me
+too, but after hours of frustration, I can only conclude this is
+inescapable.  Anonymous classes are created with non-public access.
+Anyway, I found a workaround that is better by augmenting
+{StringTemplate} slightly.  You may pass in an aggregrate attribute
+name to {setAttribute()} now:
 
 <<
 StringTemplate st =
@@ -419,7 +695,8 @@ items.{first,last}
 
 You are telling {StringTemplate} to take the following two arguments as properties {first} and {last}.  
 
-I have created variants of the {setAttribute()} method to handle from 2 to 5 properties.  This is really handy. :)
+I have created variants of the {setAttribute()} method to handle from
+2 to 5 properties.  This is really handy, at least for Java. :)
 
 ### Template References
 
@@ -464,14 +741,17 @@ Any included template can reference the attributes of the enclosing template ins
 </form>
 >>
 
-you could set attribute {resource} in the enclosing template {page}:
+you could set attribute {resource} in the enclosing template {page} object:
 
 <<
 StringTemplate page = group.getInstanceOf("page");
 page.setAttribute("resource", "faqs");
 >>
 
-This "inheritance" of attributes feature is particularly handy for setting generally useful attributes like {siteFontTag}. 
+This "inheritance" (_dynamic scoping_ really) of attributes feature is
+particularly handy for setting generally useful attributes like
+{siteFontTag} in the outermost {body} template and being able to
+reference it in any nested template in the body.
 
 ## Passing Parameters To Another Template
 
@@ -495,6 +775,46 @@ The right-hand-side of the assignment may be any expression such as an attribute
 <<
 $boldMe(item=copyrightNotice())$
 >>
+
+You may also use an anonymous template such as:
+
+<<
+$bold(it={$firstName$ $lastName$})$
+>>
+
+which first computes the template argument and then assigns it to
+{it}.
+
+If you are using {StringTemplate} groups, then you have formal
+parameters and for those templates with a sole formal argument, you
+can pass just an expression instead of doing an assignment to the
+argument name. For example, if you do {$bold(name)$} and {bold} has
+one formal argument call {item}, then {item} gets the value of {name}
+just as if you had said {$bold(item=name)$}.
+
+# Allowing enclosing attributes to pass through
+
+When template {x} calls template {y}, the formal arguments of {y} hide
+any {x} arguments of the same because the formal parameters force you
+to define values.  This prevents surprises and makes it easy to ensure
+any parameter value is empty unless you specifically set it for that
+template.  The problem is that you need to factor templates sometimes
+and want to refine behavior with a subclass or just invoke another
+shared template but invoking {y} as {<y()>} hides all of {x}'s
+parameters with the same name.  Use {<y(...)>} syntax to indicate y
+should inherit all values even those with the same name.
+{<y(name="foo", ...)>} would set one arg, but the others are inherited
+whereas {<y(name="foo")>} only has {name} set; all other arguments of
+template {y} are empty. You can set manually with
+{StringTemplate.setPassThroughAttributes()}.
+
+# Argument evaluation scope
+
+The right-hand-side of the argument assignments are evaluated
+within the scope of the enclosing template whereas the left-hand-side
+attribute name is the name of an attribute in the target template.
+Template invocations like {$bold(item=item)$} actually make sense
+because the {item} on the right is evaluated in a different scope.
 
 ### Attribute Expressions
 
@@ -525,10 +845,11 @@ Sometimes you may want to compute the URL; usually it is enough to concatenate s
 where {faqid} and {faqtitle} are attributes you would have to set for
 the template that referenced {link}.
 
-You may parenthesize any expression:
+Terence says: _I'm a little uncomfortable with this catenation
+operation.  Please use a template instead_:
 
 <<
-...$link(url=("/faq/view?ID="+faqid), title=faqtitle)$...
+...$link(url={/faq/view?ID=$faqid$}, title=faqtitle)$...
 >>
 
 ### Template Application
@@ -1082,10 +1403,6 @@ infinite recursion to <ifstat([stats])@4> referenced in <block([stats])@3>; stac
 ...
 >>
 
-### Lazy evaluation
-
-Attributes are _lazily evaluated_ in the sense that referencing _a_ does not actually invoke the lookup mechanism described here until the template is asked to render itself to text.  Lazy evaluation is surprising useful in both the web and code generation worlds because such order decoupling allows code to set attributes when it is convenient or efficient not necessarily before templates reference those attributes.  For example, a complicated web page consisting of many nested templates all may reference {$userName$}, but the value of {userName} does not need to be set until right before the entire page is rendered to text via {toString()}.  Even applying a template to a multi-valued attribute does not actually lookup and evaluate attributes until the entire overall template tree structure is rendered.  Applying a template to an attribute yields a template not a string.  You may ask the resulting template for its attributes even though they have not been computed.
-
 #### Output Filters
 
 2.0 introduces the notion of a {StringTemplateWriter}.  All text rendered from a template goes through one of these writers before being placed in the output buffer.  I added this primarily for auto-indentation for code generation, but it also could be used to remove whitespace (as a compression) from HTML output.  If you don't care about indentation, you can simply implement {write()}:
@@ -1566,3 +1883,15 @@ Syntax (ii) is rather verbose and redundant wouldn't you say?  Syntax
 (iii) doesn't even work because the + is outside the realm of
 {StringTemplate} delimiters.
 
+#### Acknowledgements
+
+Tom Burns (CEO jGuru.com) co-designed {StringTemplate} and listened to
+me think out loud incessantly.  I would also like to thank Monty
+Zukowski for planting the {template} "meme" in my head back in the mid
+1990's.  Loring Craymer and Monty both are helping me hone these ideas
+for use in source-to-source language translation.  Matthew Ford has
+done a huge amount of thinking about StringTemplate and has submitted
+numerous suggestions and patches.  Anthony Casalena at
+@(http://www.squarespace.com) has been a big help beta-testing
+{StringTemplate}.  Thanks to the users who have submitted suggestions,
+bugs, sample code, etc...
