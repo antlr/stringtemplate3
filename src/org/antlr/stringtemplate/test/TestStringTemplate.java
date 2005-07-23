@@ -1669,12 +1669,11 @@ public class TestStringTemplate extends TestSuite {
 		String templates =
 				"group Java;"+newline +
 				""+newline +
-				"file(variables,methods) ::= <<" +
-				"<variables:{<it.decl:(it.format)()>}; separator=\"\\n\">"+newline +
-				"<methods>"+newline +
+				"file(variables) ::= <<" +
+				"<variables:{ v | <v.decl:(v.format)()>}; separator=\"\\n\">"+newline +
 				">>"+newline+
-				"intdecl() ::= \"int <it.name> = 0;\""+newline +
-				"intarray() ::= \"int[] <it.name> = null;\""+newline
+				"intdecl(decl) ::= \"int <decl.name> = 0;\""+newline +
+				"intarray(decl) ::= \"int[] <decl.name> = null;\""+newline
 				;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
@@ -1684,7 +1683,7 @@ public class TestStringTemplate extends TestSuite {
 		f.setAttribute("variables.{decl,format}", new Decl("a","int-array"), "intarray");
 		//System.out.println("f='"+f+"'");
 		String expecting = "int i = 0;" +newline+
-				"int[] a = null;"+newline;
+				"int[] a = null;";
 		assertEqual(f.toString(), expecting);
 	}
 
@@ -2809,6 +2808,17 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Ter, Tom";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testAnonTemplateArgs2() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:{n| .$n$.}:{ n | _$n$_}; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "_.Ter._, _.Tom._";
 		assertEqual(e.toString(), expecting);
 	}
 
