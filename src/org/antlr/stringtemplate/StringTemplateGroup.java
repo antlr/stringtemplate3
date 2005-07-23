@@ -265,7 +265,6 @@ public class StringTemplateGroup {
     public StringTemplate lookupTemplate(String name)
 		throws IllegalArgumentException
 	{
-        if ( StringTemplate.debugMode ) listener.debug("lookupTemplate("+name+")");
         if ( name.startsWith("super.") ) {
             if ( superGroup!=null ) {
                 int dot = name.indexOf('.');
@@ -279,7 +278,6 @@ public class StringTemplateGroup {
         StringTemplate st = (StringTemplate)templates.get(name);
         if ( st==null ) {
             // not there?  Attempt to load
-            if ( StringTemplate.debugMode ) listener.debug("Attempting load of: "+getFileNameFromTemplateName(name));
             if ( !templatesDefinedInGroupFile ) {
                 // only check the disk for individual template
                 st = loadTemplateFromBeneathRootDirOrCLASSPATH(getFileNameFromTemplateName(name));
@@ -453,7 +451,6 @@ public class StringTemplateGroup {
     public StringTemplate defineTemplate(String name,
                                          String template)
     {
-		if ( StringTemplate.debugMode ) listener.debug(getName()+".defineTemplate("+name+")");
         StringTemplate st = createStringTemplate();
         st.setName(name);
 		st.setGroup(this);

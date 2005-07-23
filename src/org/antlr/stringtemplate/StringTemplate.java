@@ -180,8 +180,6 @@ public class StringTemplate {
 
 	public static final String ANONYMOUS_ST_NAME = "anonymous";
 
-    static boolean debugMode = false;
-
     /** track probable issues like setting attribute that is not referenced. */
     static boolean lintMode = false;
 
@@ -311,7 +309,6 @@ public class StringTemplate {
 	/** Create a blank template with no pattern and no attributes */
 	public StringTemplate() {
 		group = defaultGroup; // make sure has a group even if default
-        if ( debugMode ) debug("new StringTemplate():"+getTemplateID());
     }
 
 	/** Create an anonymous template.  It has no name just
@@ -319,7 +316,6 @@ public class StringTemplate {
 	 */
     public StringTemplate(String template) {
         this(null, template);
-        if ( debugMode ) debug("new StringTemplate(template):"+getTemplateID());
     }
 
     public StringTemplate(String template, Class lexer) {
@@ -331,7 +327,6 @@ public class StringTemplate {
 	/** Create an anonymous template with no name, but with a group */
 	public StringTemplate(StringTemplateGroup group, String template) {
 		this();
-        if ( debugMode ) debug("new StringTemplate(group, ["+template+"]):"+getTemplateID());
 		if ( group!=null ) {
 			setGroup(group);
 		}
@@ -346,7 +341,6 @@ public class StringTemplate {
      *  template to eval in a context different from the examplar.
      */
     protected void dup(StringTemplate from, StringTemplate to) {
-        if ( debugMode ) debug("dup template ID "+from.getTemplateID()+" to get "+to.getTemplateID());
         to.pattern = from.pattern;
 		to.chunks = from.chunks;
         to.formalArguments = from.formalArguments;
@@ -362,7 +356,6 @@ public class StringTemplate {
      *  template but does not have any attribute values.
      */
     public StringTemplate getInstanceOf() {
-		if ( debugMode ) debug("getInstanceOf("+getName()+")");
         StringTemplate t = group.createStringTemplate();
 		dup(this, t);
 		return t;
@@ -488,7 +481,6 @@ public class StringTemplate {
      *  with arrays of objects and arrays of {int,float,double}.
 	 */
 	public void setAttribute(String name, Object value) {
-		if ( debugMode ) debug(getName()+".setAttribute("+name+", "+value+")");
 		if ( value==null ) {
 			return;
 		}
@@ -644,7 +636,6 @@ public class StringTemplate {
 								   String name,
 								   Object value)
 	{
-		if ( debugMode ) debug(getName()+".rawSetAttribute("+name+", "+value+")");
 		if ( formalArguments!=FormalArgument.UNKNOWN &&
 			getFormalArgument(name)==null )
 		{
@@ -1047,7 +1038,9 @@ public class StringTemplate {
         }
     }
 
-    public void debug(String msg) {
+    /** @deprecated 2.2
+	 */
+	public void debug(String msg) {
         if ( getErrorListener()!=null ) {
             getErrorListener().debug(msg);
         }
@@ -1080,15 +1073,6 @@ public class StringTemplate {
 
     public static boolean inLintMode() {
         return lintMode;
-    }
-
-    public static boolean isDebugMode() {
-        return debugMode;
-    }
-
-    /** DEBUG MODE IS PRETTY MUCH USELESS AT THE MOMENT! */
-	public static void setDebugMode(boolean debug) {
-        StringTemplate.debugMode = debug;
     }
 
     /** Indicates that 'name' has been referenced in this template. */
