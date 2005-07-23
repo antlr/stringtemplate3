@@ -157,14 +157,14 @@ asked to render itself to text.  Lazy evaluation is surprising useful
 in both the web and code generation worlds because such order
 decoupling allows code to set attributes when it is convenient or
 efficient not necessarily before a template is created that references
-those attributes.  For example, a complicated web page consisting of
-many nested templates all may reference {$userName$}, but the value of
-{userName} does not need to be set by the model until right before the
-entire page is rendered to text via {toString()}.  Even applying a
-template to a multi-valued attribute does not actually lookup and
-evaluate attributes until the entire overall template tree structure
-is rendered.  Applying a template to an attribute yields a template
-not a string.
+those attributes.  For example, a complicated web page may consist of
+many nested templates many of which reference {$userName$}, but the
+value of {userName} does not need to be set by the model until right
+before the entire page is rendered to text via {toString()}.  Even
+applying a template to a multi-valued attribute does not actually
+lookup and evaluate attributes until the entire overall template tree
+structure is rendered.  Applying a template to an attribute yields a
+template not a string.
 
 {StringTemplate} implements a "poor man's" form of lazy evaluation by
 simply requiring that all attributes be computed _a priori_.  That is,
@@ -196,13 +196,15 @@ structure computed by {getNames()} to compute {names.size()} or
 whatever.  Now, suppose a designer moves the {numberNames} reference
 to the {<title>} tag *before* the reference to {names} in the
 {foreach} forces loading of the names from the database. You now get a
-null pointer exception at worst or a blank title at best.  I'm stunned
-that other template engine authors with whom I've spoken think this is
-ok.  Any time I can get the computer to do something automatically for
-me that removes an entire class of programming errors, I'll take it!
+null pointer exception at worst or a blank title at best.  You have to
+anticipate these dependencies and have {getNumberNames()} invoke
+{getNames())} because of a change in the template.  I'm stunned that
+other template engine authors with whom I've spoken think this is ok.
+Any time I can get the computer to do something automatically for me
+that removes an entire class of programming errors, I'll take it!
 Automatic garbage collection is the obvious analogy here.
 
-The the pull method requires that programmers do a topological sort in
+The pull method requires that programmers do a topological sort in
 their minds anticipating any order that a programmer or designer could
 induce.  To ensure attribute computation safety, I have shown
 trivially in my academic paper that _pull_ reduces to _push_ in the
@@ -900,6 +902,17 @@ For this syntax to work, however, the applied templates have to reference a stan
 
 to pick up the value of {name} in our examples above.
 
+As of 2.2 {StringTemplate}, you can avoid using {it} as a default
+parameter by using formal arguments.  For expression {$x:y()$},
+{StringTemplate} will assign the value of {x} to {it} and any sole
+formal argument of {y}.  For example, if {y} is:
+
+<<
+y(item) ::= "_$item$_"
+>>
+
+then {item} would also have the value of {x}.
+
 ## Applying Templates To Multi-Valued Attributes
 
 Where template application really shines though is when an attribute is multi-valued.  One of the most common web page generation issues is making lists of items either as bullet lists or table rows etc...  Applying a template to a multi-valued attribute means that you want the template applied to each of the values.
@@ -951,6 +964,14 @@ In this case, the output would be:
 >>
 
 If there is only one attribute value, then {i} will be 1.
+
+As when invoking templates ala "includes", a single formal argument is
+also set to the iterated value.  For example, you could define
+{numberedListItem} as follows in a {StringTemplateGroup} file:
+
+<<
+numberedListItem(item) ::= "$i$. $item$<br>"
+>>
 
 ## Applying Multiple Templates To Multi-Valued Attributes
 
@@ -1014,6 +1035,23 @@ The output would look like:
 
 Anonymous templates work on single-valued attributes as well.
 
+As of 2.2, you may define formal arguments on anonymous templates even
+if you are not using {StringTemplate} groups.  I have borrowed the
+syntax from SmallTalk though it is identical in function to {lamba} of
+Python.  Use a comma-separated list of argument names followed by the
+'{|}' "pipe" symbol.  Any single whitespace character immediately
+following the pipe is ignored.  The following example bolds the names
+in a list using an argument to avoid the monotonous use of {it}:
+
+<<
+<ul>
+$names:{ n | <b>$n$</b>}$
+</ul>
+>>
+
+Clearly only one argument may be defined in this situation: the
+iterated value of a single list.
+
 ## Indirect template references
 
 Sometimes the name of the template you would like to include is itself
@@ -1034,17 +1072,22 @@ Rather than have the controller code create a bunch of instances, one
 could consider it better to have {StringTemplate} do the creation--the
 controller just names what format to use.
 
-Consider generating a list of Java declarations that are initialized to 0, false, null, etc...  One solution is to define a template for {int}, {Object}, {Array}, etc... declarations and then pass in an aggregate object that has the variable declaration object and the format.  In a template group file you might have:
+If {StringTemplate} did not have a map definition, you could simulate
+its functionality.  Consider generating a list of Java declarations
+that are initialized to 0, false, null, etc...  You could define a
+template for {int}, {Object}, {Array}, etc... declarations and then
+pass in an aggregate object that has the variable declaration object
+and the format.  In a template group file you might have:
 
 <<
 group Java;
 
 file(variables,methods) ::= <<
-<variables:{<it.decl:(it.format)()>}; separator="\n">
+<variables:{ v | <v.decl:(v.format)()>}; separator="\n">
 <methods>
 \>>
-intdecl() ::= "int <it.name> = 0;"
-intarray() ::= "int[] <it.name> = null;"
+intdecl(decl) ::= "int <decl.name> = 0;"
+intarray(decl) ::= "int[] <decl.name> = null;"
 >>
 
 Your code might look like:
@@ -1179,25 +1222,52 @@ their values.
 | Concatenation of {toString()} invoked on each element separated by _expr_. 
 ----
 <_template_(_argument-list_)>
-| Include _template_.  The _argument-list_ is a list of attribute assignments where each assignment is of the form _attribute_=_expr_.
+| Include _template_.  The _argument-list_ is a list of attribute
+assignments where each assignment is of the form _arg-of-template_=_expr_
+where _expr_ is evaluated in the context of the surrounding template
+not of the invoked template.
 ----
 <_(expr)_(_argument-list_)>
-| Include _template_ whose name is computed via _expr_.  The _argument-list_ is a list of attribute assignments where each assignment is of the form _attribute_=_expr_.  Example {$(titleFont)()$} looks up {titleFont}'s value and uses that as template name.  Can also apply an indirect template to an attribute.
+| Include _template_ whose name is computed via _expr_.  The _argument-list_ is a list of attribute assignments where each assignment is of the form _attribute_=_expr_.  Example {$(whichFormat)()$} looks up {whichFormat}'s value and uses that as template name.  Can also apply an indirect template to an attribute.
 ----
 <_attribute_:_template_(_argument-list_)>
-| Apply _template_ to _attribute_.  The optional _argument-list_ is evaluated before application so that you can set attributes within _template_.  The default attribute {it} is set to the value of _attribute_.  Example: {$data:bold()} applies {bold()} to {data}'s value.  If _attribute_ is multi-valued, then the optional _argument-list_ is evaluated before each application so that you can set attributes within _template_.  Also, the default attribute {it} is set to the value of each element in turn.
+| Apply _template_ to _attribute_.  The optional _argument-list_ is
+evaluated before application so that you can set attributes referenced
+within _template_.  The default attribute {it} is set to the value of
+_attribute_.  If _attribute_ is multi-valued, then {it} is set to each
+element in turn and _template_ is invoked _n_ times where _n_ is the
+number of values in _attribute_.  Example: {$name:bold()} applies
+{bold()} to {name}'s value.
 ----
 <_attribute_:_(expr)_(_argument-list_)>
-| Apply _template_, whose name is computed from _expr_, to _attribute_.  The optional _argument-list_ is evaluated before application so that you can set attributes within _template_.  The default attribute {it} is set to the value of _attribute_.  Example {$data:(name)()$} looks up {name}'s value and uses that as template name to apply to {data}.
+| Apply a template, whose name is computed from _expr_, to
+each value of _attribute_.  Example {$data:(name)()$} looks up
+{name}'s value and uses that as template name to apply to {data}. 
 ----
-<_multi-valued-attribute_:_t1_(_argument-list_): ... :_tN_(_argument-list_)>
-| Apply multiple templates in order from left to right.  The result of a template application upon a multi-valued attribute is another multi-valued attribute.  The overall expression evaluates to the concatenation of all elements of the final multi-valued attribute resulting from _templateN_'s application. 
+<_attribute_:_t1_(_argument-list_): ... :_tN_(_argument-list_)>
+| Apply multiple templates in order from left to right.
+The result of a template application upon a multi-valued attribute is
+another multi-valued attribute.  The overall expression evaluates to
+the concatenation of all elements of the final multi-valued attribute
+resulting from _templateN_'s application.
 ----
 <_attribute_:\{_anonymous-template_\}>
-| Concatenate the results of applying a template with no name to each element of _multi-valued-attribute_.
+| Apply an anonymous template to each element of _attribute_.  The
+iterated {it} attribute is set automatically.
+----
+<_attribute_:\{_argument-name_ \| _anonymous-template_\}>
+| Apply an anonymous template to each element of _attribute_.  Set the
+_argument-name_ to the iterated value and also set {it}.
+----
+<_a1_,_a2_,...,_aN_:\{_argument-list_ \| _anonymous-template_\}>
+| Parallel list iteration.  March through the values of the attributes
+_a1_.._aN_, setting the values to the arguments in _argument-list_ in
+the same order.  Apply the anonymous template.  There is no defined
+{it} value unless inherited from an enclosing scope.
 ----
 <_attribute_:_t1_(),_t2_(),...,_tN_()>
-| Apply an alternating list of templates to the elements of _attribute_.
+| Apply an alternating list of templates to the elements of
+_attribute_.  The template names may include argument lists.
 ----
 <if(_attribute_)>_subtemplate_
 <else>_subtemplate2_
@@ -1326,6 +1396,10 @@ st.setAttribute("name", "Ter");
 String expecting = "<strong>Ter</strong>";
 >>
 
+{StringTemplate} group maps also inherit.  If an attribute reference
+is not found, {StringTemplate} looks for a map in its group with that
+name.  If not found, the super group is checked.
+
 #### Template And Attribute Lookup Rules
 
 ### Template lookup
@@ -1348,13 +1422,25 @@ Reference to attribute _a_ in template _t_ is resolved as follows:
 
 1 Look in _t_'s attribute table
 1 Look in _t_'s arguments
-1 Look in _t_'s enclosing template instance
+1 Look recursively up _t_'s enclosing template instance chain
+1 Look recursively up _t_'s group / supergroup chain for a map
 
-This process is recursively executed until _a_ is found or there are no more enclosing template instances.
+This process is recursively executed until _a_ is found or there are
+no more enclosing template instances or super groups.
 
-When using a group file format to specify templates, you must specify the formal arguments for that template.  If you try to access an attribute that is not formally defined in that template or an enclosing template, you will get a {NoSuchElementException}.
+When using a group file format to specify templates, you must specify
+the formal arguments for that template.  If you try to access an
+attribute that is not formally defined in that template or an
+enclosing template, you will get a {NoSuchElementException}.
 
-When building code generators with {StringTemplate}, large heavily nested template tree structures are commonplace and, due to dynamic attribute scoping, a nested template could inadvertently use an attribute from an enclosing scope.  This could lead to infinite recursion during rendering.  To prevent this, formal arguments on template _t_ hide any attribute value with that name in any enclosing scope.  Here is a test case that illustrates the point.  
+When building code generators with {StringTemplate}, large heavily
+nested template tree structures are commonplace and, due to dynamic
+attribute scoping, a nested template could inadvertently use an
+attribute from an enclosing scope.  This could lead to infinite
+recursion during rendering and other surprises.  To prevent this,
+formal arguments on template _t_ hide any attribute value with that
+name in any enclosing scope.  Here is a test case that illustrates the
+point.
 
 <<
 String templates =
@@ -1368,9 +1454,16 @@ b.setAttribute("stats", group.getInstanceOf("block"));
 String expecting ="{{}}";
 >>
 
-Even though {block} has a {stats} value that refers to itself, there is no recursion because each instance of {block} hides the {stats} value from above since {stats} is a formal argument.
+Even though {block} has a {stats} value that refers to itself, there
+is no recursion because each instance of {block} hides the {stats}
+value from above since {stats} is a formal argument.
 
-Sometimes self-recursive (hence infinitely recursive) structures occur through programming error and they are nasty to track down.  If you turn on "lint mode", {StringTemplate} will attempt to find cases where a template instance is being evaluated during the evaluation of itself.  For example, here is a test case that causes and traps infinite recursion.
+Sometimes self-recursive (hence infinitely recursive) structures occur
+through programming error and they are nasty to track down.  If you
+turn on "lint mode", {StringTemplate} will attempt to find cases where
+a template instance is being evaluated during the evaluation of
+itself.  For example, here is a test case that causes and traps
+infinite recursion.
 
 <<
 String templates =
@@ -1405,7 +1498,12 @@ infinite recursion to <ifstat([stats])@4> referenced in <block([stats])@3>; stac
 
 #### Output Filters
 
-2.0 introduces the notion of a {StringTemplateWriter}.  All text rendered from a template goes through one of these writers before being placed in the output buffer.  I added this primarily for auto-indentation for code generation, but it also could be used to remove whitespace (as a compression) from HTML output.  If you don't care about indentation, you can simply implement {write()}:
+2.0 introduced the notion of a {StringTemplateWriter}.  All text
+rendered from a template goes through one of these writers before
+being placed in the output buffer.  I added this primarily for
+auto-indentation for code generation, but it also could be used to
+remove whitespace (as a compression) from HTML output.  If you don't
+care about indentation, you can simply implement {write()}:
 
 <<
 public interface StringTemplateWriter {
@@ -1459,7 +1557,8 @@ writer class.
 
 ### Auto-indentation
 
-{StringTemplate} 2.0 has auto-indentation on by default.  To turn it off, use {NoIndentWriter} rather than (the default) {AutoIndentWriter}.
+{StringTemplate} has auto-indentation on by default.  To turn it off,
+use {NoIndentWriter} rather than (the default) {AutoIndentWriter}.
 
 At the simplest level, the indentation looks like a simple column count:
 
@@ -1717,103 +1816,18 @@ o {angle.bracket.template.g}: {<...>} template lexer
 o {action.g}: parse attribute expressions into ASTs
 o {eval.g}: evaluate expression ASTs during {toString()}
 
-Anything outside of the {StringTemplate} start/stop delimiters is ignored.  The ANTLR grammar inside the attribute action is:
+Anything outside of the {StringTemplate} start/stop delimiters is
+ignored.
 
-<<
-action
-    :   templatesExpr (SEMI optionList)?
-    |   "if" LPAREN ifCondition RPAREN
-    ;
-
-optionList
-    :   "separator" ASSIGN expr
-    ;
-
-ifCondition
-    :   ifAtom
-    |   NOT ifAtom
-    ;
-
-ifAtom
-    :   expr
-    ;
-
-expr:   atom (PLUS atom)*
-    ;
-
-atom:   attribute
-    |   templateInclude
-    |   LPAREN expr RPAREN  // regular old parens
-    ;
-
-templatesExpr
-    :   expr ( COLON template (COMMA template)* )*
-    ;
-
-nonAlternatingTemplateExpr
-    :   expr ( COLON template )*
-    ;
-
-template
-    :   (   namedTemplate       // foo()
-        |   anonymousTemplate   // {foo}
-        )
-    ;
-
-namedTemplate
-    :   ID argList
-    ;
-
-anonymousTemplate
-    :   ANONYMOUS_TEMPLATE
-    ;
-
-attribute
-    :   ID
-    |   objPropertyRef
-    |   STRING
-    |   INT
-    ;
-
-templateInclude
-    :   ID argList
-    |   "super" DOT ID argList
-    ;
-
-objPropertyRef
-    :   ID (DOT ID)+
-    ;
-
-argList
-    :   LPAREN RPAREN
-    |   LPAREN argumentAssignment (COMMA argumentAssignment)* RPAREN
-    ;
-
-argumentAssignment
-    :   ID ASSIGN nonAlternatingTemplateExpr
-    ;
->>
-
-An identifier is:
-
-<<
-ID  :	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'/')*
-    ;
->>
-
-Strings are double-quoted with optional embedded escaped characters that are translated (escapes are not translated outside of strings; for example, text outside of attribute expressions do not get escape chars translated except {\\$}, {\\<} and {\\>}).
+A word about Strings.  Strings are double-quoted with optional
+embedded escaped characters that are translated (escapes are not
+translated outside of strings; for example, text outside of attribute
+expressions do not get escape chars translated except {\\$}, {\\<} and
+{\\>}).
 
 <<
 STRING
     :   '"' (ESC_CHAR | ~'"')* '"'
-    ;
->>
-
-Anonymous templates are enclosed in curlies:
-
-<<
-ANONYMOUS_TEMPLATE
-    :   '{' (ESC_CHAR | ~'}')* '}'
     ;
 >>
 
@@ -1835,19 +1849,8 @@ ESC_CHAR
 
 but other escapes are allowed and ignored.
 
-The other unspecified operators are:
-
-<<
-COMMA  : ',' ;
-DOT    : '.' ;
-ASSIGN : '=' ;
-COLON  : ':' ;
-PLUS   : '+' ;
-SEMI   : ';' ;
-NOT    : '!' ;
-LPAREN : '(' ;
-RPAREN : ')' ;
->>
+Please see the actual grammar files for the formal language
+specification of {StringTemplate}'s various components.
 
 #### A Common Syntax Question
 
@@ -1888,9 +1891,9 @@ Syntax (ii) is rather verbose and redundant wouldn't you say?  Syntax
 Tom Burns (CEO jGuru.com) co-designed {StringTemplate} and listened to
 me think out loud incessantly.  I would also like to thank Monty
 Zukowski for planting the {template} "meme" in my head back in the mid
-1990's.  Loring Craymer and Monty both are helping me hone these ideas
-for use in source-to-source language translation.  Matthew Ford has
-done a huge amount of thinking about StringTemplate and has submitted
+1990's.  Loring Craymer and Monty both helped me hone these ideas for
+use in source-to-source language translation.  Matthew Ford has done a
+huge amount of thinking about StringTemplate and has submitted
 numerous suggestions and patches.  Anthony Casalena at
 @(http://www.squarespace.com) has been a big help beta-testing
 {StringTemplate}.  Thanks to the users who have submitted suggestions,
