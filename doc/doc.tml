@@ -127,27 +127,34 @@ programming languages are context-free as are any XML pages
 whose form can be expressed with a DTD.
 
 The normal imperative programming language features like setting
-variables, loops, arbitrary method calls into the model etc... are
-simply unnecessary and lead to entangled specifications.  Why
-criticize JSP for providing a Turing-complete programming language
-mixed in with the templates and then go off and invent yet another
-Turing-complete language, thus, providing JSP with simply an
-unfamiliar programming language?  The fact that StringTemplate does
-not allow side-effects via such features as assignment statements
-should make you suspicious of engines that do allow it.  I guarantee
-that the templates in ANTLR v3's code generator are vastly more
-complicated than any web page anywhere and I have yet to need a single
-assignment expression.  If your template looks like a program, it
+variables, loops, arithmetic expressions, arbitrary method calls into
+the model, etc... are not only unnecessary, but they are very
+specifically what is wrong with JSP.  Recall that JSP allows arbitrary
+Java expressions and statements, allowing programmers to incorporate
+computations and logic in their templates.  A quick scan of template
+engines reveals an unfortunate truth--all but a few are
+Turing-complete languages just like JSP.  One can argue that they are
+worse than JSP because they use languages peculiar to that template
+engine.  Many tool builders have clearly lost sight of the original
+problem we were all trying to solve.  We programmers often get caught
+up in cool implementations, but we should focus on what *should* be
+built not what *can* be built.
+
+The fact that StringTemplate does not allow such things as assignments
+(no side-effects) should make you suspicious of engines that do allow
+it.  I guarantee that the templates in ANTLR v3's code generator are
+vastly more complicated than any web page, for example, created by
+another template engine and I have yet to find a situation where I
+needed assignments.  If your template looks like a program, it
 probably is--you have totally entangled your model and view.
 
-Many engines miss the key elements while providing all sorts of
-unnecessary features like assignment statements that in fact support
-model-view entanglement.  In practice, I have found that certain
-language semantics are absolutely required such as recursion for
-generative programming and language translation.  A template engine
-without recursion, for example, seems unlikely to be capable of
-generating recursive output structures such as nested tables or nested
-code blocks.
+While providing all sorts of dangerous features like assignment that
+promote the use of computations and logic in templates, many engines
+miss the key elements.  Certain language semantics are absolutely
+required for generative programming and language translation.  One is
+_recursion_.  A template engine without recursion seems unlikely to be
+capable of generating recursive output structures such as nested
+tables or nested code blocks.
 
 Another distinctive {StringTemplate} language feature lacking in other
 engines is _lazy-evaluation_.  {StringTemplate}'s attributes are
@@ -160,20 +167,19 @@ efficient not necessarily before a template is created that references
 those attributes.  For example, a complicated web page may consist of
 many nested templates many of which reference {$userName$}, but the
 value of {userName} does not need to be set by the model until right
-before the entire page is rendered to text via {toString()}.  Even
-applying a template to a multi-valued attribute does not actually
-lookup and evaluate attributes until the entire overall template tree
-structure is rendered.  Applying a template to an attribute yields a
-template not a string.
+before the entire page is rendered to text via {toString()}.  You can
+build up the complicated page and set attribute values in any
+convenient order.
 
 {StringTemplate} implements a "poor man's" form of lazy evaluation by
 simply requiring that all attributes be computed _a priori_.  That is,
 all attributes must be computed and pushed into a template before it
 is written to text; this is the so-called "_push method_" whereas most
-template engines use the "_pull method_".  The pull method is more
-conventional but introduces _order-of-computation dependencies_.
-Imagine a simple web page that displays a list of names (using
-some mythical template engine notation):
+template engines use the "_pull method_".  The pull method appears
+more conventional because programmers mistakenly regard templates as
+programs, but pulling attributes introduces _order-of-computation
+dependencies_.  Imagine a simple web page that displays a list of
+names (using some mythical template engine notation):
 
 <<
 <html>
@@ -198,7 +204,7 @@ to the {<title>} tag *before* the reference to {names} in the
 {foreach} forces loading of the names from the database. You now get a
 null pointer exception at worst or a blank title at best.  You have to
 anticipate these dependencies and have {getNumberNames()} invoke
-{getNames())} because of a change in the template.  I'm stunned that
+{getNames()} because of a change in the template.  I'm stunned that
 other template engine authors with whom I've spoken think this is ok.
 Any time I can get the computer to do something automatically for me
 that removes an entire class of programming errors, I'll take it!
@@ -224,16 +230,6 @@ of the language generation problem dictates the solution: a template
 engine that is restricted to support a mutually-recursive set of
 templates with side-effect-free and order-independent attribute
 references.
-
-A final note.  I have examined perhaps 20 other template engines and I
-find the following fact interesting: either a template engine has
-simple document-with-holes sort of templates or the engine has a full
-Turing-complete language ala JSP.  StringTemplate is much more
-powerful than the simple document-with-holes approach, but it is
-nowhere near as free form as the vast majority of engines.  We
-programmers often get caught up in cool implementations and boy do we
-love to build languages, however, we should focus on what *should* be
-built not what *can* be built.
 
 #### Defining Templates
 
@@ -550,7 +546,7 @@ See the scoping rules section for information on how formal arguments affect att
 
 I use {.stg} file extension, which you might also want to use.
 
-#### Functionality Summary
+#### Functionality
 
 ### Attribute References
 
@@ -644,6 +640,9 @@ where {propertyName} is an attribute whose value is the name of a
 property to fetch from {person}.  Using the examples from above,
 {propertyName} could hold the value of either {name} or {email}.
 
+{propertyName} may actually be an expression instead of a simple
+attribute name.
+
 # Map key/value pair access
 
 You may pass in instances of type {HashMap} and {Hashtable} but cannot
@@ -699,6 +698,92 @@ You are telling {StringTemplate} to take the following two arguments as properti
 
 I have created variants of the {setAttribute()} method to handle from
 2 to 5 properties.  This is really handy, at least for Java. :)
+
+## List construction
+
+As of 2.2, you may combine multiple attributes into a single
+multi-valued attribute in a syntax similar to the group map feature.
+Catenate attributes by placing them in square brackets in a
+comma-separated list.  For example,
+
+<<
+$[mine,yours]$
+>>
+
+creates a new multi-valued attribute (a list) with both elements--all
+of {mine} first then all of {yours}.  This feature is handy when the
+model happens to group attributes differently than you need to access
+them in the view.  This ability to rearrange attributes is consistent
+with model-view separation because the template cannot alter the data
+structure nor test its values--the template is merely looking at the
+data from a new perspective.
+
+Naturally you may combine the list construction with template
+application:
+
+<<
+$[mine,yours]:{ v | ...}$
+>>
+
+Note that this is very different than
+
+<<
+$mine,yours:{ x,y | ...}$
+>>
+
+which iterates max(n,m) times where n and m are the lengths of {mine}
+and {yours}, respectively.  The {[mine,yours]} version iterates n+m
+times.
+
+## Attribute operators
+
+Sometimes you need to treat the first or last element of multi-valued
+attribute differently than the others.  For example, if you have a
+list of integers in an attribute and you need to generate code to sum
+those numbers, you could start like this:
+
+<<
+<numbers:{ n | sum += <n>;}>
+>>
+
+You need to define {sum}, however:
+
+<<
+int sum = 0;
+<numbers:{ n | sum += <n>;}>
+>>
+
+What if {numbers} is empty though?  No need to create the {sum}
+definition so you could do this:
+
+<<
+<if(numbers)>int sum = 0;<endif>
+<numbers:{ n | sum += <n>;}>
+>>
+
+A more specific strategy (and one that generates slightly better code as
+it avoids an unnecessary initialization to 0) is the following:
+
+<<
+<first(numbers):{ n | int sum += <n>;}>
+<rest(numbers):{ n | sum += <n>;}>
+>>
+
+where {first(numbers)} results in the first value of attribute
+{numbers} if any and {rest(numbers)} results all values in {numbers}
+but the first value.  
+
+The other operator available to you is {last}, which naturally results
+in the last value of a multi-valued attribute.
+
+Special cases:
+
+o operations on empty attributes yields an empty value
+
+o {rest} of a single-valued attribute yields an empty value
+
+o {tail} of a single-valued attribute yields the same as {first}, the
+attribute value
 
 ### Template References
 
@@ -1052,6 +1137,22 @@ $names:{ n | <b>$n$</b>}$
 Clearly only one argument may be defined in this situation: the
 iterated value of a single list.
 
+## Anonymous template application to multiple attributes
+
+In some cases, the model may present data to the view as separate
+columns of data rather than as a single list of objects, such as
+multi-valued attributes {names} and {phones} rather than a single
+{users} multi-valued attribute.  As of 2.2, you may iterate over
+multiple attributes:
+
+<<
+$names,phones:{ n,p | $n$: $p$}$
+>>
+
+An error is generated if you have too many arguments for the number of
+attributes.  Iteration proceeds while at least one of the attributes
+({names} or {phones}, in this case) has values.
+
 ## Indirect template references
 
 Sometimes the name of the template you would like to include is itself
@@ -1215,6 +1316,17 @@ their values.
 <_attribute_>
 | Evaluates to the value of _attribute_{.toString()} if it exists else empty string.
 ----
+<_attribute_._property_>
+| Looks for _property_ of _attribute_ via JavaBeans accessor methods
+like {get}_Property_{()} or {is}_Property_{()}.  If that fails,
+{StringTemplate} looks for a raw field of the _attribute_ called _property_.
+Evaluates to the empty string if no such property is found.
+----
+<_attribute_.(_expr_)>
+| Indirect property lookup.  Same as _attribute_._property_ except
+use the value of _expr_ as the _property_ name.
+Evaluates to the empty string if no such property is found.
+----
 <_multi-valued-attribute_>
 | Concatenation of {toString()} invoked on each element.  If _multi-valued-attribute_ is missing this evaluates to the empty string.
 ----
@@ -1286,49 +1398,87 @@ tab, carriage return.
 {<! comment !>}, {$! comment !$} | Comments, ignored by StringTemplate.
 ]
 
-#### Setting the Expression Delimiters
+#### Object Rendering
 
-By default, expressions in a template are delimited by dollar signs:
-{$...$}.  This works great for the most common case of HTML generation
-because the attribute expressions are clearly highlighted in the text.
-Sometimes, with other formats like SQL statement generation, you may
-want to change the template expression delimiters to avoid a conflict
-and to make the expressions stand out.
+The atomic element of a template is a simple object that is rendered
+to text by its {toString()} method (in Java).  For example, an
+{Integer} object is converted to text as a sequence of characters
+representing the numeric value written out.  What if you wanted commas
+to separate the 1000's places like {1,000,000}?  What if you wanted
+commas and sometimes periods depending on the locale?  Prior to 2.2,
+there was no means of altering the rendering of objects to text.  The
+controller had to pull data from the model and wrap it on an object
+whose {toString()} method rendered it appropriately.
 
-As of 2.0, the start and stop strings are limited to either {$...$} or {<...>} (unless you build your own lexical analyzer to break apart templates into chunks).
+As of {StringTemplate} 2.2, you may register various attribute
+renderers associated with object class types.  Normally a single
+renderer will be used for a group of templates so that {Date} objects
+are always displayed using the appropriate {Locale}, for example.
+There are, however, situations where you might want a template to
+override the group renderers.  You may register renderers with either
+templates or groups and groups inherit the renderers from super groups
+(if any).
 
-To use the angle bracket delimiters you must create a {StringTemplateGroup}:
+There is a new interface, {AttributeRenderer}, that defines how an
+object is rendered to string.  Here is a renderer that renders
+{Calendar} date objects tersely.
 
 <<
-StringTemplateGroup group =
-  new StringTemplateGroup("sqlstuff", "/tmp", AngleBracketTemplateLexer.class);
-StringTemplate query =
-  new StringTemplate(group, "SELECT <column> FROM <table>;");
-query.setAttribute("column", "name");
-query.setAttribute("table", "User");
+public class DateRenderer implements AttributeRenderer {
+	public String toString(Object o) {
+		SimpleDateFormat f = new SimpleDateFormat("yyyy.MM.dd");
+		return f.format(((Calendar)o).getTime());
+	}
+}
+...
+StringTemplate st =new StringTemplate(
+		"date: <created>",
+		AngleBracketTemplateLexer.class);
+st.setAttribute("created", new GregorianCalendar(2005, 07-1, 05));
+st.registerRenderer(GregorianCalendar.class, new DateRenderer());
+String expecting = "date: 2005.07.05";
+String result = st.toString();
 >>
 
-All templates created through the group or in anyway associated with
-the group will assume your the angle bracket delimiters.  It's smart to be
-consistent across all files of similar type such as "all HTML
-templates use {$...$}" and "all SQL templates use {<...>}".
+All attributes of type {GregorianCalendar} in template {st} are
+rendered using the {DateRenderer} object.
 
-#### Caching
+You will notice that there is no way for the template to say which
+renderer to use.  Allowing such a mechanism would effectively imply an
+ability to call random code from the template.  In {StringTemplate}'s
+scheme, only the model or controller can set the renderer.  The
+template must still reference a simple attribute such as {<created>}.
+If you need the same kind of attribute displayed differently within
+the same template or group, you must pass in two different attribute
+types.  This would be rare, but if you need it, you can easily still
+wrap an object in a renderer before sending it to the template as an
+attribute. For example, if you have a web site that allows editing of
+some descriptions, you will probably need both an escaped and
+unescaped version of the description.  Send in the unescaped
+description as one attribute and send it in again wrapped in an HTML
+escape renderer as a different attribute.
 
-By default templates are loaded from disk just once.  During
-development, however, it is convenient to turn caching off.  Also, you
-may want to turn off caching so that you can quickly update a running
-site.  You can set a simple refresh interval using
-{StringTemplateGroup.setRefreshInterval(...)}.  When the interval is
-reached, all templates are thrown out.  Set interval to 0 to refresh
-constantly (no caching).  Set the interval to a huge number like
-{Integer.MAX_INT} to have no refreshing at all.
+As far as I can tell, this functionality is mostly useful in the web
+page generation realm rather than code generation; perhaps an
+opportunity will present it self though.
 
 #### Template Inheritance
 
-Recall that a StringTemplateGroup is a collection of related templates such as all templates associated with the look of a web site. If you want to design a similar look for that site (such as for premium users), you don't really want to cut-n-paste the original template files for use in the new look. Changes to the original will not be propogated to the new look.
+Recall that a StringTemplateGroup is a collection of related templates
+such as all templates associated with the look of a web site. If you
+want to design a similar look for that site (such as for premium
+users), you don't really want to cut-n-paste the original template
+files for use in the new look. Changes to the original will not be
+propogated to the new look.
 
-Just like you would do with a class definition, a template group may inherit templates from  another group, the _supergroup_.  If template _t_ is not found in a group, it is looked up in the supergroup, if present.  This works regardless of whether you use a group file format or load templates from the disk via a {StringTemplateGroup} object.  Currently you cannot use the group file syntax to specify a supergroup.  I am investigating how this should work.  In the meantime, you must explicitly set the super.
+Just like you would do with a class definition, a template group may
+inherit templates from another group, the _supergroup_.  If template
+_t_ is not found in a group, it is looked up in the supergroup, if
+present.  This works regardless of whether you use a group file format
+or load templates from the disk via a {StringTemplateGroup} object.
+Currently you cannot use the group file syntax to specify a
+supergroup.  I am investigating how this should work.  In the
+meantime, you must explicitly set the super.
 
 From my unit tests, here is a simple inheritance of a template, {bold}:
 
@@ -1495,6 +1645,45 @@ infinite recursion to <ifstat([stats])@4> referenced in <block([stats])@3>; stac
 <ifstat([stats])@4> (start of recursive cycle)
 ...
 >>
+
+#### Setting the Expression Delimiters
+
+By default, expressions in a template are delimited by dollar signs:
+{$...$}.  This works great for the most common case of HTML generation
+because the attribute expressions are clearly highlighted in the text.
+Sometimes, with other formats like SQL statement generation, you may
+want to change the template expression delimiters to avoid a conflict
+and to make the expressions stand out.
+
+As of 2.0, the start and stop strings are limited to either {$...$} or {<...>} (unless you build your own lexical analyzer to break apart templates into chunks).
+
+To use the angle bracket delimiters you must create a {StringTemplateGroup}:
+
+<<
+StringTemplateGroup group =
+  new StringTemplateGroup("sqlstuff", "/tmp", AngleBracketTemplateLexer.class);
+StringTemplate query =
+  new StringTemplate(group, "SELECT <column> FROM <table>;");
+query.setAttribute("column", "name");
+query.setAttribute("table", "User");
+>>
+
+All templates created through the group or in anyway associated with
+the group will assume your the angle bracket delimiters.  It's smart to be
+consistent across all files of similar type such as "all HTML
+templates use {$...$}" and "all SQL templates use {<...>}".
+
+#### Caching
+
+By default templates are loaded from disk just once.  During
+development, however, it is convenient to turn caching off.  Also, you
+may want to turn off caching so that you can quickly update a running
+site.  You can set a simple refresh interval using
+{StringTemplateGroup.setRefreshInterval(...)}.  When the interval is
+reached, all templates are thrown out.  Set interval to 0 to refresh
+constantly (no caching).  Set the interval to a huge number like
+{Integer.MAX_INT} to have no refreshing at all.
+
 
 #### Output Filters
 
@@ -1804,9 +1993,20 @@ then the body template would simply be:
 $table(elements=users)$
 >>
 
-#### Complete Grammar
+#### StringTemplate Grammar
 
-{StringTemplate} has multiple grammars that describe templates at varying degrees of detail.  At the grossest level of granularity, the {group.g} grammar accepts a list of templates with formal template arguments.  Each of these templates is broken up into chunks of literal text and attribute expressions via {template.g}.  The default lexer uses {$...$} delimiters, but the {angle.bracket.template.g} lexer provides {<...>} delimiters.  Each of the attribute expression chunks is processed by {action.g}.  It builds trees (ASTs) representing the operation indicated in the expression.  These ASTs represent the "precompiled" templates, which are evaluated by the tree grammar {eval.g} each time a {StringTemplate} is rendered to string with {toString()}.
+{StringTemplate} has multiple grammars that describe templates at
+varying degrees of detail.  At the grossest level of granularity, the
+{group.g} grammar accepts a list of templates with formal template
+arguments.  Each of these templates is broken up into chunks of
+literal text and attribute expressions via {template.g}.  The default
+lexer uses {$...$} delimiters, but the {angle.bracket.template.g}
+lexer provides {<...>} delimiters.  Each of the attribute expression
+chunks is processed by {action.g}.  It builds trees (ASTs)
+representing the operation indicated in the expression.  These ASTs
+represent the "precompiled" templates, which are evaluated by the tree
+grammar {eval.g} each time a {StringTemplate} is rendered to string
+with {toString()}.
 
 The grammar files are:
 

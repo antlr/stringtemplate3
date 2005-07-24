@@ -31,7 +31,7 @@ $names:{n| <b>$n$</b><br>}; separator=","$
 o added parallel attribute iteration where you can apply a template to
 multiple lists of values; works for anonymous templates only:
 <<
-{$names,phones:{n,p | $n$: $p$}$}
+$names,phones:{n,p | $n$: $p$}$
 >>
 An error is generated if you have too many args for the number of
 parallel lists.  Iteration proceeds while at least one of the
@@ -64,7 +64,7 @@ if {users} is single-valued.  This introduces a function-like syntax,
 which necessitated the "_assign to sole formal arg_" functionality
 above that supports things like {bold(name)}.  You can combine
 operations to say things like {first(rest(names))} to get second
-element.  Can say {first([mine,yours])} to get the first of a combine
+element.  Can say {first([mine,yours])} to get the first of a combined
 list.  These operators work on any iterable object.  [_backward
 incompatible if you used first,last,tail as an attribute or template
 name_]
@@ -90,8 +90,8 @@ returns "{null}".
 
 o Added renderers per template and group.  Templates are inherited
 from super group.  New Interface {AttributeRenderer} defines how an
-object is rendered to String.  Here is a renderer that display {Date}
-objects that renders {Calendar} date objects tersely.
+object is rendered to String.  Here is a renderer that 
+renders {Calendar} date objects tersely.
 <<
 public class DateRenderer implements AttributeRenderer {
 	public String toString(Object o) {
