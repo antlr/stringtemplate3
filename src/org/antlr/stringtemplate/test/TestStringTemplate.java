@@ -3100,4 +3100,21 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public static class NonPublicProperty {
+
+	}
+
+	public void testNonPublicPropertyAccess() throws Exception {
+		StringTemplate st =
+				new StringTemplate("$x.foo$:$x.bar$");
+		Object o = new Object() {
+			public int foo = 9;
+			public int getBar() { return 34; }
+		};
+
+		st.setAttribute("x", o);
+		String expecting = "9:34";
+		assertEqual(st.toString(), expecting);
+	}
+
 }

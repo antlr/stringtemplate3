@@ -157,6 +157,21 @@ it up in user object whereas {$user.foo$} looks for literally property
 
 #### Bug Fixes
 
+o Thanks to Joe Soroka, you can now access public members of anonymous
+inner classes; Java doesn't normally allow even with public keyword.
+Bizarre.  The following unit test works now:
+<< 
+StringTemplate st =
+		new StringTemplate("$x.foo$:$x.bar$");
+Object o = new Object() {
+	public int foo = 9;
+	public int getBar() { return 34; }
+};
+st.setAttribute("x", o);
+String expecting = "9:34";
+assertEqual(st.toString(), expecting);
+>>
+
 o fields that were arrays didn't get treated as iterable objects
 
 o When you invoke foo(x=y), x must be an attribute of foo (well if you

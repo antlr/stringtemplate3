@@ -749,18 +749,11 @@ String results = a.toString();
 <H4>Automatic aggregate creation</H4>
 
 
-<P>While Java anonymous inner classes are supposed to make creating and
-passing around aggregates easy, it turns out they have a nasty
-weakness: they are created with protections such that they are not
-visible outside their package.  In other words, if you want to avoid
-creating a separate class and want to use an anonymous class,
-<TT>StringTemplate</TT> will receive an illegal access exception when trying
-to access the (public) property methods via reflection.  It stunned me
-too, but after hours of frustration, I can only conclude this is
-inescapable.  Anonymous classes are created with non-public access.
-Anyway, I found a workaround that is better by augmenting
-<TT>StringTemplate</TT> slightly.  You may pass in an aggregrate attribute
-name to <TT>setAttribute()</TT> now:
+<P>Creating one-off data aggregates in Java is a pain, you have to define
+a new class just to associate two pieces of data.  <TT>StringTemplate</TT>
+makes it easy to group data during <TT>setAttribute()</TT> calls.  You may
+pass in an aggregrate attribute name to <TT>setAttribute()</TT> with the data
+to aggregate:
 
 <FONT SIZE=2><PRE>
 StringTemplate st =

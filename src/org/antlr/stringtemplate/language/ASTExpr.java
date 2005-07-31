@@ -327,6 +327,13 @@ public class ASTExpr extends Expr {
 					try {
 						Field f = c.getField(propertyName);
 						try {
+							try {
+								// make sure it's accessible (stupid java)
+								f.setAccessible(true);
+							}
+							catch (SecurityException se) {
+								; // oh well; security won't let us
+							}
 							value = f.get(o);
 							value = convertArrayToList(value);
 							return value;
@@ -343,6 +350,13 @@ public class ASTExpr extends Expr {
 				}
 			}
 			try {
+				try {
+					// make sure it's accessible (stupid java)
+					m.setAccessible(true);
+				}
+				catch (SecurityException se) {
+					; // oh well; security won't let us
+				}
 				value = m.invoke(o,null);
 			}
 			catch (Exception e) {
