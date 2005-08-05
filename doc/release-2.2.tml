@@ -1,7 +1,7 @@
 StringTemplate 2.2 Release Notes
 
-Brought to you by that maniac that brings you
-@(http://www.antlr.org, ANTLR)!
+Brought to you by that maniac that brings you the
+@(http://www.antlr.org, ANTLR parser generator)!
 
 Terence Parr \
 University of San Francisco \
@@ -10,7 +10,7 @@ _Copyright 2003-2005_ \
 @(http://www.stringtemplate.org) \
 (StringTemplate released under BSD License)
 
-Version 2.2, July ??, 2005
+Version 2.2, August 5, 2005
 
 2.2 fixes a few bugs, but mainly 2.2 adds lots of great new features.
 The features were added in response to my needs building ANTLR v3's

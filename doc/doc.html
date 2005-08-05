@@ -7,21 +7,21 @@
 <H1>StringTemplate Documentation</H1>
 
 
-<P>Brought to you by that maniac that brings you
-<A HREF="http://www.antlr.org"><B> ANTLR</B></A>!
+<P>Brought to you by that maniac that brings you the
+<A HREF="http://www.antlr.org"><B> ANTLR parser generator</B></A>!
 
 <P>Terence Parr <BR>
 University of San Francisco <BR>
-<TT>parrt@cs.usfca.edu</TT> <BR>
+<TT>parrt at cs.usfca.edu</TT> <BR>
 <em>Copyright 2003-2005</em> <BR>
 <A HREF="http://www.stringtemplate.org"><B>http://www.stringtemplate.org</B></A> <BR>
 (StringTemplate released under BSD License)
 
-<P>Version 2.2, July ??, 2005
+<P>Version 2.2, August 5, 2005
 
 <P>Note that the <TT>TestStringTemplates.java</TT> file has many tests that are
 an excellent set of examples.  Also, I highly recommend you read the
-(academic-oriented) paper,
+(academically-oriented) paper,
 <A HREF="http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf"><B> Enforcing
 Model-View Separation in Template Engines</B></A>.  There are some more
 examples including nested menu generation that will be of interest.
@@ -105,10 +105,10 @@ possible without sacrificing strict model-view separation.</i>"</BLOCKQUOTE>
 
 <P>I ruthlessly evaluate all potential features and functionality against
 this standard.  Over the years, however, I have made certain
-concessions to practicality that infringe ever-so-slightly into
-potential model-view entanglement.  That said, StringTemplate still
-seems to enforce separation while providing excellent
-functionality.
+concessions to practicality that one could consider as infringing
+ever-so-slightly into potential model-view entanglement.  That said,
+StringTemplate still seems to enforce separation while providing
+excellent functionality.
 
 <P>I let my needs dictate the language and tool feature set.  The tool
 evolved as my needs evolved.  I have done almost no feature
@@ -162,9 +162,9 @@ built not what <B>can</B> be built.
 <P>The fact that StringTemplate does not allow such things as assignments
 (no side-effects) should make you suspicious of engines that do allow
 it.  I guarantee that the templates in ANTLR v3's code generator are
-vastly more complicated than any web page, for example, created by
-another template engine and I have yet to find a situation where I
-needed assignments.  If your template looks like a program, it
+vastly more complicated than any web page, for example, created for
+use with another template engine and I have yet to find a situation
+where I needed assignments.  If your template looks like a program, it
 probably is--you have totally entangled your model and view.
 
 <P>While providing all sorts of dangerous features like assignment that
@@ -182,12 +182,12 @@ not actually invoke the data lookup mechanism until the template is
 asked to render itself to text.  Lazy evaluation is surprising useful
 in both the web and code generation worlds because such order
 decoupling allows code to set attributes when it is convenient or
-efficient not necessarily before a template is created that references
-those attributes.  For example, a complicated web page may consist of
-many nested templates many of which reference <TT>$userName$</TT>, but the
-value of <TT>userName</TT> does not need to be set by the model until right
-before the entire page is rendered to text via <TT>toString()</TT>.  You can
-build up the complicated page and set attribute values in any
+efficient not necessarily before a template that references those
+attributes is created.  For example, a complicated web page may
+consist of many nested templates many of which reference <TT>$userName$</TT>,
+but the value of <TT>userName</TT> does not need to be set by the model until
+right before the entire page is rendered to text via <TT>toString()</TT>.
+You can build up the complicated page, setting attribute values in any
 convenient order.
 
 <P><TT>StringTemplate</TT> implements a "poor man's" form of lazy evaluation by
@@ -221,22 +221,23 @@ database.  The reference to <TT>numberNames</TT> invokes
 <TT>model.getNumberNames()</TT> which necessarily uses the internal data
 structure computed by <TT>getNames()</TT> to compute <TT>names.size()</TT> or
 whatever.  Now, suppose a designer moves the <TT>numberNames</TT> reference
-to the <TT>&lt;title&gt;</TT> tag <B>before</B> the reference to <TT>names</TT> in the
-<TT>foreach</TT> forces loading of the names from the database. You now get a
-null pointer exception at worst or a blank title at best.  You have to
-anticipate these dependencies and have <TT>getNumberNames()</TT> invoke
-<TT>getNames()</TT> because of a change in the template.  I'm stunned that
-other template engine authors with whom I've spoken think this is ok.
-Any time I can get the computer to do something automatically for me
-that removes an entire class of programming errors, I'll take it!
+to the <TT>&lt;title&gt;</TT> tag, which is <B>before</B> the reference to <TT>names</TT> in
+the <TT>foreach</TT> statement.  The names will not yet have been loaded,
+yielding a null pointer exception at worst or a blank title at best.
+You have to anticipate these dependencies and have <TT>getNumberNames()</TT>
+invoke <TT>getNames()</TT> because of a change in the template.  I'm stunned
+that other template engine authors with whom I've spoken think this is
+ok.  Any time I can get the computer to do something automatically for
+me that removes an entire class of programming errors, I'll take it!
 Automatic garbage collection is the obvious analogy here.
 
 <P>The pull method requires that programmers do a topological sort in
 their minds anticipating any order that a programmer or designer could
-induce.  To ensure attribute computation safety, I have shown
-trivially in my academic paper that <em>pull</em> reduces to <em>push</em> in the
-worst case.  With a complicated mesh of templates, you will miss a
-dependency, thus, creating a really nasty, difficult-to-find bug.
+induce.  To ensure attribute computation safety (i.e., avoid hidden
+dependency landmines), I have shown trivially in my academic paper
+that <em>pull</em> reduces to <em>push</em> in the worst case.  With a complicated
+mesh of templates, you will miss a dependency, thus, creating a really
+nasty, difficult-to-find bug.
 
 <P>Just so you know, I've never been a big fan of functional languages
 and I laughed really hard when I realized (while writing the academic

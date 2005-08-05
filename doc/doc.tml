@@ -1,20 +1,20 @@
 StringTemplate Documentation
 
-Brought to you by that maniac that brings you
-@(http://www.antlr.org, ANTLR)!
+Brought to you by that maniac that brings you the
+@(http://www.antlr.org, ANTLR parser generator)!
 
 Terence Parr \
 University of San Francisco \
-{parrt@cs.usfca.edu} \
+{parrt at cs.usfca.edu} \
 _Copyright 2003-2005_ \
 @(http://www.stringtemplate.org) \
 (StringTemplate released under BSD License)
 
-Version 2.2, July ??, 2005
+Version 2.2, August 5, 2005
 
 Note that the {TestStringTemplates.java} file has many tests that are
 an excellent set of examples.  Also, I highly recommend you read the
-(academic-oriented) paper,
+(academically-oriented) paper,
 @(http://www.cs.usfca.edu/~parrt/papers/mvc.templates.pdf, Enforcing
 Model-View Separation in Template Engines).  There are some more
 examples including nested menu generation that will be of interest.
@@ -92,10 +92,10 @@ possible without sacrificing strict model-view separation."
 
 I ruthlessly evaluate all potential features and functionality against
 this standard.  Over the years, however, I have made certain
-concessions to practicality that infringe ever-so-slightly into
-potential model-view entanglement.  That said, StringTemplate still
-seems to enforce separation while providing excellent
-functionality.
+concessions to practicality that one could consider as infringing
+ever-so-slightly into potential model-view entanglement.  That said,
+StringTemplate still seems to enforce separation while providing
+excellent functionality.
 
 I let my needs dictate the language and tool feature set.  The tool
 evolved as my needs evolved.  I have done almost no feature
@@ -143,9 +143,9 @@ built not what *can* be built.
 The fact that StringTemplate does not allow such things as assignments
 (no side-effects) should make you suspicious of engines that do allow
 it.  I guarantee that the templates in ANTLR v3's code generator are
-vastly more complicated than any web page, for example, created by
-another template engine and I have yet to find a situation where I
-needed assignments.  If your template looks like a program, it
+vastly more complicated than any web page, for example, created for
+use with another template engine and I have yet to find a situation
+where I needed assignments.  If your template looks like a program, it
 probably is--you have totally entangled your model and view.
 
 While providing all sorts of dangerous features like assignment that
@@ -163,12 +163,12 @@ not actually invoke the data lookup mechanism until the template is
 asked to render itself to text.  Lazy evaluation is surprising useful
 in both the web and code generation worlds because such order
 decoupling allows code to set attributes when it is convenient or
-efficient not necessarily before a template is created that references
-those attributes.  For example, a complicated web page may consist of
-many nested templates many of which reference {$userName$}, but the
-value of {userName} does not need to be set by the model until right
-before the entire page is rendered to text via {toString()}.  You can
-build up the complicated page and set attribute values in any
+efficient not necessarily before a template that references those
+attributes is created.  For example, a complicated web page may
+consist of many nested templates many of which reference {$userName$},
+but the value of {userName} does not need to be set by the model until
+right before the entire page is rendered to text via {toString()}.
+You can build up the complicated page, setting attribute values in any
 convenient order.
 
 {StringTemplate} implements a "poor man's" form of lazy evaluation by
@@ -200,22 +200,23 @@ database.  The reference to {numberNames} invokes
 {model.getNumberNames()} which necessarily uses the internal data
 structure computed by {getNames()} to compute {names.size()} or
 whatever.  Now, suppose a designer moves the {numberNames} reference
-to the {<title>} tag *before* the reference to {names} in the
-{foreach} forces loading of the names from the database. You now get a
-null pointer exception at worst or a blank title at best.  You have to
-anticipate these dependencies and have {getNumberNames()} invoke
-{getNames()} because of a change in the template.  I'm stunned that
-other template engine authors with whom I've spoken think this is ok.
-Any time I can get the computer to do something automatically for me
-that removes an entire class of programming errors, I'll take it!
+to the {<title>} tag, which is *before* the reference to {names} in
+the {foreach} statement.  The names will not yet have been loaded,
+yielding a null pointer exception at worst or a blank title at best.
+You have to anticipate these dependencies and have {getNumberNames()}
+invoke {getNames()} because of a change in the template.  I'm stunned
+that other template engine authors with whom I've spoken think this is
+ok.  Any time I can get the computer to do something automatically for
+me that removes an entire class of programming errors, I'll take it!
 Automatic garbage collection is the obvious analogy here.
 
 The pull method requires that programmers do a topological sort in
 their minds anticipating any order that a programmer or designer could
-induce.  To ensure attribute computation safety, I have shown
-trivially in my academic paper that _pull_ reduces to _push_ in the
-worst case.  With a complicated mesh of templates, you will miss a
-dependency, thus, creating a really nasty, difficult-to-find bug.
+induce.  To ensure attribute computation safety (i.e., avoid hidden
+dependency landmines), I have shown trivially in my academic paper
+that _pull_ reduces to _push_ in the worst case.  With a complicated
+mesh of templates, you will miss a dependency, thus, creating a really
+nasty, difficult-to-find bug.
 
 Just so you know, I've never been a big fan of functional languages
 and I laughed really hard when I realized (while writing the academic
