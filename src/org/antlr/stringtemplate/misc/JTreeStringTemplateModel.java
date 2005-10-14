@@ -51,7 +51,7 @@ public class JTreeStringTemplateModel implements TreeModel {
 		classNameToWrapperMap.put("org.antlr.stringtemplate.language.ASTExpr",
 								  ExprWrapper.class);
 		classNameToWrapperMap.put("java.util.Hashtable",
-								  HashtableWrapper.class);
+								  HashMapWrapper.class);
 		classNameToWrapperMap.put("java.util.ArrayList",
 								  ListWrapper.class);
 		classNameToWrapperMap.put("java.util.Vector",
@@ -83,7 +83,7 @@ public class JTreeStringTemplateModel implements TreeModel {
 			if ( index==0 ) {
 				// System.out.println("chunk type index "+index+" is attributes");
 				// return attributes
-				return new HashtableWrapper(st.getAttributes());
+				return new HashMapWrapper(st.getAttributes());
 			}
 			Expr chunk =
 					(Expr) st.getChunks().get(index-1);
@@ -272,10 +272,10 @@ public class JTreeStringTemplateModel implements TreeModel {
 		}
 	}
 
-	static class HashtableWrapper extends Wrapper {
-		Hashtable table;
-		public HashtableWrapper(Object o) {
-			this.table = (Hashtable)o;
+	static class HashMapWrapper extends Wrapper {
+		HashMap table;
+		public HashMapWrapper(Object o) {
+			this.table = (HashMap)o;
 		}
 		public Object getWrappedObject() {
 			return table;
@@ -305,10 +305,10 @@ public class JTreeStringTemplateModel implements TreeModel {
 			if ( table==null ) {
 				return new LinkedList();
 			}
-			Enumeration keys = table.keys();
+			Set keys = table.keySet();
 			List v = new LinkedList();
-			while (keys.hasMoreElements()) {
-				String attributeName = (String) keys.nextElement();
+			for (Iterator itr = keys.iterator(); itr.hasNext();) {
+				String attributeName = (String) itr.next();
 				v.add(attributeName);
 			}
 			return v;

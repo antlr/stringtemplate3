@@ -592,8 +592,10 @@ public class StringTemplateGroup {
 		AttributeRenderer renderer =
 			(AttributeRenderer)attributeRenderers.get(attributeClassType);
 		if ( renderer==null ) {
-			// no renderer registered for this class, check super group
-			renderer = superGroup.getAttributeRenderer(attributeClassType);
+			if ( superGroup!=null ) {
+				// no renderer registered for this class, check super group
+				renderer = superGroup.getAttributeRenderer(attributeClassType);
+			}
 		}
 		return renderer;
 	}

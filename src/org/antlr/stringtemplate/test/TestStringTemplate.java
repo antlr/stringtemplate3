@@ -2766,6 +2766,39 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public void testRepeatedRestOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$rest(names)$, $rest(names)$" // gets 2nd element
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "Tom, Tom";
+		assertEqual(e.toString(), expecting);
+	}
+
+	/** BUG!  Fix this.  Iterator is not reset from first to second $x$
+	 *  Either reset the iterator or pass an attribute that knows to get
+	 *  the iterator each time.  Seems like first, tail do not
+	 *  have same problem as they yield objects.
+	 *
+	 *  Maybe make a RestIterator like I have CatIterator.
+	 */
+	public void testRepeatedRestOpAsArg() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"root(names) ::= \"$other(rest(names))$\""+newline+
+				"other(x) ::= \"$x$, $x$\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate e = group.getInstanceOf("root");
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "Tom, Tom";
+		assertEqual(e.toString(), expecting);
+	}
+
 	public void testApplyTemplateWithSingleFormalArgs() throws Exception {
 		String templates =
 				"group test;" +newline+
