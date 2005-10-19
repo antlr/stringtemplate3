@@ -451,6 +451,7 @@ public class StringTemplateGroup {
     public StringTemplate defineTemplate(String name,
                                          String template)
     {
+		//System.out.println("defineTemplate "+name);
         StringTemplate st = createStringTemplate();
         st.setName(name);
 		st.setGroup(this);
@@ -631,9 +632,20 @@ public class StringTemplateGroup {
 		}
     }
 
-    public String toString() {
+	public Set getTemplateNames() {
+		return templates.keySet();
+	}
+
+	public String toString() {
+		return toString(true);
+	}
+
+	public String toString(boolean showTemplatePatterns) {
         StringBuffer buf = new StringBuffer();
-        Iterator iter = templates.keySet().iterator();
+		Set templateNameSet = templates.keySet();
+		List sortedNames = new ArrayList(templateNameSet);
+		Collections.sort(sortedNames);
+		Iterator iter = sortedNames.iterator();
         buf.append("group "+getName()+";\n");
         StringTemplate formalArgs = new StringTemplate("$args;separator=\",\"$");
         while (iter.hasNext()) {
@@ -642,10 +654,15 @@ public class StringTemplateGroup {
 			if ( st!=NOT_FOUND_ST ) {
                 formalArgs = formalArgs.getInstanceOf();
                 formalArgs.setAttribute("args", st.getFormalArguments());
-                buf.append(tname+"("+formalArgs+") ::= ");
-                buf.append("<<");
-				buf.append(st.getTemplate());
-				buf.append(">>\n");
+                buf.append(tname+"("+formalArgs+")");
+                if ( showTemplatePatterns ) {
+					buf.append(" ::= <<");
+					buf.append(st.getTemplate());
+					buf.append(">>\n");
+				}
+				else {
+					buf.append('\n');
+				}
 			}
         }
         return buf.toString();
