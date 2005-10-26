@@ -180,16 +180,20 @@ public class StringTemplateGroup {
      *  ...
      */
     public StringTemplateGroup(Reader r) {
-        this(r,DefaultTemplateLexer.class,DEFAULT_ERROR_LISTENER);
+        this(r,DefaultTemplateLexer.class,DEFAULT_ERROR_LISTENER,(StringTemplateGroup)null);
     }
 
     public StringTemplateGroup(Reader r, StringTemplateErrorListener errors) {
-        this(r,DefaultTemplateLexer.class,errors);
+        this(r,DefaultTemplateLexer.class,errors,(StringTemplateGroup)null);
     }
 
-    public StringTemplateGroup(Reader r, Class lexer) {
-        this(r,lexer,null);
-    }
+	public StringTemplateGroup(Reader r, Class lexer) {
+		this(r,lexer,null,(StringTemplateGroup)null);
+	}
+
+	public StringTemplateGroup(Reader r, Class lexer, StringTemplateErrorListener errors) {
+		this(r,lexer,errors,(StringTemplateGroup)null);
+	}
 
     /** Create a group from the input stream, but use a nondefault lexer
      *  to break the templates up into chunks.  This is usefor changing
@@ -197,11 +201,13 @@ public class StringTemplateGroup {
      */
     public StringTemplateGroup(Reader r,
                                Class lexer,
-                               StringTemplateErrorListener errors)
+                               StringTemplateErrorListener errors,
+							   StringTemplateGroup superGroup)
     {
         this.templatesDefinedInGroupFile = true;
         this.templateLexerClass = lexer;
         this.listener = errors;
+		setSuperGroup(superGroup);
         parseGroup(r);
     }
 
@@ -261,6 +267,12 @@ public class StringTemplateGroup {
 	 *  if any.  If not even there, then record that it's
      *  NOT_FOUND so we don't waste time looking again later.  If we've gone
      *  past refresh interval, flush and look again.
+	 *
+	 *  TODO: hideous! Am i really making a dup of the supergroup's templates to impl inheritance?
+	 *  Hmm...i guess it's ok as nothing can change once evaluation starts.
+	 *  Seems odd though.  What happens when there is a super.template() chain
+	 *  more than two deep?  Oh, that still does a manual shift to the super.
+	 *  Well, this doesn't seem very smart/dynamic, but I'll leave as it works.
      */
     public StringTemplate lookupTemplate(String name)
 		throws IllegalArgumentException
@@ -285,7 +297,7 @@ public class StringTemplateGroup {
             if ( st==null && superGroup!=null ) {
                 // try to resolve in super group
                 st = superGroup.getInstanceOf(name);
-                if ( st!=null ) {
+				if ( st!=null ) {
                     st.setGroup(this);
                 }
             }
@@ -451,7 +463,7 @@ public class StringTemplateGroup {
     public StringTemplate defineTemplate(String name,
                                          String template)
     {
-		//System.out.println("defineTemplate "+name);
+		System.out.println("defineTemplate "+getName()+"::"+name);
         StringTemplate st = createStringTemplate();
         st.setName(name);
 		st.setGroup(this);
@@ -460,6 +472,48 @@ public class StringTemplateGroup {
         templates.put(name, st);
         return st;
     }
+
+	public StringTemplate defineRegionTemplate(String enclosingTemplateName,
+											   String name,
+                                         	   String template,
+											   int type)
+    {
+		String mangledName = getMangledRegionName(enclosingTemplateName,name);
+		StringTemplate regionST = defineTemplate(mangledName, template);
+		regionST.setIsRegion(true);
+		regionST.setRegionDefType(type);
+		return regionST;
+	}
+
+	/** Track all references to regions <@foo()>.  We automatically
+	 *  define as
+	 *
+	 *     @enclosingtemplate.foo() ::= ""
+	 *
+	 *  You cannot set these manually in the same group; you have to subgroup
+	 *  to override.
+	 */
+	public void defineImplicitRegionTemplate(String enclosingTemplateName, String name) {
+		defineRegionTemplate(enclosingTemplateName,
+							 name,
+							 "",
+							 StringTemplate.REGION_IMPLICIT);
+
+	}
+
+	/** The "foo" of t() ::= "<@foo()>" is mangled to "region#t#foo" */
+	public String getMangledRegionName(String enclosingTemplateName,
+									   String name)
+	{
+		return "region__"+enclosingTemplateName+"__"+name;
+	}
+
+	/** Return "t" from "region__t__foo" */
+	public String getUnMangledTemplateName(String mangledName)
+	{
+		return mangledName.substring("region__".length(),
+									 mangledName.lastIndexOf("__"));
+	}
 
     /** Make name and alias for target.  Replace any previous def of name */
     public StringTemplate defineTemplateAlias(String name, String target) {
@@ -473,7 +527,17 @@ public class StringTemplateGroup {
     }
 
     public boolean isDefinedInThisGroup(String name) {
-        return templates.get(name)!=null;
+        StringTemplate st = (StringTemplate)templates.get(name);
+		if ( st!=null ) {
+			if ( st.isRegion() ) {
+				// don't allow redef of @t.r() ::= "..." or <@r>...<@end>
+				if ( st.getRegionDefType()==StringTemplate.REGION_IMPLICIT ) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
     }
 
     /** Get the ST for 'name' in this group only */
@@ -628,7 +692,10 @@ public class StringTemplateGroup {
 			listener.error(msg,e);
 		}
 		else {
-			System.err.println("StringTemplate: "+msg+": "+e);
+			System.err.println("StringTemplate: "+msg);
+			if ( e!=null ) {
+				e.printStackTrace();
+			}
 		}
     }
 

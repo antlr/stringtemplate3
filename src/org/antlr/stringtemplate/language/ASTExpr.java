@@ -298,7 +298,7 @@ public class ASTExpr extends Expr {
         // Special case: if it's a HashMap, Hashtable then pull using
         // key not the property method.  Do NOT allow general Map interface
         // as people could pass in their database masquerading as a Map.
-        else if ( isValidMapInstance(c) ) {
+        else if ( o instanceof Map ) {
             Map map = (Map)o;
             value = map.get(propertyName);
 			if ( value==null ) {
@@ -782,14 +782,7 @@ public class ASTExpr extends Expr {
 		return last;
 	}
 
-    public static boolean isValidMapInstance(Class type) {
-        return type==HashMap.class || type==Hashtable.class;
-    }
-
-    /** A property can be declared as Map, but the instance must be
-     *  isValidMapInstance().
-     */
-    public static boolean isValidReturnTypeMapInstance(Class type) {
-        return isValidMapInstance(type) || type==Map.class;
-    }
+	public String toString() {
+		return exprTree.toStringList();
+	}
 }

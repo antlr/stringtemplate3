@@ -67,6 +67,7 @@ public void reportError(RecognitionException e) {
 	}
 	else {
 	    System.err.println("template parse error: "+e);
+	    e.printStackTrace(System.err);
 	}
 }
 }
@@ -81,17 +82,52 @@ template[StringTemplateGroup g]
     Map formalArgs = null;
     StringTemplate st = null;
     boolean ignore = false;
+    String templateName=null;
 }
-	:	name:ID
-	    {
-	    if ( g.isDefinedInThisGroup(name.getText()) ) {
-	        g.error("redefinition of template: "+name.getText());
-	        st = new StringTemplate(); // create bogus template to fill in
-	    }
-	    else {
-	        st = g.defineTemplate(name.getText(), null);
-	    }
-	    }
+	:	(	AT scope:ID DOT region:ID
+			{
+			templateName=g.getMangledRegionName(scope.getText(),region.getText());
+	    	if ( g.isDefinedInThisGroup(templateName) ) {
+	        	g.error("redefinition of template region: @"+
+	        		scope.getText()+"."+region.getText());
+				st = new StringTemplate(); // create bogus template to fill in
+			}
+			else {
+				boolean err = false;
+				// @template.region() ::= "..."
+				StringTemplate scopeST = g.lookupTemplate(scope.getText());
+				if ( scopeST==null ) {
+					g.error("reference to region within undefined template: "+
+						scope.getText());
+					err=true;
+				}
+				if ( !scopeST.containsRegionName(region.getText()) ) {
+					g.error("template "+scope.getText()+" has no region called "+
+						region.getText());
+					err=true;
+				}
+				if ( err ) {
+					st = new StringTemplate();
+				}
+				else {
+					st = g.defineRegionTemplate(scope.getText(),
+												region.getText(),
+												null,
+												StringTemplate.REGION_EXPLICIT);
+				}
+			}
+			}
+		|	name:ID {templateName = name.getText();}
+			{
+			if ( g.isDefinedInThisGroup(templateName) ) {
+				g.error("redefinition of template: "+templateName);
+				st = new StringTemplate(); // create bogus template to fill in
+			}
+			else {
+				st = g.defineTemplate(templateName, null);
+			}
+			}
+		)
 	    LPAREN
 	        (args[st]|{st.defineEmptyFormalArgumentList();})
 	    RPAREN
@@ -210,11 +246,13 @@ StringTemplateToken t = null;
 	;
 
 
+AT	:	'@' ;
 LPAREN: '(' ;
 RPAREN: ')' ;
 LBRACK: '[' ;
 RBRACK: ']' ;
 COMMA:  ',' ;
+DOT:  '.' ;
 DEFINED_TO_BE:  "::=" ;
 SEMI:   ';' ;
 COLON:  ':' ;

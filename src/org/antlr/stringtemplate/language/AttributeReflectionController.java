@@ -149,11 +149,11 @@ public class AttributeReflectionController {
                 walkStringTemplate((StringTemplate)getRawValue(aggregateValue,m));
                 indentation--;
             }
-            else if ( ASTExpr.isValidReturnTypeMapInstance(m.getReturnType()) ) {
+            else if ( m.getReturnType()==Map.class ) {
                 Map rawMap = (Map)getRawValue(aggregateValue,m);
                 // if valid map instance, show key/values
                 // otherwise don't descend
-                if ( rawMap!=null && ASTExpr.isValidMapInstance(rawMap.getClass()) ) {
+                if ( rawMap!=null && rawMap instanceof Map ) {
                     indentation++;
                     walkValue(
                             rawMap,
@@ -180,7 +180,7 @@ public class AttributeReflectionController {
         else if ( type==StringTemplate.class ) {
             walkStringTemplate((StringTemplate)value);
         }
-        else if ( ASTExpr.isValidMapInstance(type) ) {
+        else if ( value instanceof Map ) {
             walkMap((Map)value);
         }
         else {
@@ -223,13 +223,11 @@ public class AttributeReflectionController {
         restoreItemIndex();
     }
 
-    /** For now, assume only java.lang stuff is atomic as long as it's
-     *  not a valid map.
+    /** For now, assume only java.lang stuff is atomic; collections are in
+	 *  java.util.
      */
     public boolean isAtomicType(Class type) {
-        return type.getName().startsWith("java.lang.") &&
-                type!=HashMap.class &&
-                type!=Hashtable.class;
+        return type.getName().startsWith("java.lang.");
     }
 
     public static String terseType(String typeName) {

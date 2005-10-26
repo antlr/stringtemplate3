@@ -100,14 +100,14 @@ expr:   primaryExpr (PLUS^ primaryExpr)*
     ;
 
 primaryExpr
-    :	atom
+    :	(templateInclude)=>templateInclude  // (see past parens to arglist)
+    |	atom
     	( DOT^ // ignore warning on DOT ID
      	  ( ID
           | valueExpr
           )
      	)*
-    |   (templateInclude)=>templateInclude  // (see past parens to arglist)
-    |	function
+    |   function
     |   valueExpr
     |	list
     ;
@@ -167,7 +167,7 @@ list:	lb:LBRACK^ {#lb.setType(LIST); #lb.setText("value");}
     ;
 
 templateInclude
-	:	(   ID argList
+	:	(   id:ID argList
 	    |   "super"! DOT! qid:ID {#qid.setText("super."+#qid.getText());} argList
         |   indirectTemplate
 	    )

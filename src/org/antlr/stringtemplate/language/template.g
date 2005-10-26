@@ -81,8 +81,6 @@ action[StringTemplate self]
 
         template[subtemplate] {if ( c!=null ) c.setSubtemplate(subtemplate);}
 
-
-
         (   ELSE
             {
             // create and precompile the subtemplate
@@ -97,6 +95,83 @@ action[StringTemplate self]
         )?
 
         ENDIF
+
+	|	rr:REGION_REF
+    	{
+    		// define implicit template and
+    		// convert <@r()> to <region__enclosingTemplate__r()>
+			String regionName = rr.getText();
+			String mangledRef = null;
+			boolean err = false;
+			// watch out for <@super.r()>; that does NOT def implicit region
+			// convert to <super.region__enclosingTemplate__r()>
+			if ( regionName.startsWith("super.") ) {
+				System.out.println("super region ref "+regionName);
+				String regionRef =
+					regionName.substring("super.".length(),regionName.length());
+				String templateScope =
+					self.getGroup().getUnMangledTemplateName(self.getName());
+				StringTemplate scopeST = self.getGroup().lookupTemplate(templateScope);
+				if ( scopeST==null ) {
+					self.getGroup().error("reference to region within undefined template: "+
+						templateScope);
+					err=true;
+				}
+				if ( !scopeST.containsRegionName(regionRef) ) {
+					self.getGroup().error("template "+templateScope+" has no region called "+
+						regionRef);
+					err=true;
+				}
+				else {
+					mangledRef =
+						self.getGroup().getMangledRegionName(templateScope,regionRef);
+					mangledRef = "super."+mangledRef;
+				}
+			}
+			else {
+				System.out.println("region ref "+regionName);
+				mangledRef =
+					self.getGroup().getMangledRegionName(self.getName(),regionName);
+				self.getGroup().defineImplicitRegionTemplate(self.getName(),
+															 regionName);
+				self.addRegionName(regionName);
+            }
+
+			if ( !err ) {
+				// treat as regular action: mangled template include
+				String indent = ((ChunkToken)rr).getIndentation();
+				ASTExpr c = self.parseAction(mangledRef+"()");
+				c.setIndentation(indent);
+				self.addChunk(c);
+			}
+    	}
+
+    |	rd:REGION_DEF
+		{
+			String combinedNameTemplateStr = rd.getText();
+			int indexOfDefSymbol = combinedNameTemplateStr.indexOf("::=");
+			if ( indexOfDefSymbol>=1 ) {
+				String regionName = combinedNameTemplateStr.substring(0,indexOfDefSymbol);
+				self.addRegionName(regionName);
+				String template =
+					combinedNameTemplateStr.substring(indexOfDefSymbol+3,
+						combinedNameTemplateStr.length());
+				self.getGroup().defineRegionTemplate(self.getName(),
+									regionName,
+									template,
+									StringTemplate.REGION_EMBEDDED);
+				String mangledRef =
+					self.getGroup().getMangledRegionName(self.getName(),regionName);
+				// treat as regular action: mangled template include
+				String indent = ((ChunkToken)rd).getIndentation();
+				ASTExpr c = self.parseAction(mangledRef+"()");
+				c.setIndentation(indent);
+				self.addChunk(c);
+			}
+			else {
+				self.error("embedded region definition screwed up");
+			}
+		}
     ;
 
 /** Break up an input text stream into chunks of either plain text
@@ -132,8 +207,15 @@ protected boolean upcomingENDIF(int i) throws CharStreamException {
 	return LA(i)=='$'&&LA(i+1)=='e'&&LA(i+2)=='n'&&LA(i+3)=='d'&&LA(i+4)=='i'&&
 	       LA(i+5)=='f'&&LA(i+6)=='$';
 }
+
+protected boolean upcomingAtEND(int i) throws CharStreamException {
+	return LA(i)=='$'&&LA(i+1)=='@'&&LA(i+2)=='e'&&LA(i+3)=='n'&&LA(i+4)=='d'&&LA(i+5)=='$';
 }
 
+protected boolean upcomingNewline(int i) throws CharStreamException {
+	return (LA(i)=='\r'&&LA(i+1)=='\n')||LA(i)=='\n';
+}
+}
 
 LITERAL
     :   {LA(1)!='\r'&&LA(1)!='\n'}?
@@ -184,6 +266,32 @@ ACTION
         ( ('\r'!)? '\n'! {newline();})? // ignore any newline right after an ELSE
     |   '$'! "endif" '$'!        {$setType(TemplateParser.ENDIF);}
         ( {startCol==1}? ('\r'!)? '\n'! {newline();})? // ignore after ENDIF if on line by itself
+
+    |   // match $@foo()$ => foo
+    	// match $@foo$...$@end$ => foo::=...
+        '$'! '@'! (~('$'|'('))+
+    	(	"()"! '$'! {$setType(TemplateParser.REGION_REF);}
+    	|   '$'!
+    		{$setType(TemplateParser.REGION_DEF);
+    		String t=$getText;
+    		$setText(t+"::=");
+    		}
+        	( options {greedy=true;} : ('\r'!)? '\n'! {newline();})?
+    		{boolean atLeft = false;}
+        	(
+        		options {greedy=true;} // handle greedy=false with predicate
+        	:	{!(upcomingAtEND(1)||(upcomingNewline(1)&&upcomingAtEND(2)))}?
+        		(	('\r')? '\n' {newline(); atLeft = true;}
+       			|	. {atLeft = false;}
+       			)
+       		)+
+        	( ('\r'!)? '\n'! {newline(); atLeft = true;} )?
+			( "$@end$"!
+			| . {self.error("missing region "+t+" $@end$ tag");}
+			)
+        	( {atLeft}? ('\r'!)? '\n'! {newline();})?
+        )
+
     |   '$'! EXPR '$'!  // (Can't start with '!', which would mean comment)
     	)
     	{

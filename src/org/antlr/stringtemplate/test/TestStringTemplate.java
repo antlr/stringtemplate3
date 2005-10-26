@@ -93,8 +93,8 @@ public class TestStringTemplate extends TestSuite {
                 new StringTemplateGroup(new StringReader(templates));
 
         String expecting = "group test;" +newline+
+				"bold(item) ::= <<<b>$item$</b>>>" +newline+
                 "duh() ::= <<xx>>" +newline+
-                "bold(item) ::= <<<b>$item$</b>>>" +newline+
                 "t() ::= <<literal template>>"+newline;
         assertEqual(group.toString(), expecting);
 
@@ -288,8 +288,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplateGroup group =
                 new StringTemplateGroup(
                         new StringReader(templates),
-                        AngleBracketTemplateLexer.class,
-                        null);
+                        AngleBracketTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("a");
         t.setAttribute("s","Test");
         String expecting = "case 1 : Test break;";
@@ -305,6 +304,272 @@ public class TestStringTemplate extends TestSuite {
         String expecting = "Tokens : A|B ;";
         assertEqual(st.toString(), expecting);
     }
+
+	public void testRegionRef() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X$@r()$Y\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate st = group.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XY";
+		assertEqual(result, expecting);
+	}
+
+	public void testEmbeddedRegionRef() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X$@r$blort$@end$Y\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate st = group.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XblortY";
+		assertEqual(result, expecting);
+	}
+
+	public void testRegionRefAngleBrackets() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r()>Y\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XY";
+		assertEqual(result, expecting);
+	}
+
+	public void testEmbeddedRegionRefAngleBrackets() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r>blort<@end>Y\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XblortY";
+		assertEqual(result, expecting);
+	}
+
+	public void testEmbeddedRegionRefWithNewlinesAngleBrackets() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r>" +newline+
+				"blort" +newline+
+				"<@end>" +newline+
+				"Y\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XblortY";
+		assertEqual(result, expecting);
+	}
+
+	public void testRegionRefWithDefAngleBrackets() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r()>Y\"" +
+				"@a.r() ::= \"foo\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XfooY";
+		assertEqual(result, expecting);
+	}
+
+	public void testRegionOverride() throws Exception {
+		String templates1 =
+				"group super;" +newline+
+				"a() ::= \"X<@r()>Y\"" +
+				"@a.r() ::= \"foo\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates1),
+										AngleBracketTemplateLexer.class);
+
+		String templates2 =
+				"group sub;" +newline+
+				"@a.r() ::= \"foo\"" +newline;
+		StringTemplateGroup subGroup =
+				new StringTemplateGroup(new StringReader(templates2),
+										AngleBracketTemplateLexer.class,
+										null,
+										group);
+
+		StringTemplate st = subGroup.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XfooY";
+		assertEqual(result, expecting);
+	}
+
+	public void testRegionOverrideRefSuperRegion() throws Exception {
+		String templates1 =
+				"group super;" +newline+
+				"a() ::= \"X<@r()>Y\"" +
+				"@a.r() ::= \"foo\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates1),
+										AngleBracketTemplateLexer.class);
+
+		String templates2 =
+				"group sub;" +newline+
+				"@a.r() ::= \"A<@super.r()>B\"" +newline;
+		StringTemplateGroup subGroup =
+				new StringTemplateGroup(new StringReader(templates2),
+										AngleBracketTemplateLexer.class,
+										null,
+										group);
+
+		StringTemplate st = subGroup.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "XAfooBY";
+		assertEqual(result, expecting);
+	}
+
+	public void testEmbeddedRegionRedefError() throws Exception {
+		// cannot define an embedded template within group
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r>dork<@end>Y\"" +
+				"@a.r() ::= \"foo\"" +newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class,
+										errors);
+		StringTemplate st = group.getInstanceOf("a");
+		st.toString();
+		String result = errors.toString();
+		String expecting = "redefinition of template region: @a.r";
+		assertEqual(result, expecting);
+	}
+
+	public void testImplicitRegionRedefError() throws Exception {
+		// cannot define an implicitly-defined template more than once
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r()>Y\"" +newline+
+				"@a.r() ::= \"foo\"" +newline+
+				"@a.r() ::= \"bar\"" +newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class,
+										errors);
+		StringTemplate st = group.getInstanceOf("a");
+		st.toString();
+		String result = errors.toString();
+		String expecting = "redefinition of template region: @a.r";
+		assertEqual(result, expecting);
+	}
+
+	public void testImplicitOverriddenRegionRedefError() throws Exception {
+		String templates1 =
+			"group super;" +newline+
+			"a() ::= \"X<@r()>Y\"" +
+			"@a.r() ::= \"foo\"" +newline;
+		StringTemplateGroup group =
+			new StringTemplateGroup(new StringReader(templates1),
+									AngleBracketTemplateLexer.class);
+
+		String templates2 =
+			"group sub;" +newline+
+			"@a.r() ::= \"foo\"" +newline+
+			"@a.r() ::= \"bar\"" +newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup subGroup =
+				new StringTemplateGroup(new StringReader(templates2),
+										AngleBracketTemplateLexer.class,
+										errors,
+										group);
+
+		StringTemplate st = subGroup.getInstanceOf("a");
+		String result = errors.toString();
+		String expecting = "redefinition of template region: @a.r";
+		assertEqual(result, expecting);
+	}
+
+	public void testUnknownRegionDefError() throws Exception {
+		// cannot define an implicitly-defined template more than once
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r()>Y\"" +newline+
+				"@a.q() ::= \"foo\"" +newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class,
+										errors);
+		StringTemplate st = group.getInstanceOf("a");
+		st.toString();
+		String result = errors.toString();
+		String expecting = "template a has no region called q";
+		assertEqual(result, expecting);
+	}
+
+	public void testSuperRegionRefError() throws Exception {
+		String templates1 =
+			"group super;" +newline+
+			"a() ::= \"X<@r()>Y\"" +
+			"@a.r() ::= \"foo\"" +newline;
+		StringTemplateGroup group =
+			new StringTemplateGroup(new StringReader(templates1),
+									AngleBracketTemplateLexer.class);
+
+		String templates2 =
+			"group sub;" +newline+
+			"@a.r() ::= \"A<@super.q()>B\"" +newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup subGroup =
+				new StringTemplateGroup(new StringReader(templates2),
+										AngleBracketTemplateLexer.class,
+										errors,
+										group);
+
+		StringTemplate st = subGroup.getInstanceOf("a");
+		String result = errors.toString();
+		String expecting = "template a has no region called q";
+		assertEqual(result, expecting);
+	}
+
+	public void testMissingEndRegionError() throws Exception {
+		// cannot define an implicitly-defined template more than once
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X$@r$foo\"" +newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),errors);
+		StringTemplate st = group.getInstanceOf("a");
+		st.toString();
+		String result = errors.toString();
+		String expecting = "missing region r $@end$ tag";
+		assertEqual(result, expecting);
+	}
+
+	public void testMissingEndRegionErrorAngleBrackets() throws Exception {
+		// cannot define an implicitly-defined template more than once
+		String templates =
+				"group test;" +newline+
+				"a() ::= \"X<@r>foo\"" +newline;
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										AngleBracketTemplateLexer.class,
+										errors);
+		StringTemplate st = group.getInstanceOf("a");
+		st.toString();
+		String result = errors.toString();
+		String expecting = "missing region r <@end> tag";
+		assertEqual(result, expecting);
+	}
 
     public void testSimpleInheritance() throws Exception {
 		// make a bold template in the super group that you can inherit from sub
@@ -1917,7 +2182,10 @@ public class TestStringTemplate extends TestSuite {
                 "            1. Property email : String"+newline +
                 "            2. Property aMap : Map"+newline +
                 "                1. Key v : String"+newline +
-                "            3. Property anotherMap : Hashtable"+newline;
+                "            3. Property anotherMap : Hashtable"+newline+
+				"                1. Property empty : boolean"+newline +
+				"                2. Property enumeration : Enumeration"+newline +
+				"                3. Property iterator : Iterator"+newline;
         StringTemplate.setLintMode(false);
         assertEqual(results, expecting);
     }

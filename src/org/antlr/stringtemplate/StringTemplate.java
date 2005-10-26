@@ -123,7 +123,14 @@ A StringTemplate describes an output pattern/language like an exemplar.
  *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-    public static final String VERSION = "2.3b1";
+    public static final String VERSION = "2.3b2";
+
+	/** <@r()> */
+	public static final int REGION_IMPLICIT = 1;
+	/** <@r>...<@end> */
+	public static final int REGION_EMBEDDED = 2;
+	/** @t.r() ::= "..." defined manually by coder */
+	public static final int REGION_EXPLICIT = 3;
 
     /** An automatically created aggregate of properties.
      *
@@ -303,6 +310,24 @@ public class StringTemplate {
 	 */
     protected List chunks;
 
+	/** If someone refs <@r()> in template t, an implicit
+	 *
+	 *   @t.r() ::= ""
+	 *
+	 *  is defined, but you can overwrite this def by defining your
+	 *  own.  We need to prevent more than one manual def though.  Between
+	 *  this var and isEmbeddedRegion we can determine these cases.
+	 */
+	protected int regionDefType;
+
+	/** Does this template come from a <@region>...<@end> embedded in
+	 *  another template?
+	 */
+	protected boolean isRegion;
+
+	/** Set of implicit and embedded regions for this template */
+	protected Set regions;
+
 	protected static StringTemplateGroup defaultGroup =
 		new StringTemplateGroup("defaultGroup", ".");
 
@@ -348,6 +373,9 @@ public class StringTemplate {
 		to.name = from.name;
 		to.group = from.group;
 		to.listener = from.listener;
+		to.regions = from.regions;
+		to.isRegion = from.isRegion;
+		to.regionDefType = from.regionDefType;
     }
 
     /** Make an instance of this template; it contains an exact copy of
@@ -819,6 +847,7 @@ public class StringTemplate {
             chunkStream.setTokenObjectClass("org.antlr.stringtemplate.language.ChunkToken");
             TemplateParser chunkifier = new TemplateParser(chunkStream);
             chunkifier.template(this);
+			//System.out.println("chunks="+chunks);
         }
         catch (Exception e) {
             String name = "<unknown>";
@@ -834,6 +863,7 @@ public class StringTemplate {
 	}
 
     public ASTExpr parseAction(String action) {
+		//System.out.println("parse action "+action);
 		ActionLexer lexer =
 			new ActionLexer(new StringReader(action.toString()));
 		ActionParser parser =
@@ -1287,46 +1317,36 @@ public class StringTemplate {
 		return names.toString().replaceAll(",","");
 	}
 
-    /** Compute a bitset of valid cardinality for an actual attribute value.
-     *  A length of 0, satisfies OPTIONAL|ZERO_OR_MORE
-     *  whereas a length of 1 satisfies all. A length>1
-     *  satisfies ZERO_OR_MORE|ONE_OR_MORE
-	 *
-	 *  UNUSED
-    public static int getActualArgumentCardinality(Object value) {
-        int actualLength = getObjectLength(value);
-        if ( actualLength==0 ) {
-            return FormalArgument.OPTIONAL|FormalArgument.ZERO_OR_MORE;
-        }
-        if ( actualLength==1 ) {
-            return FormalArgument.REQUIRED|
-                   FormalArgument.ONE_OR_MORE|
-                   FormalArgument.ZERO_OR_MORE|
-                   FormalArgument.OPTIONAL;
-        }
-        return FormalArgument.ZERO_OR_MORE|FormalArgument.ONE_OR_MORE;
-    }
-     */
+	public boolean isRegion() {
+		return isRegion;
+	}
 
-	/**  UNUSED */
-    /*
-    protected static int getObjectLength(Object value) {
-        int actualLength = 0;
-        if ( value!=null ) {
-            if ( value instanceof Collection ) {
-                actualLength = ((Collection)value).size();
-            }
-            if ( value instanceof Map ) {
-                actualLength = ((Map)value).size();
-            }
-            else {
-                actualLength = 1;
-            }
-        }
+	public void setIsRegion(boolean isRegion) {
+		this.isRegion = isRegion;
+	}
 
-        return actualLength;
-    }
-    */
+	public void addRegionName(String name) {
+		if ( regions==null ) {
+			regions = new HashSet();
+		}
+		regions.add(name);
+	}
+
+	/** Does this template ref or embed region name? */
+	public boolean containsRegionName(String name) {
+		if ( regions==null ) {
+			return false;
+		}
+		return regions.contains(name);
+	}
+
+	public int getRegionDefType() {
+		return regionDefType;
+	}
+
+	public void setRegionDefType(int regionDefType) {
+		this.regionDefType = regionDefType;
+	}
 
     public String toDebugString() {
         StringBuffer buf = new StringBuffer();

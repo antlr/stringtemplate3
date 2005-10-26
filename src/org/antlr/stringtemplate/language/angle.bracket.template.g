@@ -66,6 +66,13 @@ protected boolean upcomingENDIF(int i) throws CharStreamException {
 	       LA(i+5)=='f'&&LA(i+6)=='>';
 }
 
+protected boolean upcomingAtEND(int i) throws CharStreamException {
+	return LA(i)=='<'&&LA(i+1)=='@'&&LA(i+2)=='e'&&LA(i+3)=='n'&&LA(i+4)=='d'&&LA(i+5)=='>';
+}
+
+protected boolean upcomingNewline(int i) throws CharStreamException {
+	return (LA(i)=='\r'&&LA(i+1)=='\n')||LA(i)=='\n';
+}
 }
 
 LITERAL
@@ -123,6 +130,33 @@ options {
         ( ('\r'!)? '\n'! {newline();})? // ignore any newline right after an ELSE
     |   '<'! "endif" '>'!        {$setType(TemplateParser.ENDIF);}
         ( {startCol==1}? ('\r'!)? '\n'! {newline();})? // ignore after ENDIF if on line by itself
+
+    |   // match <@foo()> => foo
+    	// match <@foo>...<@end> => foo::=...
+        '<'! '@'! (~('>'|'('))+
+    	(	"()"! '>'! {$setType(TemplateParser.REGION_REF);}
+    	|   '>'!
+    		{
+    		$setType(TemplateParser.REGION_DEF);
+    		String t=$getText;
+    		$setText(t+"::=");
+    		}
+        	( options {greedy=true;} : ('\r'!)? '\n'! {newline();})?
+    		{boolean atLeft = false;}
+        	(
+        		options {greedy=true;} // handle greedy=false with predicate
+        	:	{!(upcomingAtEND(1)||(upcomingNewline(1)&&upcomingAtEND(2)))}?
+        		(	('\r')? '\n' {newline(); atLeft = true;}
+       			|	. {atLeft = false;}
+       			)
+       		)+
+        	( ('\r'!)? '\n'! {newline(); atLeft = true;} )?
+			( "<@end>"!
+			| . {self.error("missing region "+t+" <@end> tag");}
+			)
+        	( {atLeft}? ('\r'!)? '\n'! {newline();})?
+        )
+
     |   '<'! EXPR '>'!
     	)
     	{
