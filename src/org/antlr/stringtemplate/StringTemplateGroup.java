@@ -463,7 +463,7 @@ public class StringTemplateGroup {
     public StringTemplate defineTemplate(String name,
                                          String template)
     {
-		System.out.println("defineTemplate "+getName()+"::"+name);
+		//System.out.println("defineTemplate "+getName()+"::"+name);
         StringTemplate st = createStringTemplate();
         st.setName(name);
 		st.setGroup(this);
