@@ -87,12 +87,16 @@ public class ConditionalExpr extends ASTExpr {
                  */
                 StringTemplate s = subtemplate.getInstanceOf();
                 s.setEnclosingInstance(self);
+				// make sure we evaluate in context of enclosing template's
+				// group so polymorphism works. :)
+				s.setGroup(self.getGroup());
                 n = s.write(out);
             }
             else if ( elseSubtemplate!=null ) {
                 // evaluate ELSE clause if present and IF condition failed
                 StringTemplate s = elseSubtemplate.getInstanceOf();
                 s.setEnclosingInstance(self);
+				s.setGroup(self.getGroup());
                 n = s.write(out);
             }
         }

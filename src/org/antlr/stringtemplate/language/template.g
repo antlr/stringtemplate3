@@ -106,7 +106,7 @@ action[StringTemplate self]
 			// watch out for <@super.r()>; that does NOT def implicit region
 			// convert to <super.region__enclosingTemplate__r()>
 			if ( regionName.startsWith("super.") ) {
-				System.out.println("super region ref "+regionName);
+				//System.out.println("super region ref "+regionName);
 				String regionRef =
 					regionName.substring("super.".length(),regionName.length());
 				String templateScope =
@@ -129,7 +129,7 @@ action[StringTemplate self]
 				}
 			}
 			else {
-				System.out.println("region ref "+regionName);
+				//System.out.println("region ref "+regionName);
 				mangledRef =
 					self.getGroup().getMangledRegionName(self.getName(),regionName);
 				self.getGroup().defineImplicitRegionTemplate(self.getName(),

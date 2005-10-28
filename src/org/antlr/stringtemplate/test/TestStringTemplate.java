@@ -3401,6 +3401,31 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public void testOverrideThroughConditional() throws Exception {
+		String templates =
+			"group base;" +newline+
+			"body(ick) ::= \"<if(ick)>ick<f()><else><f()><endif>\"" +
+			"f() ::= \"foo\""+newline
+			;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		String templates2 =
+				"group sub;" +newline+
+				"f() ::= \"bar\""+newline
+			;
+		StringTemplateGroup subgroup =
+			new StringTemplateGroup(new StringReader(templates2),
+									AngleBracketTemplateLexer.class,
+									null,
+									group);
+
+		StringTemplate b = subgroup.getInstanceOf("body");
+		String expecting ="bar";
+		String result = b.toString();
+		assertEqual(result, expecting);
+	}
+
 	public static class NonPublicProperty {
 
 	}

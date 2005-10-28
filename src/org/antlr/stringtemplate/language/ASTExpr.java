@@ -428,6 +428,7 @@ public class ASTExpr extends Expr {
 											 String templateName,
 											 StringTemplateAST argumentsAST)
     {
+		//System.out.println("getTemplateInclude: look up "+enclosing.getGroup().getName()+"::"+templateName);
         StringTemplateGroup group = enclosing.getGroup();
         StringTemplate embedded = group.getEmbeddedInstanceOf(enclosing, templateName);
         if ( embedded==null ) {

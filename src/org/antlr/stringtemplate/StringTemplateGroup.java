@@ -46,6 +46,15 @@ import java.lang.reflect.Constructor;
  *
  *  The name of a template is the file name minus ".st" ending if present
  *  unless you name it as you load it.
+ *
+ *  You can use the group file format also to define a group of templates
+ *  (this works better for code gen than for html page gen).  You must give
+ *  a Reader to the ctor for it to load the group; this is general and
+ *  distinguishes it from the ctors for the old-style "load template files
+ *  from the disk".
+ *
+ *  10/2005 I am adding a StringTemplateGroupLoader concept so people can define supergroups
+ *  within a group and have it load that group automatically.
  */
 public class StringTemplateGroup {
 	/** What is the group name */
@@ -106,6 +115,13 @@ public class StringTemplateGroup {
 	 *  called in ASTExpr.write().
  	 */
 	protected Map attributeRenderers;
+
+	/** If a group file indicates it derives from a supergroup, how do we
+	 *  find it?  Shall we make it so the initial StringTemplateGroup file
+	 *  can be loaded via this loader?  Right now we pass a Reader to ctor
+	 *  to distinguish from the other variety.
+	 */
+	private static StringTemplateGroupLoader groupLoader = null;
 
 	/** Where to report errors.  All string templates in this group
 	 *  use this error handler by default.
@@ -277,6 +293,7 @@ public class StringTemplateGroup {
     public StringTemplate lookupTemplate(String name)
 		throws IllegalArgumentException
 	{
+		//System.out.println("look up "+getName()+"::"+name);
         if ( name.startsWith("super.") ) {
             if ( superGroup!=null ) {
                 int dot = name.indexOf('.');
@@ -316,7 +333,7 @@ public class StringTemplateGroup {
         else if ( st==NOT_FOUND_ST ) {
             return null;
         }
-
+		//System.out.println("lookup found "+st.getGroup().getName()+"::"+st.getName());
 		return st;
 	}
 
@@ -681,6 +698,10 @@ public class StringTemplateGroup {
 
 	public void defineMap(String name, Map mapping) {
 		maps.put(name, mapping);
+	}
+
+	public static void registerGroupLoader(StringTemplateGroupLoader loader) {
+		groupLoader = loader;
 	}
 
 	public void error(String msg) {
