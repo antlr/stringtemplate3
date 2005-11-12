@@ -417,7 +417,7 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 
 		String err_result = errors.toString();
-		String err_expecting = "redefinition of template region: @a.r";
+		String err_expecting = "group test line 3: redefinition of template region: @a.r";
 		assertEqual(err_result, err_expecting);
 	}
 
@@ -506,7 +506,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		st.toString();
 		String result = errors.toString();
-		String expecting = "redefinition of template region: @a.r";
+		String expecting = "group test line 2: redefinition of template region: @a.r";
 		assertEqual(result, expecting);
 	}
 
@@ -525,7 +525,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		st.toString();
 		String result = errors.toString();
-		String expecting = "redefinition of template region: @a.r";
+		String expecting = "group test line 4: redefinition of template region: @a.r";
 		assertEqual(result, expecting);
 	}
 
@@ -551,7 +551,7 @@ public class TestStringTemplate extends TestSuite {
 
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = errors.toString();
-		String expecting = "redefinition of template region: @a.r";
+		String expecting = "group sub line 3: redefinition of template region: @a.r";
 		assertEqual(result, expecting);
 	}
 

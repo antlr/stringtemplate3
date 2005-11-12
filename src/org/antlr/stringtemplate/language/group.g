@@ -89,7 +89,7 @@ template[StringTemplateGroup g]
 			{
 			templateName=g.getMangledRegionName(scope.getText(),region.getText());
 	    	if ( g.isDefinedInThisGroup(templateName) ) {
-	        	g.error("redefinition of template region: @"+
+	        	g.error("group "+g.getName()+" line "+line+": redefinition of template region: @"+
 	        		scope.getText()+"."+region.getText());
 				st = new StringTemplate(); // create bogus template to fill in
 			}
