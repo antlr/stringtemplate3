@@ -679,6 +679,39 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(duh.toString(), expecting);
 	}
 
+	public void testComplicatedInheritance() throws Exception {
+		// in super: decls invokes labels
+		// in sub:   overridden decls which calls super.decls
+		//           overridden labels
+		// Bug: didn't see the overridden labels.  In other words,
+		// the overridden decls called super which called labels, but
+		// didn't get the subgroup overridden labels--it calls the
+		// one in the superclass.  Ouput was "DL" not "DSL"; didn't
+		// invoke sub's labels().
+		String basetemplates =
+			"group base;" +newline+
+			"decls() ::= \"D<labels()>\""+newline+
+			"labels() ::= \"L\"" +newline
+			;
+		StringTemplateGroup base =
+			new StringTemplateGroup(new StringReader(basetemplates),
+									AngleBracketTemplateLexer.class);
+		String subtemplates =
+			"group sub;" +newline+
+			"decls() ::= \"<super.decls()>\""+newline+
+			"labels() ::= \"SL\"" +newline
+			;
+		StringTemplateGroup sub =
+				new StringTemplateGroup(new StringReader(subtemplates),
+						AngleBracketTemplateLexer.class);
+		sub.setSuperGroup(base);
+		StringTemplate st = sub.getInstanceOf("decls");
+		String expecting = "DSL";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+
 	public void testExprInParens() throws Exception {
 		// specify a template to apply to an attribute
 		// Use a template group so we can specify the start/stop chars

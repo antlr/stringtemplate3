@@ -266,6 +266,9 @@ public class StringTemplateGroup {
 
     public StringTemplate getInstanceOf(String name) throws IllegalArgumentException {
 		StringTemplate st = lookupTemplate(name);
+		// make sure that an instance knows which created it; even if
+		// it was pulled from a supergroup.
+		st.setGroup(this);
 		return st.getInstanceOf();
 	}
 
@@ -284,11 +287,9 @@ public class StringTemplateGroup {
      *  NOT_FOUND so we don't waste time looking again later.  If we've gone
      *  past refresh interval, flush and look again.
 	 *
-	 *  TODO: hideous! Am i really making a dup of the supergroup's templates to impl inheritance?
-	 *  Hmm...i guess it's ok as nothing can change once evaluation starts.
-	 *  Seems odd though.  What happens when there is a super.template() chain
-	 *  more than two deep?  Oh, that still does a manual shift to the super.
-	 *  Well, this doesn't seem very smart/dynamic, but I'll leave as it works.
+	 *  If I find a template in a super group, copy an instance down here,
+	 *  but keep it's group as the super (getInstanceOf sets it properly
+	 *  later).
      */
     public StringTemplate lookupTemplate(String name)
 		throws IllegalArgumentException
@@ -314,9 +315,9 @@ public class StringTemplateGroup {
             if ( st==null && superGroup!=null ) {
                 // try to resolve in super group
                 st = superGroup.getInstanceOf(name);
-				if ( st!=null ) {
-                    st.setGroup(this);
-                }
+				// leave st's group as the super so we can know whence it came
+				// getInstanceOf will ensure the group is set right for
+				// polymorphism
             }
             if ( st!=null ) { // found in superGroup
                 // insert into this group; refresh will allow super
