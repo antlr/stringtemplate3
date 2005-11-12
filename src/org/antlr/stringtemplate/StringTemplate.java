@@ -123,7 +123,7 @@ A StringTemplate describes an output pattern/language like an exemplar.
  *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-    public static final String VERSION = "2.3b2";
+    public static final String VERSION = "2.3b3";
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;
@@ -277,6 +277,9 @@ public class StringTemplate {
 	 */
 	protected StringTemplateGroup group;
 
+	/** If this template is defined within a group file, what line number? */
+	protected int groupFileLine;
+
 	/** Where to report errors */
     StringTemplateErrorListener listener = null;
 
@@ -328,7 +331,7 @@ public class StringTemplate {
 	/** Set of implicit and embedded regions for this template */
 	protected Set regions;
 
-	protected static StringTemplateGroup defaultGroup =
+	public static StringTemplateGroup defaultGroup =
 		new StringTemplateGroup("defaultGroup", ".");
 
 	/** Create a blank template with no pattern and no attributes */
@@ -393,6 +396,13 @@ public class StringTemplate {
         return enclosingInstance;
     }
 
+	public StringTemplate getOutermostEnclosingInstance() {
+		if ( enclosingInstance!=null ) {
+			return enclosingInstance.getOutermostEnclosingInstance();
+		}
+		return this;
+	}
+
     public void setEnclosingInstance(StringTemplate enclosingInstance) {
         if ( this==enclosingInstance ) {
             throw new IllegalArgumentException("cannot embed template "+getName()+" in itself");
@@ -432,12 +442,12 @@ public class StringTemplate {
         return name;
     }
 
-    public String getOutermostName() {
-        if ( enclosingInstance!=null ) {
-            return enclosingInstance.getOutermostName();
-        }
-        return getName();
-    }
+	public String getOutermostName() {
+		if ( enclosingInstance!=null ) {
+			return enclosingInstance.getOutermostName();
+		}
+		return getName();
+	}
 
     public void setName(String name) {
         this.name = name;
@@ -449,6 +459,18 @@ public class StringTemplate {
 
 	public void setGroup(StringTemplateGroup group) {
 		this.group = group;
+	}
+
+	/** Return the outermost template's group file line number */
+	public int getGroupFileLine() {
+		if ( enclosingInstance!=null ) {
+			return enclosingInstance.getGroupFileLine();
+		}
+		return groupFileLine;
+	}
+
+	public void setGroupFileLine(int groupFileLine) {
+		this.groupFileLine = groupFileLine;
 	}
 
     public void setTemplate(String template) {
@@ -1086,6 +1108,7 @@ public class StringTemplate {
 		else {
 			if ( e!=null ) {
                 System.err.println("StringTemplate: error: "+msg+": "+e.toString());
+				e.printStackTrace(System.err);
             }
             else {
                 System.err.println("StringTemplate: error: "+msg);

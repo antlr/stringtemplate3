@@ -61,7 +61,13 @@ tokens {
     }
 
 	public void reportError(RecognitionException e) {
-		self.error("template parse error", e);
+        StringTemplateGroup group = self.getGroup();
+        if ( group==StringTemplate.defaultGroup ) {
+            self.error("action parse error; template context is "+self.getEnclosingInstanceStackString(), e);
+        }
+        else {
+            self.error("action parse error in group "+self.getGroup().getName()+" line "+self.getGroupFileLine()+"; template context is "+self.getEnclosingInstanceStackString(), e);
+        }
 	}
 }
 

@@ -40,7 +40,13 @@ class TemplateParser extends Parser;
 protected StringTemplate self;
 
 public void reportError(RecognitionException e) {
-	self.error("template parse error", e);
+    StringTemplateGroup group = self.getGroup();
+    if ( group==StringTemplate.defaultGroup ) {
+        self.error("template parse error; template context is "+self.getEnclosingInstanceStackString(), e);
+    }
+    else {
+        self.error("template parse error in group "+self.getGroup().getName()+" line "+self.getGroupFileLine()+"; template context is "+self.getEnclosingInstanceStackString(), e);
+    }
 }
 }
 
@@ -75,7 +81,7 @@ action[StringTemplate self]
         StringTemplate subtemplate =
         	new StringTemplate(self.getGroup(), null);
         subtemplate.setEnclosingInstance(self);
-        subtemplate.setName(i.getText()+" subtemplate");
+        subtemplate.setName(i.getText()+"_subtemplate");
         self.addChunk(c);
         }
 
@@ -87,7 +93,7 @@ action[StringTemplate self]
             StringTemplate elseSubtemplate =
          		new StringTemplate(self.getGroup(), null);
             elseSubtemplate.setEnclosingInstance(self);
-            elseSubtemplate.setName("else subtemplate");
+            elseSubtemplate.setName("else_subtemplate");
             }
 
             template[elseSubtemplate]
@@ -130,11 +136,9 @@ action[StringTemplate self]
 			}
 			else {
 				//System.out.println("region ref "+regionName);
-				mangledRef =
-					self.getGroup().getMangledRegionName(self.getName(),regionName);
-				self.getGroup().defineImplicitRegionTemplate(self.getName(),
-															 regionName);
-				self.addRegionName(regionName);
+				StringTemplate regionST =
+                    self.getGroup().defineImplicitRegionTemplate(self,regionName);
+                mangledRef = regionST.getName();
             }
 
 			if ( !err ) {
@@ -152,19 +156,17 @@ action[StringTemplate self]
 			int indexOfDefSymbol = combinedNameTemplateStr.indexOf("::=");
 			if ( indexOfDefSymbol>=1 ) {
 				String regionName = combinedNameTemplateStr.substring(0,indexOfDefSymbol);
-				self.addRegionName(regionName);
 				String template =
 					combinedNameTemplateStr.substring(indexOfDefSymbol+3,
 						combinedNameTemplateStr.length());
-				self.getGroup().defineRegionTemplate(self.getName(),
+				StringTemplate regionST =
+                    self.getGroup().defineRegionTemplate(self,
 									regionName,
 									template,
 									StringTemplate.REGION_EMBEDDED);
-				String mangledRef =
-					self.getGroup().getMangledRegionName(self.getName(),regionName);
 				// treat as regular action: mangled template include
 				String indent = ((ChunkToken)rd).getIndentation();
-				ASTExpr c = self.parseAction(mangledRef+"()");
+				ASTExpr c = self.parseAction(regionST.getName()+"()");
 				c.setIndentation(indent);
 				self.addChunk(c);
 			}
@@ -195,7 +197,7 @@ public DefaultTemplateLexer(StringTemplate self, Reader r) {
 }
 
 public void reportError(RecognitionException e) {
-	self.error("template parse error", e);
+	self.error("$...$ chunk lexer error", e);
 }
 
 protected boolean upcomingELSE(int i) throws CharStreamException {

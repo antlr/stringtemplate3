@@ -58,7 +58,7 @@ options {
     }
  
 	public void reportError(RecognitionException e) {
-		self.error("template parse error", e);
+		self.error("eval tree parse error", e);
 	}
 }
 

@@ -53,7 +53,7 @@ public AngleBracketTemplateLexer(StringTemplate self, Reader r) {
 }
 
 public void reportError(RecognitionException e) {
-	self.error("template parse error", e);
+	self.error("<...> chunk lexer error", e);
 }
 
 protected boolean upcomingELSE(int i) throws CharStreamException {

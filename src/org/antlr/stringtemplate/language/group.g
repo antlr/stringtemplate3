@@ -63,10 +63,10 @@ protected StringTemplateGroup group;
 
 public void reportError(RecognitionException e) {
 	if ( group!=null ) {
-	    group.error("template parse error", e);
+	    group.error("template group parse error", e);
 	}
 	else {
-	    System.err.println("template parse error: "+e);
+	    System.err.println("template group parse error: "+e);
 	    e.printStackTrace(System.err);
 	}
 }
@@ -83,6 +83,7 @@ template[StringTemplateGroup g]
     StringTemplate st = null;
     boolean ignore = false;
     String templateName=null;
+    int line = LT(1).getLine();
 }
 	:	(	AT scope:ID DOT region:ID
 			{
@@ -97,12 +98,12 @@ template[StringTemplateGroup g]
 				// @template.region() ::= "..."
 				StringTemplate scopeST = g.lookupTemplate(scope.getText());
 				if ( scopeST==null ) {
-					g.error("reference to region within undefined template: "+
+					g.error("group "+g.getName()+" line "+line+": reference to region within undefined template: "+
 						scope.getText());
 					err=true;
 				}
 				if ( !scopeST.containsRegionName(region.getText()) ) {
-					g.error("template "+scope.getText()+" has no region called "+
+					g.error("group "+g.getName()+" line "+line+": template "+scope.getText()+" has no region called "+
 						region.getText());
 					err=true;
 				}
@@ -128,6 +129,7 @@ template[StringTemplateGroup g]
 			}
 			}
 		)
+        {if ( st!=null ) {st.setGroupFileLine(line);}}
 	    LPAREN
 	        (args[st]|{st.defineEmptyFormalArgumentList();})
 	    RPAREN

@@ -490,15 +490,32 @@ public class StringTemplateGroup {
         return st;
     }
 
+	/** Track all references to regions <@foo>...<@end> or <@foo()>.  */
 	public StringTemplate defineRegionTemplate(String enclosingTemplateName,
-											   String name,
+											   String regionName,
                                          	   String template,
 											   int type)
     {
-		String mangledName = getMangledRegionName(enclosingTemplateName,name);
+		String mangledName =
+			getMangledRegionName(enclosingTemplateName,regionName);
 		StringTemplate regionST = defineTemplate(mangledName, template);
 		regionST.setIsRegion(true);
 		regionST.setRegionDefType(type);
+		return regionST;
+	}
+
+	/** Track all references to regions <@foo>...<@end> or <@foo()>.  */
+	public StringTemplate defineRegionTemplate(StringTemplate enclosingTemplate,
+											   String regionName,
+                                         	   String template,
+											   int type)
+    {
+		StringTemplate regionST =
+			defineRegionTemplate(enclosingTemplate.getOutermostName(),
+								 regionName,
+								 template,
+								 type);
+		enclosingTemplate.getOutermostEnclosingInstance().addRegionName(regionName);
 		return regionST;
 	}
 
@@ -510,11 +527,13 @@ public class StringTemplateGroup {
 	 *  You cannot set these manually in the same group; you have to subgroup
 	 *  to override.
 	 */
-	public void defineImplicitRegionTemplate(String enclosingTemplateName, String name) {
-		defineRegionTemplate(enclosingTemplateName,
-							 name,
-							 "",
-							 StringTemplate.REGION_IMPLICIT);
+	public StringTemplate defineImplicitRegionTemplate(StringTemplate enclosingTemplate,
+													   String name)
+	{
+		return defineRegionTemplate(enclosingTemplate,
+									name,
+									"",
+									StringTemplate.REGION_IMPLICIT);
 
 	}
 
@@ -587,7 +606,7 @@ public class StringTemplateGroup {
             if ( getName()!=null ) {
                 name = getName();
             }
-            error("problem parsing group '"+name+"'", e);
+            error("problem parsing group "+name+": "+e, e);
         }
     }
 
