@@ -469,6 +469,52 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testRegionOverrideRefSuperRegion3Levels() throws Exception {
+		// Bug: This was causing infinite recursion:
+		// getInstanceOf(super::a)
+		// getInstanceOf(sub::a)
+		// getInstanceOf(subsub::a)
+		// getInstanceOf(subsub::region__a__r)
+		// getInstanceOf(subsub::super.region__a__r)
+		// getInstanceOf(subsub::super.region__a__r)
+		// getInstanceOf(subsub::super.region__a__r)
+		// ...
+		// Somehow, the ref to super in subsub is not moving up the chain
+		// to the @super.r(); oh, i introduced a bug when i put setGroup
+		// into STG.getInstanceOf()!
+
+		String templates1 =
+				"group super;" +newline+
+				"a() ::= \"X<@r()>Y\"" +
+				"@a.r() ::= \"foo\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates1),
+										AngleBracketTemplateLexer.class);
+
+		String templates2 =
+				"group sub;" +newline+
+				"@a.r() ::= \"<@super.r()>2\"" +newline;
+		StringTemplateGroup subGroup =
+				new StringTemplateGroup(new StringReader(templates2),
+										AngleBracketTemplateLexer.class,
+										null,
+										group);
+
+		String templates3 =
+				"group subsub;" +newline+
+				"@a.r() ::= \"<@super.r()>3\"" +newline;
+		StringTemplateGroup subSubGroup =
+				new StringTemplateGroup(new StringReader(templates3),
+										AngleBracketTemplateLexer.class,
+										null,
+										subGroup);
+
+		StringTemplate st = subSubGroup.getInstanceOf("a");
+		String result = st.toString();
+		String expecting = "Xfoo23Y";
+		assertEqual(result, expecting);
+	}
+
 	public void testRegionOverrideRefSuperImplicitRegion() throws Exception {
 		String templates1 =
 				"group super;" +newline+
@@ -711,6 +757,37 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void test3LevelSuperRef() throws Exception {
+		String templates1 =
+				"group super;" +newline+
+				"r() ::= \"foo\"" +newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates1),
+										AngleBracketTemplateLexer.class);
+
+		String templates2 =
+				"group sub;" +newline+
+				"r() ::= \"<super.r()>2\"" +newline;
+		StringTemplateGroup subGroup =
+				new StringTemplateGroup(new StringReader(templates2),
+										AngleBracketTemplateLexer.class,
+										null,
+										group);
+
+		String templates3 =
+				"group subsub;" +newline+
+				"r() ::= \"<super.r()>3\"" +newline;
+		StringTemplateGroup subSubGroup =
+				new StringTemplateGroup(new StringReader(templates3),
+										AngleBracketTemplateLexer.class,
+										null,
+										subGroup);
+
+		StringTemplate st = subSubGroup.getInstanceOf("r");
+		String result = st.toString();
+		String expecting = "foo23";
+		assertEqual(result, expecting);
+	}
 
 	public void testExprInParens() throws Exception {
 		// specify a template to apply to an attribute
@@ -1818,7 +1895,7 @@ public class TestStringTemplate extends TestSuite {
     public void testLazyEvalOfSuperInApplySuperTemplateRef()
             throws Exception
     {
-        StringTemplateGroup group = new StringTemplateGroup("super");
+        StringTemplateGroup group = new StringTemplateGroup("base");
         StringTemplateGroup subGroup = new StringTemplateGroup("sub");
         subGroup.setSuperGroup(group);
         group.defineTemplate("bold", "<b>$it$</b>");
@@ -1834,9 +1911,15 @@ public class TestStringTemplate extends TestSuite {
         group.defineTemplate("page", "$name:super.bold()$");
         StringTemplate st = subGroup.getInstanceOf("page");
         st.setAttribute("name", "Ter");
-        String expecting =
-                "<b>Ter</b>";
-        assertEqual(st.toString(), expecting);
+		String error = null;
+		try {
+			st.toString();
+		}
+		catch (IllegalArgumentException iae) {
+			error = iae.getMessage();
+		}
+		String expectingError = "base has no super group; invalid template: super.bold";
+		assertEqual(error, expectingError);
     }
 
     public void testTemplatePolymorphism()
@@ -1917,7 +2000,6 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate ifstat = group.getInstanceOf("ifstat");
         b.setAttribute("stats", ifstat); // block has if stat
         ifstat.setAttribute("stats", b); // but make "if" contain block
-        String expecting = "IF true then ";
         String expectingError =
                 "infinite recursion to <ifstat([stats])@4> referenced in <block([stats, attributes])@3>; stack trace:"+newline +
                 "<ifstat([stats])@4>, attributes=[stats=<block()@3>]>"+newline +

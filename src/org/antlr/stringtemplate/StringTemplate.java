@@ -273,9 +273,26 @@ public class StringTemplate {
 	protected boolean passThroughAttributes = false;
 
 	/** What group originally defined the prototype for this template?
-	 *  This affects the set of templates I can refer to.
+	 *  This affects the set of templates I can refer to.  super.t() must
+	 *  always refer to the super of the original group.
+	 *
+	 *  group base;
+	 *  t ::= "base";
+	 *
+	 *  group sub;
+	 *  t ::= "super.t()2"
+	 *
+	 *  group subsub;
+	 *  t ::= "super.t()3"
+	 */
+	protected StringTemplateGroup nativeGroup;
+
+	/** This template was created as part of what group?  Even if this
+	 *  template was created from a prototype in a supergroup, its group
+	 *  will be the subgroup.  That's the way polymorphism works.
 	 */
 	protected StringTemplateGroup group;
+
 
 	/** If this template is defined within a group file, what line number? */
 	protected int groupFileLine;
@@ -375,6 +392,7 @@ public class StringTemplate {
 		to.numberOfDefaultArgumentValues = from.numberOfDefaultArgumentValues;
 		to.name = from.name;
 		to.group = from.group;
+		to.nativeGroup = from.nativeGroup;
 		to.listener = from.listener;
 		to.regions = from.regions;
 		to.isRegion = from.isRegion;
@@ -459,6 +477,14 @@ public class StringTemplate {
 
 	public void setGroup(StringTemplateGroup group) {
 		this.group = group;
+	}
+
+	public StringTemplateGroup getNativeGroup() {
+		return nativeGroup;
+	}
+
+	public void setNativeGroup(StringTemplateGroup nativeGroup) {
+		this.nativeGroup = nativeGroup;
 	}
 
 	/** Return the outermost template's group file line number */
@@ -783,7 +809,7 @@ public class StringTemplate {
      *  argument, foo, then foo will hide any value available from "above"
      *  in order to prevent infinite recursion.
      *
-	 *  This method is not static so people can overrided functionality.
+	 *  This method is not static so people can override functionality.
      */
     public Object get(StringTemplate self, String attribute) {
 		//System.out.println("### get("+self.getEnclosingInstanceStackString()+", "+attribute+")");

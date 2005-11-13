@@ -265,18 +265,36 @@ public class StringTemplateGroup {
 	}
 
     public StringTemplate getInstanceOf(String name) throws IllegalArgumentException {
+		//System.out.println("getInstanceOf("+getName()+"::"+name+")");
 		StringTemplate st = lookupTemplate(name);
-		// make sure that an instance knows which created it; even if
-		// it was pulled from a supergroup.
-		st.setGroup(this);
-		return st.getInstanceOf();
+		StringTemplate instanceST = st.getInstanceOf();
+		return instanceST;
 	}
 
 	public StringTemplate getEmbeddedInstanceOf(StringTemplate enclosingInstance,
                                                 String name)
     	throws IllegalArgumentException
 	{
-        StringTemplate st = getInstanceOf(name);
+		/*
+		System.out.println("surrounding group is "+
+						   enclosingInstance.getGroup().getName()+
+						   " with native group "+enclosingInstance.getNativeGroup().getName());
+						   */
+		StringTemplate st = null;
+		// TODO: seems like this should go into lookupTemplate
+		if ( name.startsWith("super.") ) {
+			// for super.foo() refs, ensure that we look at the native
+			// group for the embedded instance not the current evaluation
+			// group (which is always pulled down to the original group
+			// from which somebody did group.getInstanceOf("foo");
+			st = enclosingInstance.getNativeGroup().getInstanceOf(name);
+		}
+		else {
+        	st = getInstanceOf(name);
+		}
+		// make sure all embedded templates have the same group as enclosing
+		// so that polymorphic refs will start looking at the original group
+		st.setGroup(this);
         st.setEnclosingInstance(enclosingInstance);
         return st;
     }
@@ -287,19 +305,23 @@ public class StringTemplateGroup {
      *  NOT_FOUND so we don't waste time looking again later.  If we've gone
      *  past refresh interval, flush and look again.
 	 *
-	 *  If I find a template in a super group, copy an instance down here,
-	 *  but keep it's group as the super (getInstanceOf sets it properly
-	 *  later).
+	 *  If I find a template in a super group, copy an instance down here
      */
     public StringTemplate lookupTemplate(String name)
 		throws IllegalArgumentException
 	{
-		//System.out.println("look up "+getName()+"::"+name);
+		// System.out.println("look up "+getName()+"::"+name);
         if ( name.startsWith("super.") ) {
             if ( superGroup!=null ) {
                 int dot = name.indexOf('.');
                 name = name.substring(dot+1,name.length());
-                return superGroup.lookupTemplate(name);
+                StringTemplate superScopeST = superGroup.lookupTemplate(name);
+				/*
+				System.out.println("superScopeST is "+
+								   superScopeST.getGroup().getName()+"::"+name+
+								   " with native group "+superScopeST.getNativeGroup().getName());
+				*/
+				return superScopeST;
             }
             throw new IllegalArgumentException(getName()+
                     " has no super group; invalid template: "+name);
@@ -315,9 +337,11 @@ public class StringTemplateGroup {
             if ( st==null && superGroup!=null ) {
                 // try to resolve in super group
                 st = superGroup.getInstanceOf(name);
-				// leave st's group as the super so we can know whence it came
-				// getInstanceOf will ensure the group is set right for
-				// polymorphism
+				// make sure that when we inherit a template, that it's
+				// group is reset; it's nativeGroup will remain where it was
+				if ( st!=null ) {
+					st.setGroup(this);
+				}
             }
             if ( st!=null ) { // found in superGroup
                 // insert into this group; refresh will allow super
@@ -485,6 +509,7 @@ public class StringTemplateGroup {
         StringTemplate st = createStringTemplate();
         st.setName(name);
 		st.setGroup(this);
+		st.setNativeGroup(this);
         st.setTemplate(template);
 		st.setErrorListener(listener);
         templates.put(name, st);
