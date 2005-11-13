@@ -930,7 +930,7 @@ public class TestStringTemplate extends TestSuite {
 		catch (IllegalArgumentException iae) {
 			error = iae.getMessage();
 		}
-		assertEqual(error, "Can't load template bold.st");
+		assertEqual(error, "Can't find template bold.st; context is [anonymous]");
     }
 
     public void testNullTemplateToMultiValuedApplication() throws Exception {
@@ -951,7 +951,7 @@ public class TestStringTemplate extends TestSuite {
 		catch (IllegalArgumentException iae) {
 			error = iae.getMessage();
 		}
-		assertEqual(error, "Can't load template bold.st");
+		assertEqual(error, "Can't find template bold.st; context is [anonymous]");
     }
 
     public void testChangingAttrValueTemplateApplicationToVector() throws Exception {

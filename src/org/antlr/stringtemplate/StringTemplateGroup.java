@@ -264,11 +264,18 @@ public class StringTemplateGroup {
 		return new StringTemplate();
 	}
 
-    public StringTemplate getInstanceOf(String name) throws IllegalArgumentException {
+    public StringTemplate getInstanceOf(StringTemplate enclosingInstance,
+										String name)
+		throws IllegalArgumentException
+	{
 		//System.out.println("getInstanceOf("+getName()+"::"+name+")");
-		StringTemplate st = lookupTemplate(name);
+		StringTemplate st = lookupTemplate(enclosingInstance,name);
 		StringTemplate instanceST = st.getInstanceOf();
 		return instanceST;
+	}
+
+	public StringTemplate getInstanceOf(String name) {
+		return getInstanceOf(null, name);
 	}
 
 	public StringTemplate getEmbeddedInstanceOf(StringTemplate enclosingInstance,
@@ -287,10 +294,10 @@ public class StringTemplateGroup {
 			// group for the embedded instance not the current evaluation
 			// group (which is always pulled down to the original group
 			// from which somebody did group.getInstanceOf("foo");
-			st = enclosingInstance.getNativeGroup().getInstanceOf(name);
+			st = enclosingInstance.getNativeGroup().getInstanceOf(enclosingInstance, name);
 		}
 		else {
-        	st = getInstanceOf(name);
+        	st = getInstanceOf(enclosingInstance, name);
 		}
 		// make sure all embedded templates have the same group as enclosing
 		// so that polymorphic refs will start looking at the original group
@@ -307,15 +314,17 @@ public class StringTemplateGroup {
 	 *
 	 *  If I find a template in a super group, copy an instance down here
      */
-    public StringTemplate lookupTemplate(String name)
+    public StringTemplate lookupTemplate(StringTemplate enclosingInstance,
+										 String name)
 		throws IllegalArgumentException
 	{
-		// System.out.println("look up "+getName()+"::"+name);
+		//System.out.println("look up "+getName()+"::"+name);
         if ( name.startsWith("super.") ) {
             if ( superGroup!=null ) {
                 int dot = name.indexOf('.');
                 name = name.substring(dot+1,name.length());
-                StringTemplate superScopeST = superGroup.lookupTemplate(name);
+                StringTemplate superScopeST =
+					superGroup.lookupTemplate(enclosingInstance,name);
 				/*
 				System.out.println("superScopeST is "+
 								   superScopeST.getGroup().getName()+"::"+name+
@@ -350,9 +359,16 @@ public class StringTemplateGroup {
                 templates.put(name, st);
             }
             else {
-                // not found; remember that this sucker doesn't exist
-                templates.put(name, NOT_FOUND_ST);
-				throw new IllegalArgumentException("Can't load template "+getFileNameFromTemplateName(name));
+				// not found; remember that this sucker doesn't exist
+				templates.put(name, NOT_FOUND_ST);
+				String context = "";
+				if ( enclosingInstance!=null ) {
+					context = "; context is "+
+						enclosingInstance.getEnclosingInstanceStackString();
+				}
+				throw new IllegalArgumentException("Can't find template "+
+												   getFileNameFromTemplateName(name)+
+												   context);
             }
         }
         else if ( st==NOT_FOUND_ST ) {
@@ -360,6 +376,10 @@ public class StringTemplateGroup {
         }
 		//System.out.println("lookup found "+st.getGroup().getName()+"::"+st.getName());
 		return st;
+	}
+
+	public StringTemplate lookupTemplate(String name) {
+		return lookupTemplate(null, name);
 	}
 
     protected void checkRefreshInterval() {
