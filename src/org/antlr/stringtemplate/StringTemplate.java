@@ -32,8 +32,6 @@ import java.util.*;
 import java.lang.reflect.Constructor;
 
 import org.antlr.stringtemplate.language.*;
-import org.antlr.stringtemplate.language.*;
-import org.antlr.stringtemplate.language.AttributeReflectionController;
 import antlr.*;
 import antlr.collections.AST;
 
@@ -527,18 +525,6 @@ public class StringTemplate {
         if ( !inLintMode() ) {
             return; // only do this method so far in lint mode
         }
-        if ( formalArguments!=FormalArgument.UNKNOWN ) {
-            // must define self before setting if the user has defined
-            // formal arguments to the template
-            defineFormalArgument(ASTExpr.REFLECTION_ATTRIBUTES);
-        }
-        if ( attributes==null ) {
-            attributes = new HashMap();
-        }
-        rawSetAttribute(
-                attributes,
-                ASTExpr.REFLECTION_ATTRIBUTES,
-                new AttributeReflectionController(this).toString());
     }
 
 	public void removeAttribute(String name) {
@@ -1342,8 +1328,7 @@ public class StringTemplate {
         while ( iter.hasNext() ) {
             String name = (String)iter.next();
             if ( referencedAttributes!=null &&
-                !referencedAttributes.contains(name) &&
-                !name.equals(ASTExpr.REFLECTION_ATTRIBUTES) )
+                !referencedAttributes.contains(name) )
             {
                 warning(getName()+": set but not used: "+name);
             }

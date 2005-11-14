@@ -49,17 +49,6 @@ public class ASTExpr extends Expr {
 	public static final String DEFAULT_INDEX_VARIABLE_NAME = "i";
 	public static final String DEFAULT_MAP_VALUE_NAME = "_default_";
 
-    /** How to refer to the surrounding template object;
-     *  this is attribute name to use.
-    public static final String SELF_ATTR = "self";
-     */
-
-    /** When lint mode is on, this attribute contains a list of reflection
-     *  objects that tell you about the attributes set by the user of the
-     *  template.
-     */
-    public static final String REFLECTION_ATTRIBUTES = "attributes";
-
 	AST exprTree = null;
 
     /** store separator etc... */
