@@ -363,7 +363,7 @@ public class StringTemplate {
 
     public StringTemplate(String template, Class lexer) {
         this();
-        setGroup(new StringTemplateGroup("angleBracketsGroup", lexer));
+        setGroup(new StringTemplateGroup("defaultGroup", lexer));
         setTemplate(template);
     }
 
