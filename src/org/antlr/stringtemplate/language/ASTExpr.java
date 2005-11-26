@@ -106,8 +106,10 @@ public class ASTExpr extends Expr {
 		// convert all attributes to iterators even if just one value
 		for (int a = 0; a < attributes.size(); a++) {
 			Object o = (Object) attributes.get(a);
-			o = convertAnythingToIterator(o);
-			attributes.set(a, o); // alter the list in place
+			if ( o!=null ) {
+				o = convertAnythingToIterator(o);
+				attributes.set(a, o); // alter the list in place
+			}
 		}
 
 		int numAttributes = attributes.size();
@@ -142,7 +144,7 @@ public class ASTExpr extends Expr {
 			int numEmpty = 0;
 			for (int a = 0; a < numAttributes; a++) {
 				Iterator it = (Iterator) attributes.get(a);
-				if ( it.hasNext() ) {
+				if ( it!=null && it.hasNext() ) {
 					String argName = (String)formalArgumentNames[a];
 					Object iteratedValue = it.next();
 					argumentContext.put(argName, iteratedValue);
