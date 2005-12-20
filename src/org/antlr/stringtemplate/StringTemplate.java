@@ -1382,14 +1382,14 @@ public class StringTemplate {
 		this.regionDefType = regionDefType;
 	}
 
-    public String toDebugString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("template-"+getTemplateDeclaratorString()+":");
-        buf.append("chunks=");
+	public String toDebugString() {
+		StringBuffer buf = new StringBuffer();
+		buf.append("template-"+getTemplateDeclaratorString()+":");
+		buf.append("chunks=");
 		if ( chunks!=null ) {
-        	buf.append(chunks.toString());
+			buf.append(chunks.toString());
 		}
-        buf.append("attributes=[");
+		buf.append("attributes=[");
 		if ( attributes!=null ) {
 			Set attrNames = attributes.keySet();
 			int n=0;
@@ -1410,8 +1410,57 @@ public class StringTemplate {
 			}
 			buf.append("]");
 		}
-        return buf.toString();
-    }
+		return buf.toString();
+	}
+
+	/** Don't print values, just report the nested structure with attribute names.
+	 *  Follow (nest) attributes that are templates only.
+	 */
+	public String toStructureString() {
+		return toStructureString(0);
+	}
+
+	public String toStructureString(int indent) {
+		StringBuffer buf = new StringBuffer();
+		for (int i=1; i<=indent; i++) { // indent
+			buf.append("  ");
+		}
+		buf.append(getName());
+		buf.append(attributes.keySet());
+		buf.append(":\n");
+		if ( attributes!=null ) {
+			Set attrNames = attributes.keySet();
+			for (Iterator iter = attrNames.iterator(); iter.hasNext();) {
+				String name = (String) iter.next();
+				Object value = attributes.get(name);
+				if ( value instanceof StringTemplate ) { // descend
+					buf.append(((StringTemplate)value).toStructureString(indent+1));
+				}
+				else {
+					if ( value instanceof List ) {
+						List alist = (List)value;
+						for (int i = 0; i < alist.size(); i++) {
+							Object o = (Object) alist.get(i);
+							if ( o instanceof StringTemplate ) { // descend
+								buf.append(((StringTemplate)o).toStructureString(indent+1));
+							}
+						}
+					}
+					else if ( value instanceof Map ) {
+						Map m = (Map)value;
+						Collection mvalues = m.values();
+						for (Iterator iterator = mvalues.iterator(); iterator.hasNext();) {
+							Object o = (Object) iterator.next();
+							if ( o instanceof StringTemplate ) { // descend
+								buf.append(((StringTemplate)o).toStructureString(indent+1));
+							}
+						}
+					}
+				}
+			}
+		}
+		return buf.toString();
+	}
 
     public void printDebugString() {
         System.out.println("template-"+getName()+":");
