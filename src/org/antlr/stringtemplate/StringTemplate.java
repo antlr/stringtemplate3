@@ -1254,6 +1254,16 @@ public class StringTemplate {
         return buf.toString();
     }
 
+	protected String getTemplateHeaderString(boolean showAttributes) {
+		if ( showAttributes ) {
+			StringBuffer buf = new StringBuffer();
+			buf.append(getName());
+			buf.append(attributes.keySet());
+			return buf.toString();
+		}
+		return getName();
+	}
+
     /** Find "missing attribute" and "cardinality mismatch" errors.
      *  Excecuted before a template writes its chunks out.
      *  When you find a problem, throw an IllegalArgumentException.
@@ -1460,6 +1470,126 @@ public class StringTemplate {
 			}
 		}
 		return buf.toString();
+	}
+
+	/*
+	public String getDOTForDependencyGraph(boolean showAttributes) {
+		StringBuffer buf = new StringBuffer();
+		buf.append("digraph prof {\n");
+		HashMap edges = new HashMap();
+		this.getDependencyGraph(edges, showAttributes);
+		Set sourceNodes = edges.keySet();
+		// for each source template
+		for (Iterator it = sourceNodes.iterator(); it.hasNext();) {
+			String src = (String) it.next();
+			Set targetNodes = (Set)edges.get(src);
+			// for each target template
+			for (Iterator it2 = targetNodes.iterator(); it2.hasNext();) {
+				String trg = (String) it2.next();
+				buf.append('"');
+				buf.append(src);
+				buf.append('"');
+				buf.append("->");
+				buf.append('"');
+				buf.append(trg);
+				buf.append("\"\n");
+			}
+		}
+		buf.append("}");
+		return buf.toString();
+	}
+*/
+
+	/** Generate a DOT file for displaying the template enclosure graph; e.g.,
+		digraph prof {
+		  "t1" -> "t2"
+		  "t1" -> "t3"
+		  "t4" -> "t5"
+		}
+	*/
+	public StringTemplate getDOTForDependencyGraph(boolean showAttributes) {
+		String structure =
+			"digraph StringTemplateDependencyGraph {\n" +
+			"node [shape=$shape$, $if(width)$width=$width$,$endif$" +
+			"      $if(height)$height=$height$,$endif$ fontsize=$fontsize$];\n" +
+			"$edges:{e|\"$e.src$\" -> \"$e.trg$\"\n}$" +
+			"}\n";
+		StringTemplate graphST = new StringTemplate(structure);
+		HashMap edges = new HashMap();
+		this.getDependencyGraph(edges, showAttributes);
+		Set sourceNodes = edges.keySet();
+		// for each source template
+		for (Iterator it = sourceNodes.iterator(); it.hasNext();) {
+			String src = (String) it.next();
+			Set targetNodes = (Set)edges.get(src);
+			// for each target template
+			for (Iterator it2 = targetNodes.iterator(); it2.hasNext();) {
+				String trg = (String) it2.next();
+				graphST.setAttribute("edges.{src,trg}", src, trg);
+			}
+		}
+		graphST.setAttribute("shape", "none");
+		graphST.setAttribute("fontsize", "11");
+		graphST.setAttribute("height", "0"); // make height
+		return graphST;
+	}
+
+	/** Get a list of n->m edges where template n contains template m.
+	 *  The map you pass in is filled with edges: key->value.  Useful
+	 *  for having DOT print out an enclosing template graph.
+	 */
+	public void getDependencyGraph(Map edges, boolean showAttributes) {
+		String srcNode = this.getTemplateHeaderString(showAttributes);
+		if ( attributes!=null ) {
+			Set attrNames = attributes.keySet();
+			for (Iterator iter = attrNames.iterator(); iter.hasNext();) {
+				String name = (String) iter.next();
+				Object value = attributes.get(name);
+				if ( value instanceof StringTemplate ) {
+					String targetNode =
+						((StringTemplate)value).getTemplateHeaderString(showAttributes);
+					putToMultiValuedMap(edges,srcNode,targetNode);
+					((StringTemplate)value).getDependencyGraph(edges,showAttributes); // descend
+				}
+				else {
+					if ( value instanceof List ) {
+						List alist = (List)value;
+						for (int i = 0; i < alist.size(); i++) {
+							Object o = (Object) alist.get(i);
+							if ( o instanceof StringTemplate ) {
+								String targetNode =
+									((StringTemplate)o).getTemplateHeaderString(showAttributes);
+								putToMultiValuedMap(edges,srcNode,targetNode);
+								((StringTemplate)o).getDependencyGraph(edges,showAttributes); // descend
+							}
+						}
+					}
+					else if ( value instanceof Map ) {
+						Map m = (Map)value;
+						Collection mvalues = m.values();
+						for (Iterator iterator = mvalues.iterator(); iterator.hasNext();) {
+							Object o = (Object) iterator.next();
+							if ( o instanceof StringTemplate ) {
+								String targetNode =
+									((StringTemplate)o).getTemplateHeaderString(showAttributes);
+								putToMultiValuedMap(edges,srcNode,targetNode);
+								((StringTemplate)o).getDependencyGraph(edges,showAttributes); // descend
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/** Manage a hash table like it has multiple unique values.  Map<Object,Set>. */
+	protected void putToMultiValuedMap(Map map, Object key, Object value) {
+		HashSet bag = (HashSet)map.get(key);
+		if ( bag==null ) {
+			bag = new HashSet();
+			map.put(key, bag);
+		}
+		bag.add(value);
 	}
 
     public void printDebugString() {
