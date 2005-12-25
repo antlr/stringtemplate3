@@ -73,6 +73,22 @@ public class FormalArgument {
         }
     }
 
+	public boolean equals(Object o) {
+		if ( o==null || !(o instanceof FormalArgument) ) {
+			return false;
+		}
+		FormalArgument other = (FormalArgument)o;
+		if ( !this.name.equals(other.name) ) {
+			return false;
+		}
+		// only check if there is a default value; that's all
+		if ( (this.defaultValueST!=null && other.defaultValueST==null) ||
+			 (this.defaultValueST==null && other.defaultValueST!=null) ) {
+			return false;
+		}
+		return true;
+	}
+
     public String toString() {
 		if ( defaultValueST!=null ) {
 			return name+"="+defaultValueST;

@@ -73,7 +73,11 @@ public void reportError(RecognitionException e) {
 }
 
 group[StringTemplateGroup g]
-	:	"group" name:ID {g.setName(name.getText());} SEMI
+	:	"group" name:ID {g.setName(name.getText());}
+	    ( "implements" i:ID {g.implementInterface(i.getText());}
+	      (COMMA i2:ID {g.implementInterface(i2.getText());} )*
+	    )? 
+	    SEMI
 	    ( template[g] | mapdef[g] )+
     ;
 

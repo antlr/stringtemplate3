@@ -61,7 +61,9 @@ public class TestStringTemplate extends TestSuite {
 		StringBuffer errorOutput = new StringBuffer(500);
 		public void error(String msg, Throwable e) {
 			if ( e!=null ) {
-				errorOutput.append(msg+": "+e);
+				StringWriter duh = new StringWriter();
+				e.printStackTrace(new PrintWriter(duh));
+				errorOutput.append(msg+": "+duh.toString());
 			}
 			else {
 				errorOutput.append(msg);
@@ -81,6 +83,129 @@ public class TestStringTemplate extends TestSuite {
 		public String toString() {
 			return errorOutput.toString();
 		}
+	}
+
+	public void testInterfaceFileFormat() throws Exception {
+		String groupI =
+				"interface test;" +newline+
+				"t();" +newline+
+				"bold(item);"+newline+
+				"optional duh(a,b,c);"+newline;
+		StringTemplateGroupInterface I =
+				new StringTemplateGroupInterface(new StringReader(groupI));
+
+		String expecting =
+			"interface test;\n" +
+			"t();\n" +
+			"bold(item);\n" +
+			"optional duh(a, b, c);\n";
+		assertEqual(I.toString(), expecting);
+	}
+
+	public void testGroupSatisfiesSingleInterface() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		String groupI =
+				"interface testI;" +newline+
+				"t();" +newline+
+				"bold(item);"+newline+
+				"optional duh(a,b,c);"+newline;
+		writeFile(tmpdir, "testI.sti", groupI);
+
+		String templates =
+			"group testG implements testI;" +newline+
+			"t() ::= <<foo>>" +newline+
+			"bold(item) ::= <<foo>>"+newline+
+			"duh(a,b,c) ::= <<foo>>"+newline;
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+
+		String expecting = ""; // should be no errors
+		assertEqual(errors.toString(), expecting);
+	}
+
+	public void testMissingInterfaceTemplate() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		String groupI =
+				"interface testI;" +newline+
+				"t();" +newline+
+				"bold(item);"+newline+
+				"optional duh(a,b,c);"+newline;
+		writeFile(tmpdir, "testI.sti", groupI);
+
+		String templates =
+			"group testG implements testI;" +newline+
+			"t() ::= <<foo>>" +newline+
+			"duh(a,b,c) ::= <<foo>>"+newline;
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+
+		String expecting = "group testG does not satisfy interface testI: missing templates [bold]";
+		assertEqual(errors.toString(), expecting);
+	}
+
+	public void testMissingOptionalInterfaceTemplate() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		String groupI =
+				"interface testI;" +newline+
+				"t();" +newline+
+				"bold(item);"+newline+
+				"optional duh(a,b,c);"+newline;
+		writeFile(tmpdir, "testI.sti", groupI);
+
+		String templates =
+			"group testG implements testI;" +newline+
+			"t() ::= <<foo>>" +newline+
+			"bold(item) ::= <<foo>>";
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+
+		String expecting = ""; // should be NO errors
+		assertEqual(errors.toString(), expecting);
+	}
+
+	public void testMismatchedInterfaceTemplate() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		String groupI =
+				"interface testI;" +newline+
+				"t();" +newline+
+				"bold(item);"+newline+
+				"optional duh(a,b,c);"+newline;
+		writeFile(tmpdir, "testI.sti", groupI);
+
+		String templates =
+			"group testG implements testI;" +newline+
+			"t() ::= <<foo>>" +newline+
+			"bold(item) ::= <<foo>>"+newline+
+			"duh(a,c) ::= <<foo>>"+newline;
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+
+		String expecting = "group testG does not satisfy interface testI: mismatched template arguments [optional duh(a, b, c);]";
+		assertEqual(errors.toString(), expecting);
 	}
 
     public void testGroupFileFormat() throws Exception {
@@ -891,7 +1016,7 @@ public class TestStringTemplate extends TestSuite {
         String expectingError="problem parsing template 'anonymous': line 1:31: expecting '$', found '<EOF>'";
         //System.out.println("error: '"+errors+"'");
         //System.out.println("expecting: '"+expectingError+"'");
-        assertEqual(errors.toString(), expectingError);
+        assertTrue(errors.toString().startsWith(expectingError));
     }
 
     public void testSetButNotRefd() throws Exception {
@@ -3453,6 +3578,21 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("x", o);
 		String expecting = "9:34";
 		assertEqual(st.toString(), expecting);
+	}
+
+	public static void writeFile(String dir, String fileName, String content) {
+		try {
+			File f = new File(dir, fileName);
+			FileWriter w = new FileWriter(f);
+			BufferedWriter bw = new BufferedWriter(w);
+			bw.write(content);
+			bw.close();
+			w.close();
+		}
+		catch (IOException ioe) {
+			System.err.println("can't write file");
+			ioe.printStackTrace(System.err);
+		}
 	}
 
 }

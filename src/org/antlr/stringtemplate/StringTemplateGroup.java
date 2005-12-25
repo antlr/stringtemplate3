@@ -79,10 +79,16 @@ public class StringTemplateGroup {
 	/** Track all groups by name; maps name to StringTemplateGroup */
 	protected static Map nameToGroupMap = new HashMap();
 
+	/** Track all interfaces by name; maps name to StringTemplateGroupInterface */
+	protected static Map nameToInterfaceMap = new HashMap();
+
 	/** Are we derived from another group?  Templates not found in this group
 	 *  will be searched for in the superGroup recursively.
 	 */
 	protected StringTemplateGroup superGroup = null;
+
+	/** Keep track of all interfaces implemented by this group. */
+	protected List interfaces = null;
 
     /** When templates are files on the disk, the refresh interval is used
      *  to know when to reload.  When a Reader is passed to the ctor,
@@ -190,8 +196,8 @@ public class StringTemplateGroup {
      *
      *  group name;
      *
-     *  t1(args) : "..."
-     *  t2 : <<
+     *  t1(args) ::= "..."
+     *  t2() ::= <<
      *  >>
      *  ...
      */
@@ -225,6 +231,7 @@ public class StringTemplateGroup {
         this.listener = errors;
 		setSuperGroup(superGroup);
         parseGroup(r);
+		verifyInterfaceImplementations();
     }
 
     public Class getTemplateLexerClass() {
@@ -243,8 +250,37 @@ public class StringTemplateGroup {
 		this.superGroup = superGroup;
 	}
 
+	/** TODO: how does the nameToGroupMap work with the group loader? */
 	public void setSuperGroup(String groupName) {
 		this.superGroup = (StringTemplateGroup)nameToGroupMap.get(groupName);
+	}
+
+	/** Just track the new interface; check later.  Allows dups, but no biggie. */
+	public void implementInterface(StringTemplateGroupInterface I) {
+		if ( interfaces==null ) {
+			interfaces = new ArrayList();
+		}
+		interfaces.add(I);
+	}
+
+	/** Indicate that this group implements this interface; load if necessary
+	 *  if not in the nameToInterfaceMap.
+	 */
+	public void implementInterface(String interfaceName) {
+		StringTemplateGroupInterface I =
+			(StringTemplateGroupInterface)nameToInterfaceMap.get(interfaceName);
+		if ( I!=null ) { // we've seen before; just use it
+			implementInterface(I);
+			return;
+		}
+		I = loadInterface(interfaceName, listener); // else load it
+		if ( I==null ) {
+			error("could not load interface "+interfaceName);
+		}
+		else {
+			nameToInterfaceMap.put(interfaceName, I);
+			implementInterface(I);
+		}
 	}
 
 	public StringTemplateGroup getSuperGroup() {
@@ -632,8 +668,7 @@ public class StringTemplateGroup {
 	 */
 	public boolean isDefined(String name) {
 		try {
-			lookupTemplate(name);
-			return true;
+			return lookupTemplate(name)!=null;
 		}
 		catch (IllegalArgumentException iae) {
 			return false;
@@ -655,6 +690,24 @@ public class StringTemplateGroup {
             error("problem parsing group "+name+": "+e, e);
         }
     }
+
+	/** verify that this group satisfies its interfaces */
+	protected void verifyInterfaceImplementations() {
+		for (int i = 0; interfaces!=null && i < interfaces.size(); i++) {
+			StringTemplateGroupInterface I =
+				(StringTemplateGroupInterface)interfaces.get(i);
+			List missing = I.getMissingTemplates(this);
+			List mismatched = I.getMismatchedTemplates(this);
+			if ( missing!=null ) {
+				error("group "+getName()+" does not satisfy interface "+
+					  I.getName()+": missing templates "+missing);
+			}
+			if ( mismatched!=null ) {
+				error("group "+getName()+" does not satisfy interface "+
+					  I.getName()+": mismatched template arguments "+mismatched);
+			}
+		}
+	}
 
     public int getRefreshInterval() {
         return refreshIntervalInSeconds;
@@ -767,6 +820,26 @@ public class StringTemplateGroup {
 
 	public static void registerGroupLoader(StringTemplateGroupLoader loader) {
 		groupLoader = loader;
+	}
+
+	public static StringTemplateGroup loadGroup(String name,
+												StringTemplateErrorListener listener)
+	{
+		if ( groupLoader==null ) {
+			listener.error("no group loader registered",null);
+			return null;
+		}
+		return groupLoader.loadGroup(name);
+	}
+
+	public static StringTemplateGroupInterface loadInterface(String name,
+															 StringTemplateErrorListener listener)
+	{
+		if ( groupLoader==null ) {
+			listener.error("no group loader registered",null);
+			return null;
+		}
+		return groupLoader.loadInterface(name);
 	}
 
 	public void error(String msg) {
