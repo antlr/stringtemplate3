@@ -59,7 +59,12 @@ public class TestStringTemplate extends TestSuite {
 
 	static class ErrorBuffer implements StringTemplateErrorListener {
 		StringBuffer errorOutput = new StringBuffer(500);
+		int n = 0;
 		public void error(String msg, Throwable e) {
+			n++;
+			if ( n>1 ) {
+				errorOutput.append('\n');
+			}
 			if ( e!=null ) {
 				StringWriter duh = new StringWriter();
 				e.printStackTrace(new PrintWriter(duh));
@@ -70,9 +75,11 @@ public class TestStringTemplate extends TestSuite {
 			}
 		}
 		public void warning(String msg) {
+			n++;
 			errorOutput.append(msg);
 		}
 		public void debug(String msg) {
+			n++;
 			errorOutput.append(msg);
 		}
         public boolean equals(Object o) {
@@ -102,6 +109,78 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(I.toString(), expecting);
 	}
 
+	public void testNoGroupLoader() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+
+		String templates =
+			"group testG implements blort;" +newline+
+			"t() ::= <<foo>>" +newline+
+			"bold(item) ::= <<foo>>"+newline+
+			"duh(a,b,c) ::= <<foo>>"+newline;
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+
+		String expecting = "no group loader registered";
+		assertEqual(errors.toString(), expecting);
+	}
+
+	public void testCannotFindInterfaceFile() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+
+		String templates =
+			"group testG implements blort;" +newline+
+			"t() ::= <<foo>>" +newline+
+			"bold(item) ::= <<foo>>"+newline+
+			"duh(a,b,c) ::= <<foo>>"+newline;
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+
+		String expecting = "no such interface file blort.sti";
+		assertEqual(errors.toString(), expecting);
+	}
+
+	public void testMultiDirGroupLoading() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		if ( !(new File(tmpdir+"/sub").exists()) ) {
+			if ( !(new File(tmpdir+"/sub").mkdir()) ) { // create a subdir
+				System.err.println("can't make subdir in test");
+				return;
+			}
+		}
+		StringTemplateGroup.registerGroupLoader(
+			new CommonGroupLoader(tmpdir+":"+tmpdir+"/sub",errors)
+		);
+
+		String templates =
+			"group testG2;" +newline+
+			"t() ::= <<foo>>" +newline+
+			"bold(item) ::= <<foo>>"+newline+
+			"duh(a,b,c) ::= <<foo>>"+newline;
+
+		writeFile(tmpdir+"/sub", "testG2.stg", templates);
+
+		StringTemplateGroup group =
+			StringTemplateGroup.loadGroup("testG2", errors);
+		String expecting = "group testG2;\n" +
+			"bold(item) ::= <<foo>>\n" +
+			"duh(a,b,c) ::= <<foo>>\n" +
+			"t() ::= <<foo>>\n";
+		assertEqual(group.toString(), expecting);
+	}
+
 	public void testGroupSatisfiesSingleInterface() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -127,6 +206,33 @@ public class TestStringTemplate extends TestSuite {
 
 		String expecting = ""; // should be no errors
 		assertEqual(errors.toString(), expecting);
+	}
+
+	public void testGroupExtendsSuperGroup() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		StringTemplateGroup.registerGroupLoader(
+			new CommonGroupLoader(tmpdir,errors)
+		);
+		String superGroup =
+				"group superG;" +newline+
+				"bold(item) ::= <<*$item$*>>;\n"+newline;
+		writeFile(tmpdir, "superG.stg", superGroup);
+
+		String templates =
+			"group testG : superG;" +newline+
+			"main(x) ::= <<$bold(x)$>>"+newline;
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+		StringTemplate st = group.getInstanceOf("main");
+		st.setAttribute("x", "foo");
+
+		String expecting = "*foo*";
+		assertEqual(st.toString(), expecting);
 	}
 
 	public void testMissingInterfaceTemplate() throws Exception {

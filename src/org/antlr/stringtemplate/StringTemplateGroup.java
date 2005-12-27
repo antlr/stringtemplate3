@@ -250,9 +250,18 @@ public class StringTemplateGroup {
 		this.superGroup = superGroup;
 	}
 
-	/** TODO: how does the nameToGroupMap work with the group loader? */
 	public void setSuperGroup(String groupName) {
-		this.superGroup = (StringTemplateGroup)nameToGroupMap.get(groupName);
+		StringTemplateGroup group =
+			(StringTemplateGroup)nameToGroupMap.get(groupName);
+		if ( group!=null ) { // we've seen before; just use it
+			setSuperGroup(group);
+			return;
+		}
+		group = loadGroup(groupName, listener); // else load it
+		if ( group!=null ) {
+			nameToGroupMap.put(groupName, group);
+			setSuperGroup(group);
+		}
 	}
 
 	/** Just track the new interface; check later.  Allows dups, but no biggie. */
@@ -274,10 +283,7 @@ public class StringTemplateGroup {
 			return;
 		}
 		I = loadInterface(interfaceName, listener); // else load it
-		if ( I==null ) {
-			error("could not load interface "+interfaceName);
-		}
-		else {
+		if ( I!=null ) {
 			nameToInterfaceMap.put(interfaceName, I);
 			implementInterface(I);
 		}
