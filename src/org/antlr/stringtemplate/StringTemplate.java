@@ -753,6 +753,14 @@ public class StringTemplate {
 		for (int i=0; chunks!=null && i<chunks.size(); i++) {
 			Expr a = (Expr)chunks.get(i);
 			int chunkN = a.write(this, out);
+			// expr-on-first-line-with-no-output NEWLINE => NEWLINE
+			if ( chunkN==0 && i==0 && (i+1)<chunks.size() &&
+				 chunks.get(i+1) instanceof NewlineRef )
+			{
+				//System.out.println("found pure first-line-blank \\n pattern");
+				i++; // skip next NEWLINE;
+				continue;
+			}
 			// NEWLINE expr-with-no-output NEWLINE => NEWLINE
 			// Indented $...$ have the indent stored with the ASTExpr
 			// so the indent does not come out as a StringRef

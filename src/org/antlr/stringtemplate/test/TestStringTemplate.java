@@ -2654,9 +2654,70 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		group.setErrorListener(errors);
 		StringTemplate t = new StringTemplate(group,
-			"$duh.users:{name: $it$}; separator=\", \"$");
+			"begin\n" +
+			"$duh.users:{name: $it$}; separator=\", \"$\n" +
+			"end\n");
 		t.setAttribute("duh", new Duh());
-		String expecting="";
+		String expecting="begin\nend\n";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testNullListGetsNoOutput() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"begin\n" +
+			"$users:{name: $it$}; separator=\", \"$\n" +
+			"end\n");
+		//t.setAttribute("users", new Duh());
+		String expecting="begin\nend\n";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmptyListGetsNoOutput() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"begin\n" +
+			"$users:{name: $it$}; separator=\", \"$\n" +
+			"end\n");
+		t.setAttribute("users", new ArrayList());
+		String expecting="begin\nend\n";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmptyListNoIteratorGetsNoOutput() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		StringTemplate t = new StringTemplate(group,
+			"begin\n" +
+			"$users; separator=\", \"$\n" +
+			"end\n");
+		t.setAttribute("users", new ArrayList());
+		String expecting="begin\nend\n";
+		String result = t.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmptyExprAsFirstLineGetsNoOutput() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		group.setErrorListener(errors);
+		group.defineTemplate("bold", "<b>$it$</b>");
+		StringTemplate t = new StringTemplate(group,
+			"$users$\n" +
+			"end\n");
+		String expecting="end\n";
 		String result = t.toString();
 		assertEqual(result, expecting);
 	}
