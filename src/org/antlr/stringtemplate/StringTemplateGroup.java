@@ -306,8 +306,11 @@ public class StringTemplateGroup {
 		return new StringTemplate();
 	}
 
-    public StringTemplate getInstanceOf(StringTemplate enclosingInstance,
-										String name)
+	/** A support routine that gets an instance of name knowing which
+	 *  ST encloses it for error messages.
+	 */
+	protected StringTemplate getInstanceOf(StringTemplate enclosingInstance,
+										   String name)
 		throws IllegalArgumentException
 	{
 		//System.out.println("getInstanceOf("+getName()+"::"+name+")");
@@ -316,8 +319,21 @@ public class StringTemplateGroup {
 		return instanceST;
 	}
 
+	/** The primary means of getting an instance of a template from this
+	 *  group.
+	 */
 	public StringTemplate getInstanceOf(String name) {
 		return getInstanceOf(null, name);
+	}
+
+	/** The primary means of getting an instance of a template from this
+	 *  group when you have a predefined set of attributes you want to
+	 *  use.
+	 */
+	public StringTemplate getInstanceOf(String name, Map attributes) {
+		StringTemplate st = getInstanceOf(name);
+		st.attributes = attributes;
+		return st;
 	}
 
 	public StringTemplate getEmbeddedInstanceOf(StringTemplate enclosingInstance,

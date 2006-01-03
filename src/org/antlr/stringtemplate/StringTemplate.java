@@ -374,9 +374,17 @@ public class StringTemplate {
 			setGroup(group);
 		}
 		setTemplate(template);
-   }
+	}
 
-    /** Make the 'to' template look exactly like the 'from' template
+	public StringTemplate(StringTemplateGroup group,
+						  String template,
+						  HashMap attributes)
+	{
+		this(group,template);
+		this.attributes = attributes;
+	}
+
+	/** Make the 'to' template look exactly like the 'from' template
      *  except for the attributes.  This is like creating an instance
      *  of a class in that the executable code is the same (the template
      *  chunks), but the instance data is blank (the attributes).  Do
