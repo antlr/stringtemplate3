@@ -34,6 +34,7 @@ import java.lang.reflect.Constructor;
 import org.antlr.stringtemplate.language.*;
 import antlr.*;
 import antlr.collections.AST;
+import antlr.collections.ASTEnumeration;
 
 /** A <TT>StringTemplate</TT> is a "document" with holes in it where you can stick
  *  values.  <TT>StringTemplate</TT> breaks up your template into chunks of text and
@@ -121,7 +122,7 @@ A StringTemplate describes an output pattern/language like an exemplar.
  *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-    public static final String VERSION = "2.3b5";
+	public static final String VERSION = "2.3b5";
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;
@@ -130,132 +131,132 @@ public class StringTemplate {
 	/** @t.r() ::= "..." defined manually by coder */
 	public static final int REGION_EXPLICIT = 3;
 
-    /** An automatically created aggregate of properties.
-     *
-     *  I often have lists of things that need to be formatted, but the list
-     *  items are actually pieces of data that are not already in an object.  I
-     *  need ST to do something like:
-     *
-     *  Ter=3432
-     *  Tom=32234
-     *  ....
-     *
-     *  using template:
-     *
-     *  $items:{$attr.name$=$attr.type$}$
-     *
-     *  This example will call getName() on the objects in items attribute, but
-     *  what if they aren't objects?  I have perhaps two parallel arrays
-     *  instead of a single array of objects containing two fields.  One
-     *  solution is allow Maps to be handled like properties so that it.name
-     *  would fail getName() but then see that it's a Map and do
-     *  it.get("name") instead.
-     *
-     *  This very clean approach is espoused by some, but the problem is that
-     *  it's a hole in my separation rules.  People can put the logic in the
-     *  view because you could say: "go get bob's data" in the view:
-     *
-     *  Bob's Phone: $db.bob.phone$
-     *
-     *  A view should not be part of the program and hence should never be able
-     *  to go ask for a specific person's data.
-     *
-     *  After much thought, I finally decided on a simple solution.  I've
-     *  added setAttribute variants that pass in multiple property values,
-     *  with the property names specified as part of the name using a special
-     *  attribute name syntax: "name.{propName1,propName2,...}".  This
-     *  object is a special kind of HashMap that hopefully prevents people
-     *  from passing a subclass or other variant that they have created as
-     *  it would be a loophole.  Anyway, the ASTExpr.getObjectProperty()
-     *  method looks for Aggregate as a special case and does a get() instead
-     *  of getPropertyName.
-     */
-    public static final class Aggregate {
-        protected HashMap properties = new HashMap();
-        /** Allow StringTemplate to add values, but prevent the end
-         *  user from doing so.
-         */
-        protected void put(String propName, Object propValue) {
-            properties.put(propName, propValue);
-        }
-        public Object get(String propName) {
-            return properties.get(propName);
-        }
-    }
+	/** An automatically created aggregate of properties.
+	 *
+	 *  I often have lists of things that need to be formatted, but the list
+	 *  items are actually pieces of data that are not already in an object.  I
+	 *  need ST to do something like:
+	 *
+	 *  Ter=3432
+	 *  Tom=32234
+	 *  ....
+	 *
+	 *  using template:
+	 *
+	 *  $items:{$attr.name$=$attr.type$}$
+	 *
+	 *  This example will call getName() on the objects in items attribute, but
+	 *  what if they aren't objects?  I have perhaps two parallel arrays
+	 *  instead of a single array of objects containing two fields.  One
+	 *  solution is allow Maps to be handled like properties so that it.name
+	 *  would fail getName() but then see that it's a Map and do
+	 *  it.get("name") instead.
+	 *
+	 *  This very clean approach is espoused by some, but the problem is that
+	 *  it's a hole in my separation rules.  People can put the logic in the
+	 *  view because you could say: "go get bob's data" in the view:
+	 *
+	 *  Bob's Phone: $db.bob.phone$
+	 *
+	 *  A view should not be part of the program and hence should never be able
+	 *  to go ask for a specific person's data.
+	 *
+	 *  After much thought, I finally decided on a simple solution.  I've
+	 *  added setAttribute variants that pass in multiple property values,
+	 *  with the property names specified as part of the name using a special
+	 *  attribute name syntax: "name.{propName1,propName2,...}".  This
+	 *  object is a special kind of HashMap that hopefully prevents people
+	 *  from passing a subclass or other variant that they have created as
+	 *  it would be a loophole.  Anyway, the ASTExpr.getObjectProperty()
+	 *  method looks for Aggregate as a special case and does a get() instead
+	 *  of getPropertyName.
+	 */
+	public static final class Aggregate {
+		protected HashMap properties = new HashMap();
+		/** Allow StringTemplate to add values, but prevent the end
+		 *  user from doing so.
+		 */
+		protected void put(String propName, Object propValue) {
+			properties.put(propName, propValue);
+		}
+		public Object get(String propName) {
+			return properties.get(propName);
+		}
+	}
 
 	public static final String ANONYMOUS_ST_NAME = "anonymous";
 
-    /** track probable issues like setting attribute that is not referenced. */
-    static boolean lintMode = false;
+	/** track probable issues like setting attribute that is not referenced. */
+	static boolean lintMode = false;
 
-    protected List referencedAttributes = null;
+	protected List referencedAttributes = null;
 
 	/** What's the name of this template? */
-    protected String name = ANONYMOUS_ST_NAME;
+	protected String name = ANONYMOUS_ST_NAME;
 
-    private static int templateCounter=0;
-    private static synchronized int getNextTemplateCounter() {
-        templateCounter++;
-        return templateCounter;
-    }
-    /** reset the template ID counter to 0; public so that testing routine
-     *  can access but not really of interest to the user.
-     */
-    public static void resetTemplateCounter() {
-        templateCounter = 0;
-    }
+	private static int templateCounter=0;
+	private static synchronized int getNextTemplateCounter() {
+		templateCounter++;
+		return templateCounter;
+	}
+	/** reset the template ID counter to 0; public so that testing routine
+	 *  can access but not really of interest to the user.
+	 */
+	public static void resetTemplateCounter() {
+		templateCounter = 0;
+	}
 
-    protected int templateID = getNextTemplateCounter();
+	protected int templateID = getNextTemplateCounter();
 
-    /** Enclosing instance if I'm embedded within another template.
-     *  IF-subtemplates are considered embedded as well.
-     */
-    protected StringTemplate enclosingInstance = null;
+	/** Enclosing instance if I'm embedded within another template.
+	 *  IF-subtemplates are considered embedded as well.
+	 */
+	protected StringTemplate enclosingInstance = null;
 
-    /** A list of embedded templates */
-    protected List embeddedInstances = null;
+	/** A list of embedded templates */
+	protected List embeddedInstances = null;
 
-    /** If this template is an embedded template such as when you apply
-     *  a template to an attribute, then the arguments passed to this
-     *  template represent the argument context--a set of values
-     *  computed by walking the argument assignment list.  For example,
-     *  <name:bold(item=name, foo="x")> would result in an
-     *  argument context of {[item=name], [foo="x"]} for this
-     *  template.  This template would be the bold() template and
-     *  the enclosingInstance would point at the template that held
-     *  that <name:bold(...)> template call.  When you want to get
-     *  an attribute value, you first check the attributes for the
-     *  'self' template then the arg context then the enclosingInstance
-     *  like resolving variables in pascal-like language with nested
-     *  procedures.
-     *
-     *  With multi-valued attributes such as <faqList:briefFAQDisplay()>
-     *  attribute "i" is set to 1..n.
-     */
-    protected Map argumentContext = null;
+	/** If this template is an embedded template such as when you apply
+	 *  a template to an attribute, then the arguments passed to this
+	 *  template represent the argument context--a set of values
+	 *  computed by walking the argument assignment list.  For example,
+	 *  <name:bold(item=name, foo="x")> would result in an
+	 *  argument context of {[item=name], [foo="x"]} for this
+	 *  template.  This template would be the bold() template and
+	 *  the enclosingInstance would point at the template that held
+	 *  that <name:bold(...)> template call.  When you want to get
+	 *  an attribute value, you first check the attributes for the
+	 *  'self' template then the arg context then the enclosingInstance
+	 *  like resolving variables in pascal-like language with nested
+	 *  procedures.
+	 *
+	 *  With multi-valued attributes such as <faqList:briefFAQDisplay()>
+	 *  attribute "i" is set to 1..n.
+	 */
+	protected Map argumentContext = null;
 
-    /** If this template is embedded in another template, the arguments
-     *  must be evaluated just before each application when applying
-     *  template to a list of values.  The "it" attribute must change
-     *  with each application so that $names:bold(item=it)$ works.  If
-     *  you evaluate once before starting the application loop then it
-     *  has a single fixed value.  Eval.g saves the AST rather than evaluating
-     *  before invoking applyListOfAlternatingTemplates().  Each iteration
-     *  of a template application to a multi-valued attribute, these args
-     *  are re-evaluated with an initial context of {[it=...], [i=...]}.
-     */
-    protected StringTemplateAST argumentsAST = null;
+	/** If this template is embedded in another template, the arguments
+	 *  must be evaluated just before each application when applying
+	 *  template to a list of values.  The "it" attribute must change
+	 *  with each application so that $names:bold(item=it)$ works.  If
+	 *  you evaluate once before starting the application loop then it
+	 *  has a single fixed value.  Eval.g saves the AST rather than evaluating
+	 *  before invoking applyListOfAlternatingTemplates().  Each iteration
+	 *  of a template application to a multi-valued attribute, these args
+	 *  are re-evaluated with an initial context of {[it=...], [i=...]}.
+	 */
+	protected StringTemplateAST argumentsAST = null;
 
-    /** When templates are defined in a group file format, the attribute
-     *  list is provided including information about attribute cardinality
-     *  such as present, optional, ...  When this information is available,
-     *  rawSetAttribute should do a quick existence check as should the
-     *  invocation of other templates.  So if you ref bold(item="foo") but
-     *  item is not defined in bold(), then an exception should be thrown.
-     *  When actually rendering the template, the cardinality is checked.
-     *  This is a Map<String,FormalArgument>.
-     */
-    protected LinkedHashMap formalArguments = FormalArgument.UNKNOWN;
+	/** When templates are defined in a group file format, the attribute
+	 *  list is provided including information about attribute cardinality
+	 *  such as present, optional, ...  When this information is available,
+	 *  rawSetAttribute should do a quick existence check as should the
+	 *  invocation of other templates.  So if you ref bold(item="foo") but
+	 *  item is not defined in bold(), then an exception should be thrown.
+	 *  When actually rendering the template, the cardinality is checked.
+	 *  This is a Map<String,FormalArgument>.
+	 */
+	protected LinkedHashMap formalArguments = FormalArgument.UNKNOWN;
 
 	/** How many formal arguments to this template have default values
 	 *  specified?
@@ -296,21 +297,21 @@ public class StringTemplate {
 	protected int groupFileLine;
 
 	/** Where to report errors */
-    StringTemplateErrorListener listener = null;
+	StringTemplateErrorListener listener = null;
 
 	/** The original, immutable pattern/language (not really used again after
 	 *  initial "compilation", setup/parsing).
 	 */
-    protected String pattern;
+	protected String pattern;
 
 	/** Map an attribute name to its value(s).  These values are set by outside
 	 *  code via st.setAttribute(name, value).  StringTemplate is like self in
-     *  that a template is both the "class def" and "instance".  When you
-     *  create a StringTemplate or setTemplate, the text is broken up into chunks
-     *  (i.e., compiled down into a series of chunks that can be evaluated later).
-     *  You can have multiple
+	 *  that a template is both the "class def" and "instance".  When you
+	 *  create a StringTemplate or setTemplate, the text is broken up into chunks
+	 *  (i.e., compiled down into a series of chunks that can be evaluated later).
+	 *  You can have multiple
 	 */
-    protected Map attributes;
+	protected Map attributes;
 
 	/** A Map<Class,Object> that allows people to register a renderer for
 	 *  a particular kind of object to be displayed in this template.  This
@@ -319,14 +320,14 @@ public class StringTemplate {
 	 *  Most of the time this map is not used because the StringTemplateGroup
 	 *  has the general renderer map for all templates in that group.
 	 *  Sometimes though you want to override the group's renderers.
- 	 */
+	  */
 	protected Map attributeRenderers;
 
 	/** A list of alternating string and ASTExpr references.
 	 *  This is compiled to when the template is loaded/defined and walked to
 	 *  write out a template instance.
 	 */
-    protected List chunks;
+	protected List chunks;
 
 	/** If someone refs <@r()> in template t, an implicit
 	 *
@@ -352,20 +353,20 @@ public class StringTemplate {
 	/** Create a blank template with no pattern and no attributes */
 	public StringTemplate() {
 		group = defaultGroup; // make sure has a group even if default
-    }
+	}
 
 	/** Create an anonymous template.  It has no name just
 	 *  chunks (which point to this anonymous template) and attributes.
 	 */
-    public StringTemplate(String template) {
-        this(null, template);
-    }
+	public StringTemplate(String template) {
+		this(null, template);
+	}
 
-    public StringTemplate(String template, Class lexer) {
-        this();
-        setGroup(new StringTemplateGroup("defaultGroup", lexer));
-        setTemplate(template);
-    }
+	public StringTemplate(String template, Class lexer) {
+		this();
+		setGroup(new StringTemplateGroup("defaultGroup", lexer));
+		setTemplate(template);
+	}
 
 	/** Create an anonymous template with no name, but with a group */
 	public StringTemplate(StringTemplateGroup group, String template) {
@@ -385,16 +386,16 @@ public class StringTemplate {
 	}
 
 	/** Make the 'to' template look exactly like the 'from' template
-     *  except for the attributes.  This is like creating an instance
-     *  of a class in that the executable code is the same (the template
-     *  chunks), but the instance data is blank (the attributes).  Do
-     *  not copy the enclosingInstance pointer since you will want this
-     *  template to eval in a context different from the examplar.
-     */
-    protected void dup(StringTemplate from, StringTemplate to) {
-        to.pattern = from.pattern;
+	 *  except for the attributes.  This is like creating an instance
+	 *  of a class in that the executable code is the same (the template
+	 *  chunks), but the instance data is blank (the attributes).  Do
+	 *  not copy the enclosingInstance pointer since you will want this
+	 *  template to eval in a context different from the examplar.
+	 */
+	protected void dup(StringTemplate from, StringTemplate to) {
+		to.pattern = from.pattern;
 		to.chunks = from.chunks;
-        to.formalArguments = from.formalArguments;
+		to.formalArguments = from.formalArguments;
 		to.numberOfDefaultArgumentValues = from.numberOfDefaultArgumentValues;
 		to.name = from.name;
 		to.group = from.group;
@@ -403,22 +404,22 @@ public class StringTemplate {
 		to.regions = from.regions;
 		to.isRegion = from.isRegion;
 		to.regionDefType = from.regionDefType;
-    }
+	}
 
-    /** Make an instance of this template; it contains an exact copy of
-     *  everything (except the attributes and enclosing instance pointer).
-     *  So the new template refers to the previously compiled chunks of this
-     *  template but does not have any attribute values.
-     */
-    public StringTemplate getInstanceOf() {
-        StringTemplate t = group.createStringTemplate();
+	/** Make an instance of this template; it contains an exact copy of
+	 *  everything (except the attributes and enclosing instance pointer).
+	 *  So the new template refers to the previously compiled chunks of this
+	 *  template but does not have any attribute values.
+	 */
+	public StringTemplate getInstanceOf() {
+		StringTemplate t = group.createStringTemplate();
 		dup(this, t);
 		return t;
-    }
+	}
 
-    public StringTemplate getEnclosingInstance() {
-        return enclosingInstance;
-    }
+	public StringTemplate getEnclosingInstance() {
+		return enclosingInstance;
+	}
 
 	public StringTemplate getOutermostEnclosingInstance() {
 		if ( enclosingInstance!=null ) {
@@ -427,44 +428,44 @@ public class StringTemplate {
 		return this;
 	}
 
-    public void setEnclosingInstance(StringTemplate enclosingInstance) {
-        if ( this==enclosingInstance ) {
-            throw new IllegalArgumentException("cannot embed template "+getName()+" in itself");
-        }
-        // set the parent for this template
-        this.enclosingInstance = enclosingInstance;
-        // make the parent track this template as an embedded template
-        if ( enclosingInstance!=null ) {
+	public void setEnclosingInstance(StringTemplate enclosingInstance) {
+		if ( this==enclosingInstance ) {
+			throw new IllegalArgumentException("cannot embed template "+getName()+" in itself");
+		}
+		// set the parent for this template
+		this.enclosingInstance = enclosingInstance;
+		// make the parent track this template as an embedded template
+		if ( enclosingInstance!=null ) {
 			this.enclosingInstance.addEmbeddedInstance(this);
 		}
-    }
+	}
 
-    public void addEmbeddedInstance(StringTemplate embeddedInstance) {
-        if ( this.embeddedInstances==null ) {
-            this.embeddedInstances = new LinkedList();
-        }
-        this.embeddedInstances.add(embeddedInstance);
-    }
+	public void addEmbeddedInstance(StringTemplate embeddedInstance) {
+		if ( this.embeddedInstances==null ) {
+			this.embeddedInstances = new LinkedList();
+		}
+		this.embeddedInstances.add(embeddedInstance);
+	}
 
-    public Map getArgumentContext() {
-        return argumentContext;
-    }
+	public Map getArgumentContext() {
+		return argumentContext;
+	}
 
-    public void setArgumentContext(Map ac) {
-        argumentContext = ac;
-    }
+	public void setArgumentContext(Map ac) {
+		argumentContext = ac;
+	}
 
-    public StringTemplateAST getArgumentsAST() {
-        return argumentsAST;
-    }
+	public StringTemplateAST getArgumentsAST() {
+		return argumentsAST;
+	}
 
-    public void setArgumentsAST(StringTemplateAST argumentsAST) {
-        this.argumentsAST = argumentsAST;
-    }
+	public void setArgumentsAST(StringTemplateAST argumentsAST) {
+		this.argumentsAST = argumentsAST;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
 	public String getOutermostName() {
 		if ( enclosingInstance!=null ) {
@@ -473,9 +474,9 @@ public class StringTemplate {
 		return getName();
 	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	public StringTemplateGroup getGroup() {
 		return group;
@@ -505,39 +506,39 @@ public class StringTemplate {
 		this.groupFileLine = groupFileLine;
 	}
 
-    public void setTemplate(String template) {
+	public void setTemplate(String template) {
 		this.pattern = template;
 		breakTemplateIntoChunks();
-    }
+	}
 
-    public String getTemplate() {
+	public String getTemplate() {
 		return pattern;
-    }
+	}
 
 	public void setErrorListener(StringTemplateErrorListener listener) {
 		this.listener = listener;
 	}
 
-    public StringTemplateErrorListener getErrorListener() {
-        if ( listener==null ) {
-            return group.getErrorListener();
-        }
-        return listener;
-    }
+	public StringTemplateErrorListener getErrorListener() {
+		if ( listener==null ) {
+			return group.getErrorListener();
+		}
+		return listener;
+	}
 
-    public void reset() {
+	public void reset() {
 		attributes = new HashMap(); // just throw out table and make new one
-    }
+	}
 
-    public void setPredefinedAttributes() {
-        if ( !inLintMode() ) {
-            return; // only do this method so far in lint mode
-        }
-    }
+	public void setPredefinedAttributes() {
+		if ( !inLintMode() ) {
+			return; // only do this method so far in lint mode
+		}
+	}
 
 	public void removeAttribute(String name) {
 		attributes.remove(name);
-    }
+	}
 
 	/** Set an attribute for this template.  If you set the same
 	 *  attribute more than once, you get a multi-valued attribute.
@@ -547,20 +548,20 @@ public class StringTemplate {
 	 *  can set it back to null after this call if you want.
 	 *  If you send in a List plus other values to the same
 	 *  attribute, they all get flattened into one List of values.
-     *  If you send in an array, it is converted to a List.  Works
-     *  with arrays of objects and arrays of {int,float,double}.
+	 *  If you send in an array, it is converted to a List.  Works
+	 *  with arrays of objects and arrays of {int,float,double}.
 	 */
 	public void setAttribute(String name, Object value) {
 		if ( value==null ) {
 			return;
 		}
-        if ( attributes==null ) {
-            attributes = new HashMap();
-        }
+		if ( attributes==null ) {
+			attributes = new HashMap();
+		}
 
-        if ( value instanceof StringTemplate ) {
-            ((StringTemplate)value).setEnclosingInstance(this);
-        }
+		if ( value instanceof StringTemplate ) {
+			((StringTemplate)value).setEnclosingInstance(this);
+		}
 		else {
 			// convert value if array
 			value = ASTExpr.convertArrayToList(value);
@@ -610,98 +611,98 @@ public class StringTemplate {
 		}
 	}
 
-    /** Convenience method to box ints */
-    public void setAttribute(String name, int value) {
-        setAttribute(name, new Integer(value));
-    }
+	/** Convenience method to box ints */
+	public void setAttribute(String name, int value) {
+		setAttribute(name, new Integer(value));
+	}
 
-    /** Set an aggregate attribute with two values.  The attribute name
-     *  must have the format: "name.{propName1,propName2}".
-     */
-    public void setAttribute(String aggrSpec, Object v1, Object v2) {
-        setAttribute(aggrSpec, new Object[] {v1,v2});
-    }
+	/** Set an aggregate attribute with two values.  The attribute name
+	 *  must have the format: "name.{propName1,propName2}".
+	 */
+	public void setAttribute(String aggrSpec, Object v1, Object v2) {
+		setAttribute(aggrSpec, new Object[] {v1,v2});
+	}
 
-    public void setAttribute(String aggrSpec, Object v1, Object v2, Object v3) {
-        setAttribute(aggrSpec, new Object[] {v1,v2,v3});
-    }
+	public void setAttribute(String aggrSpec, Object v1, Object v2, Object v3) {
+		setAttribute(aggrSpec, new Object[] {v1,v2,v3});
+	}
 
-    public void setAttribute(String aggrSpec, Object v1, Object v2, Object v3, Object v4) {
-        setAttribute(aggrSpec, new Object[] {v1,v2,v3,v4});
-    }
+	public void setAttribute(String aggrSpec, Object v1, Object v2, Object v3, Object v4) {
+		setAttribute(aggrSpec, new Object[] {v1,v2,v3,v4});
+	}
 
-    public void setAttribute(String aggrSpec, Object v1, Object v2, Object v3, Object v4, Object v5) {
-        setAttribute(aggrSpec, new Object[] {v1,v2,v3,v4,v5});
-    }
+	public void setAttribute(String aggrSpec, Object v1, Object v2, Object v3, Object v4, Object v5) {
+		setAttribute(aggrSpec, new Object[] {v1,v2,v3,v4,v5});
+	}
 
-    /** Create an aggregate from the list of properties in aggrSpec and fill
-     *  with values from values array.  This is not publically visible because
-     *  it conflicts semantically with setAttribute("foo",new Object[] {...});
-     */
-    protected void setAttribute(String aggrSpec, Object[] values) {
-        List properties = new ArrayList();
-        String aggrName = parseAggregateAttributeSpec(aggrSpec, properties);
-        if ( values==null || properties.size()==0 ) {
-            throw new IllegalArgumentException("missing properties or values for '"+aggrSpec+"'");
-        }
-        if ( values.length != properties.size() ) {
-            throw new IllegalArgumentException("number of properties in '"+aggrSpec+"' != number of values");
-        }
-        Aggregate aggr = new Aggregate();
-        for (int i = 0; i < values.length; i++) {
-            Object value = values[i];
+	/** Create an aggregate from the list of properties in aggrSpec and fill
+	 *  with values from values array.  This is not publically visible because
+	 *  it conflicts semantically with setAttribute("foo",new Object[] {...});
+	 */
+	protected void setAttribute(String aggrSpec, Object[] values) {
+		List properties = new ArrayList();
+		String aggrName = parseAggregateAttributeSpec(aggrSpec, properties);
+		if ( values==null || properties.size()==0 ) {
+			throw new IllegalArgumentException("missing properties or values for '"+aggrSpec+"'");
+		}
+		if ( values.length != properties.size() ) {
+			throw new IllegalArgumentException("number of properties in '"+aggrSpec+"' != number of values");
+		}
+		Aggregate aggr = new Aggregate();
+		for (int i = 0; i < values.length; i++) {
+			Object value = values[i];
 			if ( value instanceof StringTemplate ) {
 				((StringTemplate)value).setEnclosingInstance(this);
 			}
 			else {
 				value = ASTExpr.convertArrayToList(value);
 			}
-            aggr.put((String)properties.get(i), value);
-        }
-        setAttribute(aggrName, aggr);
-    }
+			aggr.put((String)properties.get(i), value);
+		}
+		setAttribute(aggrName, aggr);
+	}
 
-    /** Split "aggrName.{propName1,propName2}" into list [propName1,propName2]
-     *  and the aggrName.
-     */
-    protected String parseAggregateAttributeSpec(String aggrSpec, List properties) {
-        int dot = aggrSpec.indexOf('.');
-        if ( dot<=0 ) {
-            throw new IllegalArgumentException("invalid aggregate attribute format: "+
-                    aggrSpec);
-        }
-        String aggrName = aggrSpec.substring(0, dot);
-        String propString = aggrSpec.substring(dot+1, aggrSpec.length());
-        boolean error = true;
-        StringTokenizer tokenizer = new StringTokenizer(propString, "{,}", true);
-        match:
-        if ( tokenizer.hasMoreTokens() ) {
-            String token = tokenizer.nextToken(); // advance to {
-            if ( token.equals("{") ) {
-                token = tokenizer.nextToken();    // advance to first prop name
-                properties.add(token);
-                token = tokenizer.nextToken();    // advance to a comma
-                while ( token.equals(",") ) {
-                    token = tokenizer.nextToken();    // advance to a prop name
-                    properties.add(token);
-                    token = tokenizer.nextToken();    // advance to a "," or "}"
-                }
-                if ( token.equals("}") ) {
-                    error = false;
-                }
-            }
-        }
-        if ( error ) {
-            throw new IllegalArgumentException("invalid aggregate attribute format: "+
-                    aggrSpec);
-        }
-        return aggrName;
-    }
+	/** Split "aggrName.{propName1,propName2}" into list [propName1,propName2]
+	 *  and the aggrName.
+	 */
+	protected String parseAggregateAttributeSpec(String aggrSpec, List properties) {
+		int dot = aggrSpec.indexOf('.');
+		if ( dot<=0 ) {
+			throw new IllegalArgumentException("invalid aggregate attribute format: "+
+					aggrSpec);
+		}
+		String aggrName = aggrSpec.substring(0, dot);
+		String propString = aggrSpec.substring(dot+1, aggrSpec.length());
+		boolean error = true;
+		StringTokenizer tokenizer = new StringTokenizer(propString, "{,}", true);
+		match:
+		if ( tokenizer.hasMoreTokens() ) {
+			String token = tokenizer.nextToken(); // advance to {
+			if ( token.equals("{") ) {
+				token = tokenizer.nextToken();    // advance to first prop name
+				properties.add(token);
+				token = tokenizer.nextToken();    // advance to a comma
+				while ( token.equals(",") ) {
+					token = tokenizer.nextToken();    // advance to a prop name
+					properties.add(token);
+					token = tokenizer.nextToken();    // advance to a "," or "}"
+				}
+				if ( token.equals("}") ) {
+					error = false;
+				}
+			}
+		}
+		if ( error ) {
+			throw new IllegalArgumentException("invalid aggregate attribute format: "+
+					aggrSpec);
+		}
+		return aggrName;
+	}
 
-    /** Map a value to a named attribute.  Throw NoSuchElementException if
-     *  the named attribute is not formally defined in self's specific template
-     *  and a formal argument list exists.
-     */
+	/** Map a value to a named attribute.  Throw NoSuchElementException if
+	 *  the named attribute is not formally defined in self's specific template
+	 *  and a formal argument list exists.
+	 */
 	protected void rawSetAttribute(Map attributes,
 								   String name,
 								   Object value)
@@ -722,7 +723,7 @@ public class StringTemplate {
 
 	/** Argument evaluation such as foo(x=y), x must
 	 *  be checked against foo's argument list not this's (which is
- 	 *  the enclosing context).  So far, only eval.g uses arg self as
+	  *  the enclosing context).  So far, only eval.g uses arg self as
 	 *  something other than "this".
 	 */
 	public void rawSetArgumentAttribute(StringTemplate embedded,
@@ -746,17 +747,17 @@ public class StringTemplate {
 
 	public Object getAttribute(String name) {
 		return get(this,name);
-    }
+	}
 
-    /** Walk the chunks, asking them to write themselves out according
+	/** Walk the chunks, asking them to write themselves out according
 	 *  to attribute values of 'this.attributes'.  This is like evaluating or
-     *  interpreting the StringTemplate as a program using the
-     *  attributes.  The chunks will be identical (point at same list)
-     *  for all instances of this template.
+	 *  interpreting the StringTemplate as a program using the
+	 *  attributes.  The chunks will be identical (point at same list)
+	 *  for all instances of this template.
 	 */
 	public int write(StringTemplateWriter out) throws IOException {
 		int n = 0;
-        setPredefinedAttributes();
+		setPredefinedAttributes();
 		setDefaultArgumentValues();
 		for (int i=0; chunks!=null && i<chunks.size(); i++) {
 			Expr a = (Expr)chunks.get(i);
@@ -781,85 +782,85 @@ public class StringTemplate {
 			}
 			n += chunkN;
 		}
-        if ( lintMode ) {
-            checkForTrouble();
-        }
+		if ( lintMode ) {
+			checkForTrouble();
+		}
 		return n;
 	}
 
-    /** Resolve an attribute reference.  It can be in four possible places:
-     *
-     *  1. the attribute list for the current template
-     *  2. if self is an embedded template, somebody invoked us possibly
-     *     with arguments--check the argument context
-     *  3. if self is an embedded template, the attribute list for the enclosing
-     *     instance (recursively up the enclosing instance chain)
+	/** Resolve an attribute reference.  It can be in four possible places:
+	 *
+	 *  1. the attribute list for the current template
+	 *  2. if self is an embedded template, somebody invoked us possibly
+	 *     with arguments--check the argument context
+	 *  3. if self is an embedded template, the attribute list for the enclosing
+	 *     instance (recursively up the enclosing instance chain)
 	 *  4. if nothing is found in the enclosing instance chain, then it might
 	 *     be a map defined in the group or the its supergroup etc...
-     *
-     *  Attribute references are checked for validity.  If an attribute has
-     *  a value, its validity was checked before template rendering.
-     *  If the attribute has no value, then we must check to ensure it is a
-     *  valid reference.  Somebody could reference any random value like $xyz$;
-     *  formal arg checks before rendering cannot detect this--only the ref
-     *  can initiate a validity check.  So, if no value, walk up the enclosed
-     *  template tree again, this time checking formal parameters not
-     *  attributes Map.  The formal definition must exist even if no value.
-     *
-     *  To avoid infinite recursion in toString(), we have another condition
-     *  to check regarding attribute values.  If your template has a formal
-     *  argument, foo, then foo will hide any value available from "above"
-     *  in order to prevent infinite recursion.
-     *
+	 *
+	 *  Attribute references are checked for validity.  If an attribute has
+	 *  a value, its validity was checked before template rendering.
+	 *  If the attribute has no value, then we must check to ensure it is a
+	 *  valid reference.  Somebody could reference any random value like $xyz$;
+	 *  formal arg checks before rendering cannot detect this--only the ref
+	 *  can initiate a validity check.  So, if no value, walk up the enclosed
+	 *  template tree again, this time checking formal parameters not
+	 *  attributes Map.  The formal definition must exist even if no value.
+	 *
+	 *  To avoid infinite recursion in toString(), we have another condition
+	 *  to check regarding attribute values.  If your template has a formal
+	 *  argument, foo, then foo will hide any value available from "above"
+	 *  in order to prevent infinite recursion.
+	 *
 	 *  This method is not static so people can override functionality.
-     */
-    public Object get(StringTemplate self, String attribute) {
+	 */
+	public Object get(StringTemplate self, String attribute) {
 		//System.out.println("### get("+self.getEnclosingInstanceStackString()+", "+attribute+")");
 		//System.out.println("attributes="+(self.attributes!=null?self.attributes.keySet().toString():"none"));
 		if ( self==null ) {
 			return null;
 		}
 
-        if ( lintMode ) {
-            self.trackAttributeReference(attribute);
-        }
+		if ( lintMode ) {
+			self.trackAttributeReference(attribute);
+		}
 
-        // is it here?
-        Object o = null;
-        if ( self.attributes!=null ) {
-            o = self.attributes.get(attribute);
-        }
+		// is it here?
+		Object o = null;
+		if ( self.attributes!=null ) {
+			o = self.attributes.get(attribute);
+		}
 
-        // nope, check argument context in case embedded
-        if ( o==null ) {
-            Map argContext = self.getArgumentContext();
-            if ( argContext!=null ) {
-                o = argContext.get(attribute);
-            }
-        }
+		// nope, check argument context in case embedded
+		if ( o==null ) {
+			Map argContext = self.getArgumentContext();
+			if ( argContext!=null ) {
+				o = argContext.get(attribute);
+			}
+		}
 
-        if ( o==null &&
+		if ( o==null &&
 			 !self.passThroughAttributes &&
 			 self.getFormalArgument(attribute)!=null )
 		{
-            // if you've defined attribute as formal arg for this
-            // template and it has no value, do not look up the
-            // enclosing dynamic scopes.  This avoids potential infinite
-            // recursion.
-            return null;
-        }
+			// if you've defined attribute as formal arg for this
+			// template and it has no value, do not look up the
+			// enclosing dynamic scopes.  This avoids potential infinite
+			// recursion.
+			return null;
+		}
 
 		// not locally defined, check enclosingInstance if embedded
 		if ( o==null && self.enclosingInstance!=null ) {
-            /*
+			/*
             System.out.println("looking for "+getName()+"."+attribute+" in super="+
                     enclosingInstance.getName());
 			*/
-            Object valueFromEnclosing = get(self.enclosingInstance, attribute);
-            if ( valueFromEnclosing==null ) {
-                checkNullAttributeAgainstFormalArguments(self, attribute);
-            }
-            o = valueFromEnclosing;
+			Object valueFromEnclosing = get(self.enclosingInstance, attribute);
+			if ( valueFromEnclosing==null ) {
+				checkNullAttributeAgainstFormalArguments(self, attribute);
+			}
+			o = valueFromEnclosing;
 		}
 
 		// not found and no enclosing instance to look at
@@ -869,50 +870,50 @@ public class StringTemplate {
 		}
 
 		return o;
-    }
+	}
 
 	/** Walk a template, breaking it into a list of
 	 *  chunks: Strings and actions/expressions.
 	 */
 	protected void breakTemplateIntoChunks() {
-        //System.out.println("parsing template: "+pattern);
-        if ( pattern==null ) {
-            return;
-        }
-        try {
-            // instead of creating a specific template lexer, use
-            // an instance of the class specified by the user.
-            // The default is DefaultTemplateLexer.
-            // The only constraint is that you use an ANTLR lexer
-            // so I can use the special ChunkToken.
-            Class lexerClass = group.getTemplateLexerClass();
-            Constructor ctor =
-                    lexerClass.getConstructor(
+		//System.out.println("parsing template: "+pattern);
+		if ( pattern==null ) {
+			return;
+		}
+		try {
+			// instead of creating a specific template lexer, use
+			// an instance of the class specified by the user.
+			// The default is DefaultTemplateLexer.
+			// The only constraint is that you use an ANTLR lexer
+			// so I can use the special ChunkToken.
+			Class lexerClass = group.getTemplateLexerClass();
+			Constructor ctor =
+					lexerClass.getConstructor(
 						new Class[] {StringTemplate.class,Reader.class}
 					);
-            CharScanner chunkStream =
-                    (CharScanner) ctor.newInstance(
+			CharScanner chunkStream =
+					(CharScanner) ctor.newInstance(
 						new Object[] {this,new StringReader(pattern)}
 					);
-            chunkStream.setTokenObjectClass("org.antlr.stringtemplate.language.ChunkToken");
-            TemplateParser chunkifier = new TemplateParser(chunkStream);
-            chunkifier.template(this);
+			chunkStream.setTokenObjectClass("org.antlr.stringtemplate.language.ChunkToken");
+			TemplateParser chunkifier = new TemplateParser(chunkStream);
+			chunkifier.template(this);
 			//System.out.println("chunks="+chunks);
-        }
-        catch (Exception e) {
-            String name = "<unknown>";
-            String outerName = getOutermostName();
-            if ( getName()!=null ) {
-                name = getName();
-            }
-            if ( outerName!=null && !name.equals(outerName) ) {
-                name = name+" nested in "+outerName;
-            }
-            error("problem parsing template '"+name+"'", e);
-        }
+		}
+		catch (Exception e) {
+			String name = "<unknown>";
+			String outerName = getOutermostName();
+			if ( getName()!=null ) {
+				name = getName();
+			}
+			if ( outerName!=null && !name.equals(outerName) ) {
+				name = name+" nested in "+outerName;
+			}
+			error("problem parsing template '"+name+"'", e);
+		}
 	}
 
-    public ASTExpr parseAction(String action) {
+	public ASTExpr parseAction(String action) {
 		//System.out.println("parse action "+action);
 		ActionLexer lexer =
 			new ActionLexer(new StringReader(action.toString()));
@@ -923,15 +924,15 @@ public class StringTemplate {
 		ASTExpr a = null;
 		try {
 			Map options = parser.action();
-            AST tree = parser.getAST();
-            if ( tree!=null ) {
-                if ( tree.getType()==ActionParser.CONDITIONAL ) {
-                    a = new ConditionalExpr(this,tree);
-                }
-                else {
-                    a = new ASTExpr(this,tree,options);
-                }
-            }
+			AST tree = parser.getAST();
+			if ( tree!=null ) {
+				if ( tree.getType()==ActionParser.CONDITIONAL ) {
+					a = new ConditionalExpr(this,tree);
+				}
+				else {
+					a = new ASTExpr(this,tree,options);
+				}
+			}
 		}
 		catch (RecognitionException re) {
 			error("Can't parse chunk: "+action.toString(), re);
@@ -942,13 +943,13 @@ public class StringTemplate {
 		return a;
 	}
 
-    public int getTemplateID() {
-        return templateID;
-    }
+	public int getTemplateID() {
+		return templateID;
+	}
 
-    public Map getAttributes() {
-        return attributes;
-    }
+	public Map getAttributes() {
+		return attributes;
+	}
 
 	/** Get a list of the strings and subtemplates and attribute
 	 *  refs in a template.
@@ -957,26 +958,26 @@ public class StringTemplate {
 		return chunks;
 	}
 
-    public void addChunk(Expr e) {
-        if ( chunks==null ) {
-            chunks = new ArrayList();
-        }
-        chunks.add(e);
-    }
+	public void addChunk(Expr e) {
+		if ( chunks==null ) {
+			chunks = new ArrayList();
+		}
+		chunks.add(e);
+	}
 
-    public void setAttributes(Map attributes) {
+	public void setAttributes(Map attributes) {
 		this.attributes = attributes;
 	}
 
-    // F o r m a l  A r g  S t u f f
+	// F o r m a l  A r g  S t u f f
 
 	public Map getFormalArguments() {
 		return formalArguments;
 	}
 
-    public void setFormalArguments(LinkedHashMap args) {
-        formalArguments = args;
-    }
+	public void setFormalArguments(LinkedHashMap args) {
+		formalArguments = args;
+	}
 
 	/** Set any default argument values that were not set by the
 	 *  invoking template or by setAttribute directly.  Note
@@ -1017,23 +1018,23 @@ public class StringTemplate {
 	}
 
 	/** From this template upward in the enclosing template tree,
-     *  recursively look for the formal parameter.
-     */
-    public FormalArgument lookupFormalArgument(String name) {
-        FormalArgument arg = getFormalArgument(name);
-        if ( arg==null && enclosingInstance!=null ) {
-            arg = enclosingInstance.lookupFormalArgument(name);
-        }
-        return arg;
-    }
+	 *  recursively look for the formal parameter.
+	 */
+	public FormalArgument lookupFormalArgument(String name) {
+		FormalArgument arg = getFormalArgument(name);
+		if ( arg==null && enclosingInstance!=null ) {
+			arg = enclosingInstance.lookupFormalArgument(name);
+		}
+		return arg;
+	}
 
-    public FormalArgument getFormalArgument(String name) {
-        return (FormalArgument)formalArguments.get(name);
-    }
+	public FormalArgument getFormalArgument(String name) {
+		return (FormalArgument)formalArguments.get(name);
+	}
 
-    public void defineEmptyFormalArgumentList() {
-        setFormalArguments(new LinkedHashMap());
-    }
+	public void defineEmptyFormalArgumentList() {
+		setFormalArguments(new LinkedHashMap());
+	}
 
 	public void defineFormalArgument(String name) {
 		defineFormalArgument(name,null);
@@ -1049,16 +1050,16 @@ public class StringTemplate {
 		}
 	}
 
-    public void defineFormalArgument(String name, StringTemplate defaultValue) {
+	public void defineFormalArgument(String name, StringTemplate defaultValue) {
 		if ( defaultValue!=null ) {
 			numberOfDefaultArgumentValues++;
 		}
-        FormalArgument a = new FormalArgument(name,defaultValue);
-        if ( formalArguments==FormalArgument.UNKNOWN ) {
-            formalArguments = new LinkedHashMap();
-        }
-        formalArguments.put(name, a);
-    }
+		FormalArgument a = new FormalArgument(name,defaultValue);
+		if ( formalArguments==FormalArgument.UNKNOWN ) {
+			formalArguments = new LinkedHashMap();
+		}
+		formalArguments.put(name, a);
+	}
 
 	/** Normally if you call template y from x, y cannot see any attributes
 	 *  of x that are defined as formal parameters of y.  Setting this
@@ -1103,31 +1104,31 @@ public class StringTemplate {
 		return renderer;
 	}
 
-    // U T I L I T Y  R O U T I N E S
+	// U T I L I T Y  R O U T I N E S
 
-    public void error(String msg) {
-        error(msg, null);
-    }
+	public void error(String msg) {
+		error(msg, null);
+	}
 
-    public void warning(String msg) {
-        if ( getErrorListener()!=null ) {
-            getErrorListener().warning(msg);
-        }
-        else {
-            System.err.println("StringTemplate: warning: "+msg);
-        }
-    }
+	public void warning(String msg) {
+		if ( getErrorListener()!=null ) {
+			getErrorListener().warning(msg);
+		}
+		else {
+			System.err.println("StringTemplate: warning: "+msg);
+		}
+	}
 
-    /** @deprecated 2.2
+	/** @deprecated 2.2
 	 */
 	public void debug(String msg) {
-        if ( getErrorListener()!=null ) {
-            getErrorListener().debug(msg);
-        }
-        else {
-            System.err.println("StringTemplate: debug: "+msg);
-        }
-    }
+		if ( getErrorListener()!=null ) {
+			getErrorListener().debug(msg);
+		}
+		else {
+			System.err.println("StringTemplate: debug: "+msg);
+		}
+	}
 
 	public void error(String msg, Throwable e) {
 		if ( getErrorListener()!=null ) {
@@ -1135,238 +1136,240 @@ public class StringTemplate {
 		}
 		else {
 			if ( e!=null ) {
-                System.err.println("StringTemplate: error: "+msg+": "+e.toString());
+				System.err.println("StringTemplate: error: "+msg+": "+e.toString());
 				e.printStackTrace(System.err);
-            }
-            else {
-                System.err.println("StringTemplate: error: "+msg);
-            }
+			}
+			else {
+				System.err.println("StringTemplate: error: "+msg);
+			}
 		}
-    }
+	}
 
-    /** Make StringTemplate check your work as it evaluates templates.
-     *  Problems are sent to error listener.   Currently warns when
-     *  you set attributes that are not used.
-     */
-    public static void setLintMode(boolean lint) {
-        StringTemplate.lintMode = lint;
-    }
+	/** Make StringTemplate check your work as it evaluates templates.
+	 *  Problems are sent to error listener.   Currently warns when
+	 *  you set attributes that are not used.
+	 */
+	public static void setLintMode(boolean lint) {
+		StringTemplate.lintMode = lint;
+	}
 
-    public static boolean inLintMode() {
-        return lintMode;
-    }
+	public static boolean inLintMode() {
+		return lintMode;
+	}
 
-    /** Indicates that 'name' has been referenced in this template. */
-    protected void trackAttributeReference(String name) {
-        if ( referencedAttributes==null ) {
-            referencedAttributes = new ArrayList();
-        }
-        referencedAttributes.add(name);
-    }
+	/** Indicates that 'name' has been referenced in this template. */
+	protected void trackAttributeReference(String name) {
+		if ( referencedAttributes==null ) {
+			referencedAttributes = new ArrayList();
+		}
+		referencedAttributes.add(name);
+	}
 
-    /** Look up the enclosing instance chain (and include this) to see
-     *  if st is a template already in the enclosing instance chain.
-     */
-    public static boolean isRecursiveEnclosingInstance(StringTemplate st) {
-        if ( st==null ) {
-            return false;
-        }
-        StringTemplate p = st.enclosingInstance;
-        if ( p==st ) {
-            return true; // self-recursive
-        }
-        // now look for indirect recursion
-        while ( p!=null ) {
-            if ( p==st ) {
-                return true;
-            }
-            p = p.enclosingInstance;
-        }
-        return false;
-    }
+	/** Look up the enclosing instance chain (and include this) to see
+	 *  if st is a template already in the enclosing instance chain.
+	 */
+	public static boolean isRecursiveEnclosingInstance(StringTemplate st) {
+		if ( st==null ) {
+			return false;
+		}
+		StringTemplate p = st.enclosingInstance;
+		if ( p==st ) {
+			return true; // self-recursive
+		}
+		// now look for indirect recursion
+		while ( p!=null ) {
+			if ( p==st ) {
+				return true;
+			}
+			p = p.enclosingInstance;
+		}
+		return false;
+	}
 
-    public String getEnclosingInstanceStackTrace() {
-        StringBuffer buf = new StringBuffer();
-        Set seen = new HashSet();
-        StringTemplate p = this;
-        while ( p!=null ) {
-            if ( seen.contains(p) ) {
-                buf.append(p.getTemplateDeclaratorString());
-                buf.append(" (start of recursive cycle)");
-                buf.append("\n");
-                buf.append("...");
-                break;
-            }
-            seen.add(p);
-            buf.append(p.getTemplateDeclaratorString());
-            if ( p.attributes!=null ) {
-                buf.append(", attributes=[");
-                int i = 0;
-                for (Iterator iter = p.attributes.keySet().iterator(); iter.hasNext();) {
-                    String attrName = (String) iter.next();
-                    if ( i>0 ) {
-                        buf.append(", ");
-                    }
-                    i++;
-                    buf.append(attrName);
-                    Object o = p.attributes.get(attrName);
-                    if ( o instanceof StringTemplate ) {
-                        StringTemplate st = (StringTemplate)o;
-                        buf.append("=");
-                        buf.append("<");
-                        buf.append(st.getName());
-                        buf.append("()@");
-                        buf.append(String.valueOf(st.getTemplateID()));
-                        buf.append(">");
-                    }
-                    else if ( o instanceof List ) {
-                        buf.append("=List[..");
-                        List list = (List)o;
-                        int n=0;
-                        for (int j = 0; j < list.size(); j++) {
-                            Object listValue = list.get(j);
-                            if ( listValue instanceof StringTemplate ) {
-                                if ( n>0 ) {
-                                    buf.append(", ");
-                                }
-                                n++;
-                                StringTemplate st = (StringTemplate)listValue;
-                                buf.append("<");
-                                buf.append(st.getName());
-                                buf.append("()@");
-                                buf.append(String.valueOf(st.getTemplateID()));
-                                buf.append(">");
-                            }
-                        }
-                        buf.append("..]");
-                    }
-                }
-                buf.append("]");
-            }
-            if ( p.referencedAttributes!=null ) {
-                buf.append(", references=");
-                buf.append(p.referencedAttributes);
-            }
-            buf.append(">\n");
-            p = p.enclosingInstance;
-        }
-        /*
-        if ( enclosingInstance!=null ) {
-        buf.append(enclosingInstance.getEnclosingInstanceStackTrace());
-        }
-        */
-        return buf.toString();
-    }
+	public String getEnclosingInstanceStackTrace() {
+		StringBuffer buf = new StringBuffer();
+		Set seen = new HashSet();
+		StringTemplate p = this;
+		while ( p!=null ) {
+			if ( seen.contains(p) ) {
+				buf.append(p.getTemplateDeclaratorString());
+				buf.append(" (start of recursive cycle)");
+				buf.append("\n");
+				buf.append("...");
+				break;
+			}
+			seen.add(p);
+			buf.append(p.getTemplateDeclaratorString());
+			if ( p.attributes!=null ) {
+				buf.append(", attributes=[");
+				int i = 0;
+				for (Iterator iter = p.attributes.keySet().iterator(); iter.hasNext();) {
+					String attrName = (String) iter.next();
+					if ( i>0 ) {
+						buf.append(", ");
+					}
+					i++;
+					buf.append(attrName);
+					Object o = p.attributes.get(attrName);
+					if ( o instanceof StringTemplate ) {
+						StringTemplate st = (StringTemplate)o;
+						buf.append("=");
+						buf.append("<");
+						buf.append(st.getName());
+						buf.append("()@");
+						buf.append(String.valueOf(st.getTemplateID()));
+						buf.append(">");
+					}
+					else if ( o instanceof List ) {
+						buf.append("=List[..");
+						List list = (List)o;
+						int n=0;
+						for (int j = 0; j < list.size(); j++) {
+							Object listValue = list.get(j);
+							if ( listValue instanceof StringTemplate ) {
+								if ( n>0 ) {
+									buf.append(", ");
+								}
+								n++;
+								StringTemplate st = (StringTemplate)listValue;
+								buf.append("<");
+								buf.append(st.getName());
+								buf.append("()@");
+								buf.append(String.valueOf(st.getTemplateID()));
+								buf.append(">");
+							}
+						}
+						buf.append("..]");
+					}
+				}
+				buf.append("]");
+			}
+			if ( p.referencedAttributes!=null ) {
+				buf.append(", references=");
+				buf.append(p.referencedAttributes);
+			}
+			buf.append(">\n");
+			p = p.enclosingInstance;
+		}
+		/*
+				if ( enclosingInstance!=null ) {
+				buf.append(enclosingInstance.getEnclosingInstanceStackTrace());
+				}
+				*/
+		return buf.toString();
+	}
 
-    public String getTemplateDeclaratorString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("<");
-        buf.append(getName());
-        buf.append("(");
-        buf.append(formalArguments.keySet());
-        buf.append(")@");
-        buf.append(String.valueOf(getTemplateID()));
-        buf.append(">");
-        return buf.toString();
-    }
+	public String getTemplateDeclaratorString() {
+		StringBuffer buf = new StringBuffer();
+		buf.append("<");
+		buf.append(getName());
+		buf.append("(");
+		buf.append(formalArguments.keySet());
+		buf.append(")@");
+		buf.append(String.valueOf(getTemplateID()));
+		buf.append(">");
+		return buf.toString();
+	}
 
 	protected String getTemplateHeaderString(boolean showAttributes) {
 		if ( showAttributes ) {
 			StringBuffer buf = new StringBuffer();
 			buf.append(getName());
-			buf.append(attributes.keySet());
+			if ( attributes!=null ) {
+				buf.append(attributes.keySet());
+			}
 			return buf.toString();
 		}
 		return getName();
 	}
 
-    /** Find "missing attribute" and "cardinality mismatch" errors.
-     *  Excecuted before a template writes its chunks out.
-     *  When you find a problem, throw an IllegalArgumentException.
-     *  We must check the attributes as well as the incoming arguments
-     *  in argumentContext.
-    protected void checkAttributesAgainstFormalArguments() {
-        Set args = formalArguments.keySet();
-        /*
-        if ( (attributes==null||attributes.size()==0) &&
-             (argumentContext==null||argumentContext.size()==0) &&
-             formalArguments.size()!=0 )
-        {
-            throw new IllegalArgumentException("missing argument(s): "+args+" in template "+getName());
-        }
-        Iterator iter = args.iterator();
-        while ( iter.hasNext() ) {
-            String argName = (String)iter.next();
-            FormalArgument arg = getFormalArgument(argName);
-            int expectedCardinality = arg.getCardinality();
-            Object value = getAttribute(argName);
-            int actualCardinality = getActualArgumentCardinality(value);
-            // if intersection of expected and actual is empty, mismatch
-            if ( (expectedCardinality&actualCardinality)==0 ) {
-                throw new IllegalArgumentException("cardinality mismatch: "+
-                        argName+"; expected "+
-                        FormalArgument.getCardinalityName(expectedCardinality)+
-                        " found cardinality="+getObjectLength(value));
-            }
-        }
-    }
+	/** Find "missing attribute" and "cardinality mismatch" errors.
+	 *  Excecuted before a template writes its chunks out.
+	 *  When you find a problem, throw an IllegalArgumentException.
+	 *  We must check the attributes as well as the incoming arguments
+	 *  in argumentContext.
+	protected void checkAttributesAgainstFormalArguments() {
+		Set args = formalArguments.keySet();
+		/*
+		if ( (attributes==null||attributes.size()==0) &&
+			 (argumentContext==null||argumentContext.size()==0) &&
+			 formalArguments.size()!=0 )
+		{
+			throw new IllegalArgumentException("missing argument(s): "+args+" in template "+getName());
+		}
+		Iterator iter = args.iterator();
+		while ( iter.hasNext() ) {
+			String argName = (String)iter.next();
+			FormalArgument arg = getFormalArgument(argName);
+			int expectedCardinality = arg.getCardinality();
+			Object value = getAttribute(argName);
+			int actualCardinality = getActualArgumentCardinality(value);
+			// if intersection of expected and actual is empty, mismatch
+			if ( (expectedCardinality&actualCardinality)==0 ) {
+				throw new IllegalArgumentException("cardinality mismatch: "+
+						argName+"; expected "+
+						FormalArgument.getCardinalityName(expectedCardinality)+
+						" found cardinality="+getObjectLength(value));
+			}
+		}
+	}
 */
 
-    /** A reference to an attribute with no value, must be compared against
-     *  the formal parameter to see if it exists; if it exists all is well,
-     *  but if not, throw an exception.
-     *
-     *  Don't do the check if no formal parameters exist for this template;
-     *  ask enclosing.
-     */
-    protected void checkNullAttributeAgainstFormalArguments(
-            StringTemplate self,
-            String attribute)
-    {
-        if ( self.getFormalArguments()==FormalArgument.UNKNOWN ) {
-            // bypass unknown arg lists
-            if ( self.enclosingInstance!=null ) {
-                checkNullAttributeAgainstFormalArguments(
-                        self.enclosingInstance,
-                        attribute);
-            }
-            return;
-        }
-        FormalArgument formalArg = self.lookupFormalArgument(attribute);
-        if ( formalArg == null ) {
+	/** A reference to an attribute with no value, must be compared against
+	 *  the formal parameter to see if it exists; if it exists all is well,
+	 *  but if not, throw an exception.
+	 *
+	 *  Don't do the check if no formal parameters exist for this template;
+	 *  ask enclosing.
+	 */
+	protected void checkNullAttributeAgainstFormalArguments(
+			StringTemplate self,
+			String attribute)
+	{
+		if ( self.getFormalArguments()==FormalArgument.UNKNOWN ) {
+			// bypass unknown arg lists
+			if ( self.enclosingInstance!=null ) {
+				checkNullAttributeAgainstFormalArguments(
+						self.enclosingInstance,
+						attribute);
+			}
+			return;
+		}
+		FormalArgument formalArg = self.lookupFormalArgument(attribute);
+		if ( formalArg == null ) {
 			throw new NoSuchElementException("no such attribute: "+attribute+
 											 " in template context "+getEnclosingInstanceStackString());
-        }
-    }
+		}
+	}
 
-    /** Executed after evaluating a template.  For now, checks for setting
-     *  of attributes not reference.
-     */
-    protected void checkForTrouble() {
-        // we have table of set values and list of values referenced
-        // compare, looking for SET BUT NOT REFERENCED ATTRIBUTES
-        if ( attributes==null ) {
-            return;
-        }
-        Set names = attributes.keySet();
-        Iterator iter = names.iterator();
+	/** Executed after evaluating a template.  For now, checks for setting
+	 *  of attributes not reference.
+	 */
+	protected void checkForTrouble() {
+		// we have table of set values and list of values referenced
+		// compare, looking for SET BUT NOT REFERENCED ATTRIBUTES
+		if ( attributes==null ) {
+			return;
+		}
+		Set names = attributes.keySet();
+		Iterator iter = names.iterator();
 		// if in names and not in referenced attributes, trouble
-        while ( iter.hasNext() ) {
-            String name = (String)iter.next();
-            if ( referencedAttributes!=null &&
-                !referencedAttributes.contains(name) )
-            {
-                warning(getName()+": set but not used: "+name);
-            }
-        }
-        // can do the reverse, but will have lots of false warnings :(
-    }
+		while ( iter.hasNext() ) {
+			String name = (String)iter.next();
+			if ( referencedAttributes!=null &&
+				!referencedAttributes.contains(name) )
+			{
+				warning(getName()+": set but not used: "+name);
+			}
+		}
+		// can do the reverse, but will have lots of false warnings :(
+	}
 
 	/** If an instance of x is enclosed in a y which is in a z, return
 	 *  a String of these instance names in order from topmost to lowest;
 	 *  here that would be "[z y x]".
 	 */
-    public String getEnclosingInstanceStackString() {
+	public String getEnclosingInstanceStackString() {
 		List names = new LinkedList();
 		StringTemplate p = this;
 		while ( p!=null ) {
@@ -1552,7 +1555,15 @@ public class StringTemplate {
 
 	/** Get a list of n->m edges where template n contains template m.
 	 *  The map you pass in is filled with edges: key->value.  Useful
-	 *  for having DOT print out an enclosing template graph.
+	 *  for having DOT print out an enclosing template graph.  It
+	 *  finds all direct template invocations too like <foo()> but not
+	 *  indirect ones like <(name)()>.
+	 *
+	 *  Ack, I just realized that this is done statically and hence
+	 *  cannot see runtime arg values on statically included templates.
+	 *  Hmm...someday figure out to do this dynamically as if we were
+	 *  evaluating the templates.  There will be extra nodes in the tree
+	 *  because we are static like method and method[...] with args.
 	 */
 	public void getDependencyGraph(Map edges, boolean showAttributes) {
 		String srcNode = this.getTemplateHeaderString(showAttributes);
@@ -1596,6 +1607,29 @@ public class StringTemplate {
 				}
 			}
 		}
+		// look in chunks too for template refs
+		for (int i = 0; chunks!=null && i < chunks.size(); i++) {
+			Expr expr = (Expr) chunks.get(i);
+			if ( expr instanceof ASTExpr ) {
+				ASTExpr e = (ASTExpr)expr;
+				AST tree = e.getAST();
+				AST includeAST =
+					new CommonAST(new CommonToken(ActionEvaluator.INCLUDE,"include"));
+				ASTEnumeration it = tree.findAllPartial(includeAST);
+				while (it.hasMoreNodes()) {
+					AST t = (AST) it.nextNode();
+					String templateInclude = t.getFirstChild().getText();
+					System.out.println("found include "+templateInclude);
+					putToMultiValuedMap(edges,srcNode,templateInclude);
+					StringTemplateGroup group = getGroup();
+					if ( group!=null ) {
+						StringTemplate st = group.getInstanceOf(templateInclude);
+						// descend into the reference template
+						st.getDependencyGraph(edges, showAttributes);
+					}
+				}
+			}
+		}
 	}
 
 	/** Manage a hash table like it has multiple unique values.  Map<Object,Set>. */
@@ -1608,62 +1642,62 @@ public class StringTemplate {
 		bag.add(value);
 	}
 
-    public void printDebugString() {
-        System.out.println("template-"+getName()+":");
-        System.out.print("chunks=");
-        System.out.println(chunks.toString());
-        if ( attributes==null ) {
-            return;
-        }
-        System.out.print("attributes=[");
-        Set attrNames = attributes.keySet();
-        int n=0;
-        for (Iterator iter = attrNames.iterator(); iter.hasNext();) {
-            if ( n>0 ) {
-                System.out.print(',');
-            }
-            String name = (String) iter.next();
-            Object value = attributes.get(name);
-            if ( value instanceof StringTemplate ) {
-                System.out.print(name+"=");
-                ((StringTemplate)value).printDebugString();
-            }
-            else {
-                if ( value instanceof List ) {
-                    ArrayList alist = (ArrayList)value;
-                    for (int i = 0; i < alist.size(); i++) {
-                        Object o = (Object) alist.get(i);
-                        System.out.print(name+"["+i+"] is "+o.getClass().getName()+"=");
-                        if ( o instanceof StringTemplate ) {
-                            ((StringTemplate)o).printDebugString();
-                        }
-                        else {
-                            System.out.println(o);
-                        }
-                    }
-                }
-                else {
-                    System.out.print(name+"=");
-                    System.out.println(value);
-                }
-            }
-            n++;
-        }
-        System.out.print("]\n");
-    }
+	public void printDebugString() {
+		System.out.println("template-"+getName()+":");
+		System.out.print("chunks=");
+		System.out.println(chunks.toString());
+		if ( attributes==null ) {
+			return;
+		}
+		System.out.print("attributes=[");
+		Set attrNames = attributes.keySet();
+		int n=0;
+		for (Iterator iter = attrNames.iterator(); iter.hasNext();) {
+			if ( n>0 ) {
+				System.out.print(',');
+			}
+			String name = (String) iter.next();
+			Object value = attributes.get(name);
+			if ( value instanceof StringTemplate ) {
+				System.out.print(name+"=");
+				((StringTemplate)value).printDebugString();
+			}
+			else {
+				if ( value instanceof List ) {
+					ArrayList alist = (ArrayList)value;
+					for (int i = 0; i < alist.size(); i++) {
+						Object o = (Object) alist.get(i);
+						System.out.print(name+"["+i+"] is "+o.getClass().getName()+"=");
+						if ( o instanceof StringTemplate ) {
+							((StringTemplate)o).printDebugString();
+						}
+						else {
+							System.out.println(o);
+						}
+					}
+				}
+				else {
+					System.out.print(name+"=");
+					System.out.println(value);
+				}
+			}
+			n++;
+		}
+		System.out.print("]\n");
+	}
 
-    public String toString() {
-        StringWriter out = new StringWriter();
+	public String toString() {
+		StringWriter out = new StringWriter();
 		// Write the output to a StringWriter
 		// TODO seems slow to create all these objects, can I use a singleton?
 		StringTemplateWriter wr = group.getStringTemplateWriter(out);
-        try {
-            write(wr);
-        }
-        catch (IOException io) {
-            error("Got IOException writing to writer "+wr.getClass().getName());
-        }
-        return out.toString();
-    }
+		try {
+			write(wr);
+		}
+		catch (IOException io) {
+			error("Got IOException writing to writer "+wr.getClass().getName());
+		}
+		return out.toString();
+	}
 
 }

@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 
-/** A brain dead loader that looks only in the directory(ies) you specify in the ctor.
+/** A brain dead loader that looks only in the directory(ies) you
+ *  specify in the ctor.
  */
 public class CommonGroupLoader implements StringTemplateGroupLoader {
 	protected List dirs = null;
@@ -78,6 +79,7 @@ public class CommonGroupLoader implements StringTemplateGroupLoader {
 		return I;
 	}
 
+	/** Look in each directory for the file called 'name'. */
 	protected String locate(String name) {
 		for (int i = 0; i < dirs.size(); i++) {
 			String dir = (String) dirs.get(i);

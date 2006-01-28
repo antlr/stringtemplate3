@@ -69,7 +69,13 @@ public class StringTemplateGroup {
 	protected Map maps = new HashMap();
 
     /** How to pull apart a template into chunks? */
-    protected Class templateLexerClass = DefaultTemplateLexer.class;
+    protected Class templateLexerClass = null;
+
+	/** You can set the lexer once if you know all of your groups use the
+	 *  same separator.  If the instance has templateLexerClass set
+	 *  then it is used as an override.
+	 */
+	protected static Class defaultTemplateLexerClass = DefaultTemplateLexer.class;
 
 	/** Under what directory should I look for templates?  If null,
 	 *  to look into the CLASSPATH for templates as resources.
@@ -184,7 +190,7 @@ public class StringTemplateGroup {
 	 *  loaded as resources via the classloader.
 	 */
     public StringTemplateGroup(String name) {
-        this(name,null,DefaultTemplateLexer.class);
+        this(name,null,null);
     }
 
     public StringTemplateGroup(String name, Class lexer) {
@@ -202,11 +208,11 @@ public class StringTemplateGroup {
      *  ...
      */
     public StringTemplateGroup(Reader r) {
-        this(r,DefaultTemplateLexer.class,DEFAULT_ERROR_LISTENER,(StringTemplateGroup)null);
+        this(r,null,DEFAULT_ERROR_LISTENER,(StringTemplateGroup)null);
     }
 
     public StringTemplateGroup(Reader r, StringTemplateErrorListener errors) {
-        this(r,DefaultTemplateLexer.class,errors,(StringTemplateGroup)null);
+        this(r,null,errors,(StringTemplateGroup)null);
     }
 
 	public StringTemplateGroup(Reader r, Class lexer) {
@@ -234,9 +240,15 @@ public class StringTemplateGroup {
 		verifyInterfaceImplementations();
     }
 
-    public Class getTemplateLexerClass() {
-        return templateLexerClass;
-    }
+	/** What lexer class to use to break up templates.  If not lexer set
+	 *  for this group, use static default.
+	 */
+	public Class getTemplateLexerClass() {
+		if ( templateLexerClass!=null ) {
+			return templateLexerClass;
+		}
+		return defaultTemplateLexerClass;
+	}
 
 	public String getName() {
 		return name;
@@ -257,10 +269,15 @@ public class StringTemplateGroup {
 			setSuperGroup(group);
 			return;
 		}
-		group = loadGroup(groupName, listener); // else load it
+		group = loadGroup(groupName); // else load it
 		if ( group!=null ) {
 			nameToGroupMap.put(groupName, group);
 			setSuperGroup(group);
+		}
+		else {
+			if ( groupLoader==null ) {
+				listener.error("no group loader registered", null);
+			}
 		}
 	}
 
@@ -282,10 +299,15 @@ public class StringTemplateGroup {
 			implementInterface(I);
 			return;
 		}
-		I = loadInterface(interfaceName, listener); // else load it
+		I = loadInterface(interfaceName); // else load it
 		if ( I!=null ) {
 			nameToInterfaceMap.put(interfaceName, I);
 			implementInterface(I);
+		}
+		else {
+			if ( groupLoader==null ) {
+				listener.error("no group loader registered", null);
+			}
 		}
 	}
 
@@ -840,28 +862,26 @@ public class StringTemplateGroup {
 		maps.put(name, mapping);
 	}
 
+	public static void registerDefaultLexer(Class lexerClass) {
+		defaultTemplateLexerClass = lexerClass;
+	}
+
 	public static void registerGroupLoader(StringTemplateGroupLoader loader) {
 		groupLoader = loader;
 	}
 
-	public static StringTemplateGroup loadGroup(String name,
-												StringTemplateErrorListener listener)
-	{
-		if ( groupLoader==null ) {
-			listener.error("no group loader registered",null);
-			return null;
+	public static StringTemplateGroup loadGroup(String name) {
+		if ( groupLoader!=null ) {
+			return groupLoader.loadGroup(name);
 		}
-		return groupLoader.loadGroup(name);
+		return null;
 	}
 
-	public static StringTemplateGroupInterface loadInterface(String name,
-															 StringTemplateErrorListener listener)
-	{
-		if ( groupLoader==null ) {
-			listener.error("no group loader registered",null);
-			return null;
+	public static StringTemplateGroupInterface loadInterface(String name) {
+		if ( groupLoader!=null ) {
+			return groupLoader.loadInterface(name);
 		}
-		return groupLoader.loadInterface(name);
+		return null;
 	}
 
 	public void error(String msg) {

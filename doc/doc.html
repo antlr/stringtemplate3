@@ -19,6 +19,10 @@ University of San Francisco <BR>
 
 <P>Version 2.2, August 5, 2005
 
+<P><em>Version 2.3 coming early 2006</em>
+
+<P>Please see the <A HREF="http://www.stringtemplate.org/bugs.tml"><B> changes and bugs</B></A> page.
+
 <P>Note that the <TT>TestStringTemplates.java</TT> file has many tests that are
 an excellent set of examples.  Also, I highly recommend you read the
 (academically-oriented) paper,
@@ -2310,6 +2314,272 @@ $table(elements=users)$
 </PRE></FONT>
 
 
+<H3>Internationalization and localization</H3>
+
+
+<P>StringTemplate provides a simple and effective method for localizing
+web pages.  The goal is to alter a page based upon the locale; that
+is, page strings or other content must change depending on a locale.
+This article not only illustrates how to make a pages change text
+depending on locale, it shows how the same site may easily have two
+different <em>skins</em> (site "looks").
+
+<P>This technique works well in practice for real sites.  
+<A HREF="http://demo.schoolloop.com/""><B> Schoolloop.com</B></A> is a case
+in point.  Click on the link that says "<em>en espanol</em>" to flip the
+site into Spanish mode.  The exam same templates are used; all strings
+are pulled from a serious of resource bundles.  There is no
+duplication of pages to change the strings.
+<H4>Multiple skins</H4>
+
+
+<P>First let's look at multiple skins in order to show how templates are
+loaded for this example.
+
+<P>Multiple site looks are organized into their own directories.  A
+<TT>StringTemplateGroup</TT> object rooted at that directory will load
+templates directly from there.  In my example, I made two skins, blue
+and red.  Here is how the group is loaded:
+
+<FONT SIZE=2><PRE>
+String skin="blue";
+ClassLoader cl = Thread.currentThread().getContextClassLoader();
+// get a template group rooted at appropriate skin
+String absoluteSkinRootDirectoryName = cl.getResource(skin).getFile();
+StringTemplateGroup templates =
+    new StringTemplateGroup("test", absoluteSkinRootDirectoryName);
+</PRE></FONT>
+
+
+
+<P>Then, when you ask for an instance of a page, it pulls from whichever
+directory <TT>skin</TT> is set to:
+
+<FONT SIZE=2><PRE>
+StringTemplate page1ST = templates.getInstanceOf("page1");
+</PRE></FONT>
+
+
+
+<P>Here is page 1 in the  <font color=blue>blue</font>  skin:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;title&gt;$strings.page1_title$&lt;/title&gt;
+&lt;body&gt;
+&lt;font color=blue&gt;
+&lt;p&gt;$strings.intro$
+
+&lt;p&gt;$strings.page1_content$
+&lt;/font&gt;
+&lt;/body&gt;
+&lt;html&gt;
+</PRE></FONT>
+
+
+
+<P>and here is page 2:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;title&gt;$strings.page2_title$&lt;/title&gt;
+&lt;body&gt;
+&lt;font color=blue&gt;
+&lt;p&gt;$strings.page2_content$
+&lt;/font&gt;
+&lt;/body&gt;
+&lt;html&gt;
+</PRE></FONT>
+
+
+
+<P>For the  <font color=red>red</font>  here is page 1:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;title&gt;$strings.page1_title$&lt;/title&gt;
+&lt;body&gt;
+&lt;font color=red&gt;
+&lt;h1&gt;$strings.page1_title$&lt;/h1&gt;
+
+&lt;p&gt;$strings.intro$
+&lt;hr&gt;
+&lt;p&gt;$strings.page1_content$
+&lt;/font&gt;
+&lt;/body&gt;
+&lt;html&gt;
+</PRE></FONT>
+
+
+
+<P>and page 2:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;title&gt;$strings.page2_title$&lt;/title&gt;
+&lt;body&gt;
+&lt;font color=red&gt;
+&lt;h1&gt;$strings.page2_title$&lt;/h1&gt;
+&lt;hr&gt;
+&lt;p&gt;$strings.page2_content$
+&lt;/font&gt;
+&lt;/body&gt;
+&lt;html&gt;
+</PRE></FONT>
+
+
+
+<P>The thing to note is that there is no text, just formatting in these
+page templates.  Those strings from the <TT>strings</TT> attribute are
+used for all text that could change per locale.
+<H4>Localizing template strings</H4>
+
+
+<P>Once the code knows how to load templates, the locale must dictate
+which strings are displayed.  The templates clearly have attribute
+references pulling from a strings table (a hash table).  For this
+example, I'm assuming that I have a few different strings and that I'm
+storing them in a Java properties file called
+<em>language</em><TT>.strings</TT> where <em>language</em> is the
+two-letter language code.  Here is my <TT>en.strings</TT> file:
+
+<FONT SIZE=2><PRE>
+intro=Welcome to my test page for internationalization with StringTemplate
+page1_title=Page 1 testing I18N
+page2_title=Page 2 testing I18N
+page1_content=This is page 1's simple page content
+page2_content=This is page 2's simple page content
+</PRE></FONT>
+
+
+
+<P>and here is my <TT>fr.strings</TT> file:
+
+<FONT SIZE=2><PRE>
+intro=Bienvenue sur la page de test d'internationalisation avec StringTemplate
+page1_title=Page 1 test de I18N
+page2_title=Page 2 test de I18N
+page1_content=Le contenu de la page 1
+page2_content=Le contenu de la page 2
+</PRE></FONT>
+
+
+
+<P>To load these per the current locale is pretty easy:
+
+<FONT SIZE=2><PRE>
+// use Locale to get 2 letter country code for this computer
+Locale locale = Locale.getDefault();
+String defaultLanguage = locale.getLanguage();
+// allow them to override language from argument on command line
+String language = defaultLanguage;
+if ( args.length&gt;0 ) {
+    language = args[0];
+}
+// load strings from a properties files like en.strings
+URL stringsFile = cl.getResource(language+".strings");
+if ( stringsFile==null ) {
+    System.err.println("can't find strings for language: "+language);
+    return;
+}
+Properties strings = new Properties();
+InputStream is = stringsFile.openStream();
+strings.load(is);
+</PRE></FONT>
+
+
+
+<P>The <TT>strings</TT> properties object is just a <TT>Hashtable</TT> so
+you can directly pass to StringTemplate templates as an attribute:
+
+<FONT SIZE=2><PRE>
+StringTemplate page1ST = templates.getInstanceOf("page1");
+page1ST.setAttribute("strings", strings);
+</PRE></FONT>
+
+
+
+<P>To generate the page, just say:
+
+<FONT SIZE=2><PRE>
+System.out.println(page1ST);
+</PRE></FONT>
+
+
+
+<P>The output will be (for the <TT>en</TT> locale):
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;title&gt;Page 1 testing I18N&lt;/title&gt;
+&lt;body&gt;
+&lt;font color=blue&gt;
+&lt;p&gt;Welcome to my test page for internationalization with
+StringTemplate
+
+&lt;p&gt;This is page 1's simple page content
+&lt;/font&gt;
+&lt;/body&gt;
+&lt;html&gt;
+</PRE></FONT>
+
+
+
+<P>If I change the locale to <TT>fr</TT> then without changes templates,
+the following is generated:
+
+<FONT SIZE=2><PRE>
+&lt;html&gt;
+&lt;title&gt;Page 1 test de I18N&lt;/title&gt;
+&lt;body&gt;
+&lt;font color=blue&gt;
+&lt;p&gt;
+
+&lt;p&gt;Le contenu de la page 1
+&lt;/font&gt;
+&lt;/body&gt;
+&lt;html&gt;
+</PRE></FONT>
+
+
+<H4>Source and compilation</H4>
+
+
+<P>Here is the Java code, different strings, and different skins:
+<UL>
+<LI><A HREF="i18n/Test.java"><B> Test.java</B></A>
+</LI>
+<LI><A HREF="i18n/en.strings"><B> English strings</B></A>
+</LI>
+<LI><A HREF="i18n/fr.strings"><B> French strings</B></A>
+</LI>
+<LI><A HREF="i18n/blue/"><B> the blue skin</B></A>
+</LI>
+<LI><A HREF="i18n/red/"><B> the red skin</B></A>
+</LI>
+
+</UL>
+
+<P>You naturally need ANTLR too; <A HREF="http://www.antlr.org/download.html"><B>
+get it here</B></A>.
+
+<P>You can compile this example like this:
+
+<FONT SIZE=2><PRE>
+javac -classpath .:antlr-2.7.6.jar:stringtemplate-2.3b5.jar Test.java
+java -classpath .:antlr-2.7.6.jar:stringtemplate-2.3b5.jar Test
+</PRE></FONT>
+
+
+<H4>Summary</H4>
+
+
+<P>In summary, the key element to demonstrate here is that you do not
+have to duplicate all of your templates to change what they say.  You
+can leave the formatting alone and, with a simple hashtable pulled
+from a data file, push in the proper strings per the locale.  I also
+took the opportunity to show off just how easy it is to make multiple
+site skins.
 <H2>StringTemplate Grammar</H2>
 
 

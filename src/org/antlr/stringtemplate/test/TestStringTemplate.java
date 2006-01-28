@@ -31,9 +31,8 @@ import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
 
 import java.io.*;
-import java.util.*;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.*;
 
 /** Test the various functionality of StringTemplate. Seems to run only
  *  on unix due to \r\n vs \n issue.  David Scurrah says:
@@ -173,7 +172,7 @@ public class TestStringTemplate extends TestSuite {
 		writeFile(tmpdir+"/sub", "testG2.stg", templates);
 
 		StringTemplateGroup group =
-			StringTemplateGroup.loadGroup("testG2", errors);
+			StringTemplateGroup.loadGroup("testG2");
 		String expecting = "group testG2;\n" +
 			"bold(item) ::= <<foo>>\n" +
 			"duh(a,b,c) ::= <<foo>>\n" +

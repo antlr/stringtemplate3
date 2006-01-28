@@ -1,0 +1,5 @@
+intro=Welcome to my test page for internationalization with StringTemplate
+page1_title=Page 1 testing I18N
+page2_title=Page 2 testing I18N
+page1_content=This is page 1's simple page content
+page2_content=This is page 2's simple page content

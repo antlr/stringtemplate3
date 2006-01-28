@@ -12,6 +12,10 @@ _Copyright 2003-2005_ \
 
 Version 2.2, August 5, 2005
 
+_Version 2.3 coming early 2006_
+
+Please see the @(http://www.stringtemplate.org/bugs.tml, changes and bugs) page.
+
 Note that the {TestStringTemplates.java} file has many tests that are
 an excellent set of examples.  Also, I highly recommend you read the
 (academically-oriented) paper,
@@ -1986,6 +1990,237 @@ then the body template would simply be:
 <<
 $table(elements=users)$
 >>
+
+### Internationalization and localization
+
+StringTemplate provides a simple and effective method for localizing
+web pages.  The goal is to alter a page based upon the locale; that
+is, page strings or other content must change depending on a locale.
+This article not only illustrates how to make a pages change text
+depending on locale, it shows how the same site may easily have two
+different _skins_ (site "looks").
+
+This technique works well in practice for real sites.  
+@(http://demo.schoolloop.com/", Schoolloop.com) is a case
+in point.  Click on the link that says "_en espanol_" to flip the
+site into Spanish mode.  The exam same templates are used; all strings
+are pulled from a serious of resource bundles.  There is no
+duplication of pages to change the strings.
+
+## Multiple skins
+
+First let's look at multiple skins in order to show how templates are
+loaded for this example.
+
+Multiple site looks are organized into their own directories.  A
+{StringTemplateGroup} object rooted at that directory will load
+templates directly from there.  In my example, I made two skins, blue
+and red.  Here is how the group is loaded:
+
+<<
+String skin="blue";
+ClassLoader cl = Thread.currentThread().getContextClassLoader();
+// get a template group rooted at appropriate skin
+String absoluteSkinRootDirectoryName = cl.getResource(skin).getFile();
+StringTemplateGroup templates =
+    new StringTemplateGroup("test", absoluteSkinRootDirectoryName);
+>>
+
+Then, when you ask for an instance of a page, it pulls from whichever
+directory {skin} is set to:
+
+<<
+StringTemplate page1ST = templates.getInstanceOf("page1");
+>>
+
+Here is page 1 in the %output<< <font color=blue>blue</font> >> skin:
+
+<<
+<html>
+<title>$strings.page1_title$</title>
+<body>
+<font color=blue>
+<p>$strings.intro$
+
+<p>$strings.page1_content$
+</font>
+</body>
+<html>
+>>
+
+and here is page 2:
+
+<<
+<html>
+<title>$strings.page2_title$</title>
+<body>
+<font color=blue>
+<p>$strings.page2_content$
+</font>
+</body>
+<html>
+>>
+
+For the %output<< <font color=red>red</font> >> here is page 1:
+
+<<
+<html>
+<title>$strings.page1_title$</title>
+<body>
+<font color=red>
+<h1>$strings.page1_title$</h1>
+
+<p>$strings.intro$
+<hr>
+<p>$strings.page1_content$
+</font>
+</body>
+<html>
+>>
+
+and page 2:
+
+<<
+<html>
+<title>$strings.page2_title$</title>
+<body>
+<font color=red>
+<h1>$strings.page2_title$</h1>
+<hr>
+<p>$strings.page2_content$
+</font>
+</body>
+<html>
+>>
+
+The thing to note is that there is no text, just formatting in these
+page templates.  Those strings from the {strings} attribute are
+used for all text that could change per locale.
+
+## Localizing template strings
+
+Once the code knows how to load templates, the locale must dictate
+which strings are displayed.  The templates clearly have attribute
+references pulling from a strings table (a hash table).  For this
+example, I'm assuming that I have a few different strings and that I'm
+storing them in a Java properties file called
+_language_{.strings} where _language_ is the
+two-letter language code.  Here is my {en.strings} file:
+
+<<
+intro=Welcome to my test page for internationalization with StringTemplate
+page1_title=Page 1 testing I18N
+page2_title=Page 2 testing I18N
+page1_content=This is page 1's simple page content
+page2_content=This is page 2's simple page content
+>>
+
+and here is my {fr.strings} file:
+
+<<
+intro=Bienvenue sur la page de test d'internationalisation avec StringTemplate
+page1_title=Page 1 test de I18N
+page2_title=Page 2 test de I18N
+page1_content=Le contenu de la page 1
+page2_content=Le contenu de la page 2
+>>
+
+To load these per the current locale is pretty easy:
+
+<<
+// use Locale to get 2 letter country code for this computer
+Locale locale = Locale.getDefault();
+String defaultLanguage = locale.getLanguage();
+// allow them to override language from argument on command line
+String language = defaultLanguage;
+if ( args.length>0 ) {
+    language = args[0];
+}
+// load strings from a properties files like en.strings
+URL stringsFile = cl.getResource(language+".strings");
+if ( stringsFile==null ) {
+    System.err.println("can't find strings for language: "+language);
+    return;
+}
+Properties strings = new Properties();
+InputStream is = stringsFile.openStream();
+strings.load(is);
+>>
+
+The {strings} properties object is just a {Hashtable} so
+you can directly pass to StringTemplate templates as an attribute:
+
+<<
+StringTemplate page1ST = templates.getInstanceOf("page1");
+page1ST.setAttribute("strings", strings);
+>>
+
+To generate the page, just say:
+
+<<
+System.out.println(page1ST);
+>>
+
+The output will be (for the {en} locale):
+
+<<
+<html>
+<title>Page 1 testing I18N</title>
+<body>
+<font color=blue>
+<p>Welcome to my test page for internationalization with
+StringTemplate
+
+<p>This is page 1's simple page content
+</font>
+</body>
+<html>
+>>
+
+If I change the locale to {fr} then without changes templates,
+the following is generated:
+
+<<
+<html>
+<title>Page 1 test de I18N</title>
+<body>
+<font color=blue>
+<p>
+
+<p>Le contenu de la page 1
+</font>
+</body>
+<html>
+>>
+
+## Source and compilation
+
+Here is the Java code, different strings, and different skins:
+
+o @(i18n/Test.java, Test.java)
+o @(i18n/en.strings, English strings)
+o @(i18n/fr.strings, French strings)
+o @(i18n/blue/, the blue skin)
+o @(i18n/red/, the red skin)
+
+You naturally need ANTLR too; @(http://www.antlr.org/download.html,
+get it here).
+
+You can compile this example like this:
+
+<<
+javac -classpath .:antlr-2.7.6.jar:stringtemplate-2.3.jar Test.java
+java -classpath .:antlr-2.7.6.jar:stringtemplate-2.3.jar Test
+>>
+
+## Summary
+
+In summary, the key element to demonstrate here is that you do not
+have to duplicate all of your templates to change what they say.  You
+can leave the formatting alone and, with a simple hashtable pulled
+from a data file, push in the proper strings per the locale.  I also
+took the opportunity to show off just how easy it is to make multiple
+site skins.
 
 #### StringTemplate Grammar
 
