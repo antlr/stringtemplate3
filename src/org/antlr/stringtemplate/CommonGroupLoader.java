@@ -39,7 +39,8 @@ public class CommonGroupLoader implements StringTemplateGroupLoader {
 		}
 	}
 
-	public StringTemplateGroup loadGroup(String groupName) {
+	public StringTemplateGroup loadGroup(String groupName,
+										 StringTemplateGroup superGroup) {
 		FileReader fr = null;
 		BufferedReader br = null;
 		StringTemplateGroup group = null;
@@ -51,12 +52,20 @@ public class CommonGroupLoader implements StringTemplateGroupLoader {
 		try {
 			fr = new FileReader(fileName);
 			br = new BufferedReader(fr);
-			group = new StringTemplateGroup(br, errors);
+			group = new StringTemplateGroup(br, null, errors, superGroup);
 		}
 		catch (IOException ioe) {
 			error("can't load group "+groupName, ioe);
 		}
 		return group;
+	}
+
+	/** Load a group with a specified superGroup.  Groups with
+	 *  region definitions must know their supergroup to find templates
+	 *  during parsing.
+	 */
+	public StringTemplateGroup loadGroup(String groupName) {
+		return loadGroup(groupName, null);
 	}
 
 	public StringTemplateGroupInterface loadInterface(String interfaceName) {

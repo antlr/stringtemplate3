@@ -10,6 +10,14 @@ public interface StringTemplateGroupLoader {
 	 */
 	public StringTemplateGroup loadGroup(String groupName);
 
+	/** Load a group with a specified superGroup.  Groups with
+	 *  region definitions must know their supergroup to find templates
+	 *  during parsing.
+	 */
+	public StringTemplateGroup loadGroup(String groupName,
+										 StringTemplateGroup superGroup);
+
+
 	/** Load the interface called interfaceName from somewhere.  Return null
 	 *  if no interface is found.
 	 */

@@ -874,8 +874,13 @@ public class StringTemplateGroup {
 	}
 
 	public static StringTemplateGroup loadGroup(String name) {
+		return loadGroup(name, null);
+	}
+
+	public static StringTemplateGroup loadGroup(String name,
+												StringTemplateGroup superGroup) {
 		if ( groupLoader!=null ) {
-			return groupLoader.loadGroup(name);
+			return groupLoader.loadGroup(name, superGroup);
 		}
 		return null;
 	}
