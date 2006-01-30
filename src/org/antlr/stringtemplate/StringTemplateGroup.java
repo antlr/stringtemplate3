@@ -337,8 +337,11 @@ public class StringTemplateGroup {
 	{
 		//System.out.println("getInstanceOf("+getName()+"::"+name+")");
 		StringTemplate st = lookupTemplate(enclosingInstance,name);
-		StringTemplate instanceST = st.getInstanceOf();
-		return instanceST;
+		if ( st!=null ) {
+			StringTemplate instanceST = st.getInstanceOf();
+			return instanceST;
+		}
+		return null;
 	}
 
 	/** The primary means of getting an instance of a template from this
@@ -748,7 +751,7 @@ public class StringTemplateGroup {
 			}
 			if ( mismatched!=null ) {
 				error("group "+getName()+" does not satisfy interface "+
-					  I.getName()+": mismatched template arguments "+mismatched);
+					  I.getName()+": mismatched arguments on these templates "+mismatched);
 			}
 		}
 	}

@@ -309,7 +309,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateGroup group =
 				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
 
-		String expecting = "group testG does not satisfy interface testI: mismatched template arguments [optional duh(a, b, c);]";
+		String expecting = "group testG does not satisfy interface testI: mismatched arguments on these templates [optional duh(a, b, c)]";
 		assertEqual(errors.toString(), expecting);
 	}
 

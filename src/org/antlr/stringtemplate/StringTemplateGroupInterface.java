@@ -134,10 +134,26 @@ public class StringTemplateGroupInterface {
 			if ( group.isDefined(d.name) ) {
 				StringTemplate defST = group.getTemplateDefinition(d.name);
 				Map formalArgs = defST.getFormalArguments();
+				boolean ack = false;
 				if ( (d.formalArgs!=null && formalArgs==null) ||
 					(d.formalArgs==null && formalArgs!=null) ||
-					(d.formalArgs!=null && !d.formalArgs.equals(formalArgs)) )
+					d.formalArgs.size() != formalArgs.size() )
 				{
+					ack=true;
+				}
+				if ( !ack ) {
+					for (Iterator it2 = formalArgs.keySet().iterator();
+						 it2.hasNext();)
+					{
+						String argName = (String)it2.next();
+						if ( d.formalArgs.get(argName)==null ) {
+							ack=true;
+							break;
+						}
+					}
+				}
+				if ( ack ) {
+					System.out.println(d.formalArgs+"!="+formalArgs);
 					mismatched.add(getTemplateSignature(d));
 				}
 			}
@@ -181,7 +197,7 @@ public class StringTemplateGroupInterface {
 			String name = (String)it.next();
 			TemplateDefinition d = (TemplateDefinition)templates.get(name);
 			buf.append( getTemplateSignature(d) );
-			buf.append("\n");
+			buf.append(";\n");
 		}
 		return buf.toString();
 	}
@@ -210,7 +226,6 @@ public class StringTemplateGroupInterface {
 		else {
 			buf.append("()");
 		}
-		buf.append(";");
 		return buf.toString();
 	}
 }
