@@ -166,8 +166,8 @@ public class StringTemplateGroup {
     protected int refreshIntervalInSeconds = Integer.MAX_VALUE/1000; // default: no refreshing from disk
     protected long lastCheckedDisk = 0L;
 
-	/** How are the files encode (ascii, UTF8, ...)?  You might want to read
-	 *  UTF8 for example on a ascii machine.
+	/** How are the files encoded (ascii, UTF8, ...)?  You might want to read
+	 *  UTF8 for example on an ascii machine.
 	 */
 	String fileCharEncoding = System.getProperty("file.encoding");
 

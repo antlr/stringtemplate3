@@ -132,7 +132,7 @@ public class TestStringTemplate extends TestSuite {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
-		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		StringTemplateGroup.registerGroupLoader(new PathGroupLoader(tmpdir,errors));
 
 		String templates =
 			"group testG implements blort;" +newline+
@@ -160,7 +160,7 @@ public class TestStringTemplate extends TestSuite {
 			}
 		}
 		StringTemplateGroup.registerGroupLoader(
-			new CommonGroupLoader(tmpdir+":"+tmpdir+"/sub",errors)
+			new PathGroupLoader(tmpdir+":"+tmpdir+"/sub",errors)
 		);
 
 		String templates =
@@ -184,7 +184,7 @@ public class TestStringTemplate extends TestSuite {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
-		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		StringTemplateGroup.registerGroupLoader(new PathGroupLoader(tmpdir,errors));
 		String groupI =
 				"interface testI;" +newline+
 				"t();" +newline+
@@ -212,7 +212,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
 		StringTemplateGroup.registerGroupLoader(
-			new CommonGroupLoader(tmpdir,errors)
+			new PathGroupLoader(tmpdir,errors)
 		);
 		String superGroup =
 				"group superG;" +newline+
@@ -238,7 +238,7 @@ public class TestStringTemplate extends TestSuite {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
-		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		StringTemplateGroup.registerGroupLoader(new PathGroupLoader(tmpdir,errors));
 		String groupI =
 				"interface testI;" +newline+
 				"t();" +newline+
@@ -264,7 +264,7 @@ public class TestStringTemplate extends TestSuite {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
-		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		StringTemplateGroup.registerGroupLoader(new PathGroupLoader(tmpdir,errors));
 		String groupI =
 				"interface testI;" +newline+
 				"t();" +newline+
@@ -290,7 +290,7 @@ public class TestStringTemplate extends TestSuite {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
-		StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+		StringTemplateGroup.registerGroupLoader(new PathGroupLoader(tmpdir,errors));
 		String groupI =
 				"interface testI;" +newline+
 				"t();" +newline+
@@ -3768,6 +3768,78 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("x", o);
 		String expecting = "9:34";
 		assertEqual(st.toString(), expecting);
+	}
+
+	public void testIndexVar() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("dummy", ".");
+		String newline = System.getProperty("line.separator");
+		StringTemplate t =
+				new StringTemplate(
+						group,
+						"$A:{$i$. $it$}; separator=\"\\n\"$"
+				);
+		t.setAttribute("A", "parrt");
+		t.setAttribute("A", "tombu");
+		String expecting =
+			"1. parrt" +newline+
+			"2. tombu";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testIndex0Var() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("dummy", ".");
+		String newline = System.getProperty("line.separator");
+		StringTemplate t =
+				new StringTemplate(
+						group,
+						"$A:{$i0$. $it$}; separator=\"\\n\"$"
+				);
+		t.setAttribute("A", "parrt");
+		t.setAttribute("A", "tombu");
+		String expecting =
+			"0. parrt" +newline+
+			"1. tombu";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testIndexVarWithMultipleExprs() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("dummy", ".");
+		String newline = System.getProperty("line.separator");
+		StringTemplate t =
+				new StringTemplate(
+						group,
+						"$A,B:{a,b|$i$. $a$@$b$}; separator=\"\\n\"$"
+				);
+		t.setAttribute("A", "parrt");
+		t.setAttribute("A", "tombu");
+		t.setAttribute("B", "x5707");
+		t.setAttribute("B", "x5000");
+		String expecting =
+			"1. parrt@x5707" +newline+
+			"2. tombu@x5000";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testIndex0VarWithMultipleExprs() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("dummy", ".");
+		String newline = System.getProperty("line.separator");
+		StringTemplate t =
+				new StringTemplate(
+						group,
+						"$A,B:{a,b|$i0$. $a$@$b$}; separator=\"\\n\"$"
+				);
+		t.setAttribute("A", "parrt");
+		t.setAttribute("A", "tombu");
+		t.setAttribute("B", "x5707");
+		t.setAttribute("B", "x5000");
+		String expecting =
+			"0. parrt@x5707" +newline+
+			"1. tombu@x5000";
+		assertEqual(t.toString(), expecting);
 	}
 
 	public static void writeFile(String dir, String fileName, String content) {

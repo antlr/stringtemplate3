@@ -1,118 +1,44 @@
 package org.antlr.stringtemplate;
 
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.File;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.ArrayList;
+import java.io.*;
 
-/** A brain dead loader that looks only in the directory(ies) you
- *  specify in the ctor.
+/** A simple loader that looks only in the directory(ies) you
+ *  specify in the ctor, but it uses the classpath rather than
+ *  absolute dirs so it can be used when the ST application is jar'd up.
+ *  You may specify the char encoding.
  */
-public class CommonGroupLoader implements StringTemplateGroupLoader {
-	protected List dirs = null;
-	protected StringTemplateErrorListener errors = null;
+public class CommonGroupLoader extends PathGroupLoader {
 
 	public CommonGroupLoader(StringTemplateErrorListener errors) {
-		this.errors = errors;
+		super(errors);
 	}
 
 	/** Pass a single dir or multiple dirs separated by colons from which
-	 *  to load groups/interfaces.
+	 *  to load groups/interfaces.  These are interpreted as relative
+	 *  paths to be used with CLASSPATH to locate groups.  E.g.,
+	 *  If you pass in "org/antlr/codegen/templates" and ask to load
+	 *  group "foo" it will try to load via classpath as
+	 *  "org/antlr/codegen/templates/foo".
 	 */
 	public CommonGroupLoader(String dirStr, StringTemplateErrorListener errors) {
-		this.errors = errors;
-		StringTokenizer tokenizer = new StringTokenizer(dirStr, ":", false);
-		while (tokenizer.hasMoreElements()) {
-			String dir = (String) tokenizer.nextElement();
-			if ( dirs==null ) {
-				dirs = new ArrayList();
-			}
-			if ( !(new File(dir).exists()) ) {
-				error("group loader: no such dir "+dir);
-			}
-			else {
-				dirs.add(dir);
-			}
-		}
+		super(dirStr,errors);
 	}
 
-	public StringTemplateGroup loadGroup(String groupName,
-										 StringTemplateGroup superGroup) {
-		FileReader fr = null;
-		BufferedReader br = null;
-		StringTemplateGroup group = null;
-		String fileName = locate(groupName+".stg");
-		if ( fileName==null ) {
-			error("no such group file "+groupName+".stg");
-			return null;
-		}
-		try {
-			fr = new FileReader(fileName);
-			br = new BufferedReader(fr);
-			group = new StringTemplateGroup(br, null, errors, superGroup);
-		}
-		catch (IOException ioe) {
-			error("can't load group "+groupName, ioe);
-		}
-		return group;
-	}
-
-	/** Load a group with a specified superGroup.  Groups with
-	 *  region definitions must know their supergroup to find templates
-	 *  during parsing.
+	/** Look in each relative directory for the file called 'name'.
+	 *  Load via classpath.
 	 */
-	public StringTemplateGroup loadGroup(String groupName) {
-		return loadGroup(groupName, null);
-	}
-
-	public StringTemplateGroupInterface loadInterface(String interfaceName) {
-		FileReader fr = null;
-		BufferedReader br = null;
-		StringTemplateGroupInterface I = null;
-		String fileName = locate(interfaceName+".sti");
-		if ( fileName==null ) {
-			error("no such interface file "+interfaceName+".sti");
-			return null;
-		}
-		try {
-			fr = new FileReader(fileName);
-			br = new BufferedReader(fr);
-			I = new StringTemplateGroupInterface(br, errors);
-		}
-		catch (IOException ioe) {
-			error("can't load interface "+interfaceName, ioe);
-		}
-		return I;
-	}
-
-	/** Look in each directory for the file called 'name'. */
-	protected String locate(String name) {
+	protected BufferedReader locate(String name) throws IOException {
 		for (int i = 0; i < dirs.size(); i++) {
 			String dir = (String) dirs.get(i);
 			String fileName = dir+"/"+name;
-			if ( new File(fileName).exists() ) {
-				return fileName;
+			//System.out.println("trying "+fileName);
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			InputStream is = cl.getResourceAsStream(fileName);
+			if ( is!=null ) {
+				return new BufferedReader(getInputStreamReader(is));
 			}
 		}
 		return null;
 	}
 
-	public void error(String msg) {
-		error(msg, null);
-	}
-
-	public void error(String msg, Exception e) {
-		if ( errors!=null ) {
-			errors.error(msg,e);
-		}
-		else {
-			System.err.println("StringTemplate: "+msg);
-			if ( e!=null ) {
-				e.printStackTrace();
-			}
-		}
-    }
 }
