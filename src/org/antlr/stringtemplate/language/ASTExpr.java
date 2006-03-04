@@ -27,18 +27,17 @@
 */
 package org.antlr.stringtemplate.language;
 
+import antlr.RecognitionException;
+import antlr.collections.AST;
 import org.antlr.stringtemplate.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
-import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-
-import antlr.collections.AST;
-import antlr.RecognitionException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /** A single string template expression enclosed in $...; separator=...$
  *  parsed into an AST chunk to be evaluated.
@@ -47,6 +46,7 @@ public class ASTExpr extends Expr {
     public static final String DEFAULT_ATTRIBUTE_NAME = "it";
     public static final String DEFAULT_ATTRIBUTE_NAME_DEPRECATED = "attr";
 	public static final String DEFAULT_INDEX_VARIABLE_NAME = "i";
+	public static final String DEFAULT_INDEX0_VARIABLE_NAME = "i0";
 	public static final String DEFAULT_MAP_VALUE_NAME = "_default_";
 
 	AST exprTree = null;
@@ -137,6 +137,7 @@ public class ASTExpr extends Expr {
 		}
 
 		// keep walking while at least one attribute has values
+		int i = 0; // iteration number from 0
 		while ( true ) {
 			argumentContext = new HashMap();
 			// get a value for each attribute in list; put into arg context
@@ -156,10 +157,13 @@ public class ASTExpr extends Expr {
 			if ( numEmpty==numAttributes ) {
 				break;
 			}
+			argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(i+1));
+			argumentContext.put(DEFAULT_INDEX0_VARIABLE_NAME, new Integer(i));
 			StringTemplate embedded = templateToApply.getInstanceOf();
 			embedded.setEnclosingInstance(self);
 			embedded.setArgumentContext(argumentContext);
 			results.add(embedded);
+			i++;
 		}
 
 		return results;
@@ -203,7 +207,8 @@ public class ASTExpr extends Expr {
 				setSoleFormalArgumentToIthValue(embedded, argumentContext, ithValue);
 				argumentContext.put(DEFAULT_ATTRIBUTE_NAME, ithValue);
                 argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, ithValue);
-                argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(i+1));
+				argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(i+1));
+				argumentContext.put(DEFAULT_INDEX0_VARIABLE_NAME, new Integer(i));
                 embedded.setArgumentContext(argumentContext);
                 evaluateArguments(embedded);
                 /*
