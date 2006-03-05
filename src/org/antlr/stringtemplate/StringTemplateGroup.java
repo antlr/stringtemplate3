@@ -128,6 +128,28 @@ public class StringTemplateGroup {
  	 */
 	protected Map attributeRenderers;
 
+	/** Maps obj.prop to a value to avoid reflection costs */
+	protected Map objectPropertyCache = new HashMap();
+
+	public static class ObjPropCache {
+		Object o;
+		String propertyName;
+		public ObjPropCache(Object o, String propertyName) {
+			this.o=o;
+			this.propertyName=propertyName;
+		}
+
+		public boolean equals(Object other) {
+			ObjPropCache otherKey = (ObjPropCache)other;
+			return o.equals(otherKey.o) &&
+				propertyName.equals(otherKey.propertyName);
+		}
+
+		public int hashCode() {
+			return o.hashCode()+propertyName.hashCode();
+		}
+	}
+
 	/** If a group file indicates it derives from a supergroup, how do we
 	 *  find it?  Shall we make it so the initial StringTemplateGroup file
 	 *  can be loaded via this loader?  Right now we pass a Reader to ctor
@@ -845,6 +867,16 @@ public class StringTemplateGroup {
 			}
 		}
 		return renderer;
+	}
+
+	public void cacheObjectProperty(Object o, String propertyName, Object value) {
+		Object key = new ObjPropCache(o,propertyName);
+		objectPropertyCache.put(key,value);
+	}
+
+	public Object getCachedObjectProperty(final Object o, final String propertyName) {
+		Object key = new ObjPropCache(o,propertyName);
+		return objectPropertyCache.get(key);
 	}
 
 	public Map getMap(String name) {

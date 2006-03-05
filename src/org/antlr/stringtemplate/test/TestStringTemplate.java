@@ -29,6 +29,7 @@ package org.antlr.stringtemplate.test;
 
 import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
+import org.antlr.stringtemplate.language.ASTExpr;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -53,7 +54,15 @@ system property  java.io.tmpdir to get a temp directory."
 public class TestStringTemplate extends TestSuite {
     final String newline = System.getProperty("line.separator");
 
-    public TestStringTemplate() {
+	public void runTests() throws Throwable {
+		TestRig.runAllTests(this.getClass(), this);
+		/*
+		System.out.println("num obj.prop refs: "+ ASTExpr.totalObjPropRefs);
+		System.out.println("num obj.prop refs: "+ ASTExpr.totalObjPropComputations);
+		*/
+	}
+
+	public TestStringTemplate() {
     }
 
 	static class ErrorBuffer implements StringTemplateErrorListener {

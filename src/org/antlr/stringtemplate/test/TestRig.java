@@ -27,10 +27,7 @@
 */
 package org.antlr.stringtemplate.test;
 
-import org.antlr.stringtemplate.test.TestSuite;
-
 import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
 /** Terence's own version of a test case.  Got sick of trying to figure out
  *  the quirks of junit...this is pretty much the same functionality and
@@ -86,14 +83,8 @@ public class TestRig {
                 }
                 catch (NoSuchMethodException nsme) {
                     // else just call runTest on all methods with "test" prefix
-                    Method methods[] = c.getMethods();
-                    for (int i = 0; i < methods.length; i++) {
-                        Method testMethod = methods[i];
-                        if ( testMethod.getName().startsWith("test") ) {
-                            test.runTest(testMethod.getName());
-                        }
-                    }
-                }
+					runAllTests(c, test);
+				}
 			}
         }
         catch (Exception e) {
@@ -104,4 +95,14 @@ public class TestRig {
         System.out.println("successes: "+test.getSuccesses());
         System.out.println("failures: "+test.getFailures());
     }
+
+	public static void runAllTests(Class c, TestSuite test) {
+		Method methods[] = c.getMethods();
+		for (int i = 0; i < methods.length; i++) {
+			Method testMethod = methods[i];
+			if ( testMethod.getName().startsWith("test") ) {
+				test.runTest(testMethod.getName());
+			}
+		}
+	}
 }

@@ -35,8 +35,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /** A single string template expression enclosed in $...; separator=...$
@@ -48,6 +48,10 @@ public class ASTExpr extends Expr {
 	public static final String DEFAULT_INDEX_VARIABLE_NAME = "i";
 	public static final String DEFAULT_INDEX0_VARIABLE_NAME = "i0";
 	public static final String DEFAULT_MAP_VALUE_NAME = "_default_";
+
+	// used temporarily for checking obj.prop cache
+	public static int totalObjPropRefs = 0;
+	public static int totalObjPropComputations = 0;
 
 	AST exprTree = null;
 
@@ -265,20 +269,42 @@ public class ASTExpr extends Expr {
 	/** Return o.getPropertyName() given o and propertyName.  If o is
      *  a stringtemplate then access it's attributes looking for propertyName
      *  instead (don't check any of the enclosing scopes; look directly into
-     *  that object).  Also try isXXX() for booleans.  Allow HashMap,
-     *  Hashtable as special case (grab value for key).
+     *  that object).  Also try isXXX() for booleans.  Allow Map
+	 *  as special case (grab value for key).
+	 *
+	 *  Cache repeated requests for obj.prop within same group.
      */
-    public Object getObjectProperty(StringTemplate self, Object o, String propertyName) {
-        if ( o==null || propertyName==null ) {
-            return null;
-        }
-        Class c = o.getClass();
+	public Object getObjectProperty(StringTemplate self,
+									final Object o,
+									final String propertyName) {
+		if ( o==null || propertyName==null ) {
+			return null;
+		}
+		totalObjPropRefs++;
+		// see if property is cached in group's cache
+		Object cachedValue =
+			self.getGroup().getCachedObjectProperty(o,propertyName);
+		if ( cachedValue!=null ) {
+			return cachedValue;
+		}
+		Object value = rawGetObjectProperty(self, o, propertyName);
+		// take care of array properties...convert to a List so we can
+		// apply templates to the elements etc...
+		value = convertArrayToList(value);
+		self.getGroup().cacheObjectProperty(o,propertyName,value);
+		return value;
+	}
+
+	protected Object rawGetObjectProperty(StringTemplate self, Object o, String propertyName) {
+		totalObjPropComputations++;
+		Class c = o.getClass();
         Object value = null;
 
         // Special case: our automatically created Aggregates via
         // attribute name: "{obj.{prop1,prop2}}"
         if ( c==StringTemplate.Aggregate.class ) {
             value = ((StringTemplate.Aggregate)o).get(propertyName);
+			return value;
         }
 
         // Special case: if it's a template, pull property from
@@ -288,13 +314,14 @@ public class ASTExpr extends Expr {
             Map attributes = ((StringTemplate)o).getAttributes();
             if ( attributes!=null ) {
                 value = attributes.get(propertyName);
+				return value;
             }
         }
 
         // Special case: if it's a HashMap, Hashtable then pull using
         // key not the property method.  Do NOT allow general Map interface
         // as people could pass in their database masquerading as a Map.
-        else if ( o instanceof Map ) {
+        if ( o instanceof Map ) {
             Map map = (Map)o;
             value = map.get(propertyName);
 			if ( value==null ) {
@@ -302,49 +329,17 @@ public class ASTExpr extends Expr {
 				// then there may be a default value
 				value = map.get(DEFAULT_MAP_VALUE_NAME);
 			}
+			return value;
         }
 
-        else {
-            // use getPropertyName() lookup
-            String methodSuffix = Character.toUpperCase(propertyName.charAt(0))+
-                        propertyName.substring(1,propertyName.length());
-            String methodName = "get"+methodSuffix;
-            Method m = null;
-            try {
-                m = c.getMethod(methodName, null);
-            }
-            catch (NoSuchMethodException nsme) {
-                methodName = "is"+methodSuffix;
-                try {
-                    m = c.getMethod(methodName, null);
-                }
-                catch (NoSuchMethodException nsme2) {
-					// try for a visible field
-					try {
-						Field f = c.getField(propertyName);
-						try {
-							try {
-								// make sure it's accessible (stupid java)
-								f.setAccessible(true);
-							}
-							catch (SecurityException se) {
-								; // oh well; security won't let us
-							}
-							value = f.get(o);
-							value = convertArrayToList(value);
-							return value;
-						}
-						catch (IllegalAccessException iae) {
-							self.error("Can't access property "+propertyName+" using method get/is"+methodSuffix+
-									   " or direct field access from "+c.getName()+" instance", iae);
-						}
-					}
-					catch (NoSuchFieldException nsfe) {
-						self.error("Class "+c.getName()+" has no such attribute: "+propertyName+
-								   " in template context "+self.getEnclosingInstanceStackString(), nsfe);
-					}
-				}
-			}
+		// try getXXX and isXXX properties
+		String methodSuffix = Character.toUpperCase(propertyName.charAt(0))+
+				propertyName.substring(1,propertyName.length());
+		Method m = getMethod(c,"get"+methodSuffix);
+		if ( m==null ) {
+			m = getMethod(c, "is"+methodSuffix);
+		}
+		if ( m != null ) {
 			try {
 				try {
 					// make sure it's accessible (stupid java)
@@ -357,15 +352,47 @@ public class ASTExpr extends Expr {
 			}
 			catch (Exception e) {
 				self.error("Can't get property "+propertyName+" using method get/is"+methodSuffix+
-						   " from "+c.getName()+" instance", e);
+					" from "+c.getName()+" instance", e);
+			}
+		}
+		else {
+			// try for a visible field
+			try {
+				Field f = c.getField(propertyName);
+				try {
+					try {
+						// make sure it's accessible (stupid java)
+						f.setAccessible(true);
+					}
+					catch (SecurityException se) {
+						; // oh well; security won't let us
+					}
+					value = f.get(o);
+				}
+				catch (IllegalAccessException iae) {
+					self.error("Can't access property "+propertyName+" using method get/is"+methodSuffix+
+						" or direct field access from "+c.getName()+" instance", iae);
+				}
+			}
+			catch (NoSuchFieldException nsfe) {
+				self.error("Class "+c.getName()+" has no such attribute: "+propertyName+
+					" in template context "+self.getEnclosingInstanceStackString(), nsfe);
 			}
 		}
 
-		// take care of array properties...convert to a List so we can
-		// apply templates to the elements etc...
-		value = convertArrayToList(value);
         return value;
     }
+
+	protected Method getMethod(Class c, String methodName) {
+		Method m;
+		try {
+			m = c.getMethod(methodName, null);
+		}
+		catch (NoSuchMethodException nsme) {
+			m = null;
+		}
+		return m;
+	}
 
 	/** Normally StringTemplate tests presence or absence of attributes
 	 *  for adherence to my principles of separation, but some people
@@ -633,6 +660,9 @@ public class ASTExpr extends Expr {
 	/** Do a standard conversion of array attributes to Lists.
 	 */
 	public static Object convertArrayToList(Object value) {
+		if ( value==null ) {
+			return null;
+		}
 		if ( value instanceof Object[] ) {
 			value = Arrays.asList((Object[])value);
 		}
