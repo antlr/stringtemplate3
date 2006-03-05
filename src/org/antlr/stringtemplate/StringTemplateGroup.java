@@ -34,6 +34,7 @@ import org.antlr.stringtemplate.language.GroupParser;
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Member;
 
 /** Manages a group of named mutually-referential StringTemplate objects.
  *  Currently the templates must all live under a directory so that you
@@ -68,8 +69,8 @@ public class StringTemplateGroup {
 	 */
 	protected Map maps = new HashMap();
 
-    /** How to pull apart a template into chunks? */
-    protected Class templateLexerClass = null;
+	/** How to pull apart a template into chunks? */
+	protected Class templateLexerClass = null;
 
 	/** You can set the lexer once if you know all of your groups use the
 	 *  same separator.  If the instance has templateLexerClass set
@@ -79,8 +80,8 @@ public class StringTemplateGroup {
 
 	/** Under what directory should I look for templates?  If null,
 	 *  to look into the CLASSPATH for templates as resources.
-     */
-    protected String rootDir = null;
+	 */
+	protected String rootDir = null;
 
 	/** Track all groups by name; maps name to StringTemplateGroup */
 	protected static Map nameToGroupMap = new HashMap();
@@ -96,18 +97,18 @@ public class StringTemplateGroup {
 	/** Keep track of all interfaces implemented by this group. */
 	protected List interfaces = null;
 
-    /** When templates are files on the disk, the refresh interval is used
-     *  to know when to reload.  When a Reader is passed to the ctor,
-     *  it is a stream full of template definitions.  The former is used
-     *  for web development, but the latter is most likely used for source
-     *  code generation for translators; a refresh is unlikely.  Anyway,
-     *  I decided to track the source of templates in case such info is useful
-     *  in other situations than just turning off refresh interval.  I just
-     *  found another: don't ever look on the disk for individual templates
-     *  if this group is a group file...immediately look into any super group.
-     *  If not in the super group, report no such template.
-     */
-    protected boolean templatesDefinedInGroupFile = false;
+	/** When templates are files on the disk, the refresh interval is used
+	 *  to know when to reload.  When a Reader is passed to the ctor,
+	 *  it is a stream full of template definitions.  The former is used
+	 *  for web development, but the latter is most likely used for source
+	 *  code generation for translators; a refresh is unlikely.  Anyway,
+	 *  I decided to track the source of templates in case such info is useful
+	 *  in other situations than just turning off refresh interval.  I just
+	 *  found another: don't ever look on the disk for individual templates
+	 *  if this group is a group file...immediately look into any super group.
+	 *  If not in the super group, report no such template.
+	 */
+	protected boolean templatesDefinedInGroupFile = false;
 
 	/** Normally AutoIndentWriter is used to filter output, but user can
 	 *  specify a new one.
@@ -125,28 +126,30 @@ public class StringTemplateGroup {
 	 *  These render objects are used way down in the evaluation chain
 	 *  right before an attribute's toString() method would normally be
 	 *  called in ASTExpr.write().
- 	 */
+	  */
 	protected Map attributeRenderers;
 
-	/** Maps obj.prop to a value to avoid reflection costs */
-	protected Map objectPropertyCache = new HashMap();
+	/** Maps obj.prop to a value to avoid reflection costs; track one
+	 *  set of all class.property -> Member mappings for all ST usage in VM.
+	 */
+	protected static Map classPropertyCache = new HashMap();
 
-	public static class ObjPropCache {
-		Object o;
+	public static class ClassPropCacheKey {
+		Class c;
 		String propertyName;
-		public ObjPropCache(Object o, String propertyName) {
-			this.o=o;
+		public ClassPropCacheKey(Class c, String propertyName) {
+			this.c=c;
 			this.propertyName=propertyName;
 		}
 
 		public boolean equals(Object other) {
-			ObjPropCache otherKey = (ObjPropCache)other;
-			return o.equals(otherKey.o) &&
+			ClassPropCacheKey otherKey = (ClassPropCacheKey)other;
+			return c.equals(otherKey.c) &&
 				propertyName.equals(otherKey.propertyName);
 		}
 
 		public int hashCode() {
-			return o.hashCode()+propertyName.hashCode();
+			return c.hashCode()+propertyName.hashCode();
 		}
 	}
 
@@ -162,21 +165,21 @@ public class StringTemplateGroup {
 	 */
 	protected StringTemplateErrorListener listener = DEFAULT_ERROR_LISTENER;
 
-    public static StringTemplateErrorListener DEFAULT_ERROR_LISTENER =
-        new StringTemplateErrorListener() {
-            public void error(String s, Throwable e) {
-                System.err.println(s);
-                if ( e!=null ) {
-                    e.printStackTrace(System.err);
-                }
-            }
-            public void warning(String s) {
-                System.out.println(s);
-            }
-            public void debug(String s) {
-                System.out.println(s);
-            }
-        };
+	public static StringTemplateErrorListener DEFAULT_ERROR_LISTENER =
+		new StringTemplateErrorListener() {
+			public void error(String s, Throwable e) {
+				System.err.println(s);
+				if ( e!=null ) {
+					e.printStackTrace(System.err);
+				}
+			}
+			public void warning(String s) {
+				System.out.println(s);
+			}
+			public void debug(String s) {
+				System.out.println(s);
+			}
+		};
 
 	/** Used to indicate that the template doesn't exist.
 	 *  We don't have to check disk for it; we know it's not there.
@@ -184,58 +187,58 @@ public class StringTemplateGroup {
 	protected static final StringTemplate NOT_FOUND_ST =
 		new StringTemplate();
 
-    /** How long before tossing out all templates in seconds. */
-    protected int refreshIntervalInSeconds = Integer.MAX_VALUE/1000; // default: no refreshing from disk
-    protected long lastCheckedDisk = 0L;
+	/** How long before tossing out all templates in seconds. */
+	protected int refreshIntervalInSeconds = Integer.MAX_VALUE/1000; // default: no refreshing from disk
+	protected long lastCheckedDisk = 0L;
 
 	/** How are the files encoded (ascii, UTF8, ...)?  You might want to read
 	 *  UTF8 for example on an ascii machine.
 	 */
 	String fileCharEncoding = System.getProperty("file.encoding");
 
-    /** Create a group manager for some templates, all of which are
-     *  at or below the indicated directory.
-     */
+	/** Create a group manager for some templates, all of which are
+	 *  at or below the indicated directory.
+	 */
 	public StringTemplateGroup(String name, String rootDir) {
-        this(name,rootDir,DefaultTemplateLexer.class);
-    }
+		this(name,rootDir,DefaultTemplateLexer.class);
+	}
 
-    public StringTemplateGroup(String name, String rootDir, Class lexer) {
-        this.name = name;
+	public StringTemplateGroup(String name, String rootDir, Class lexer) {
+		this.name = name;
 		this.rootDir = rootDir;
-        lastCheckedDisk = System.currentTimeMillis();
+		lastCheckedDisk = System.currentTimeMillis();
 		nameToGroupMap.put(name, this);
-        this.templateLexerClass = lexer;
-    }
+		this.templateLexerClass = lexer;
+	}
 
-    /** Create a group manager for some templates, all of which are
+	/** Create a group manager for some templates, all of which are
 	 *  loaded as resources via the classloader.
 	 */
-    public StringTemplateGroup(String name) {
-        this(name,null,null);
-    }
+	public StringTemplateGroup(String name) {
+		this(name,null,null);
+	}
 
-    public StringTemplateGroup(String name, Class lexer) {
-        this(name,null,lexer);
-    }
+	public StringTemplateGroup(String name, Class lexer) {
+		this(name,null,lexer);
+	}
 
-    /** Create a group from the template group defined by a input stream.
-     *  The name is pulled from the file.  The format is
-     *
-     *  group name;
-     *
-     *  t1(args) ::= "..."
-     *  t2() ::= <<
-     *  >>
-     *  ...
-     */
-    public StringTemplateGroup(Reader r) {
-        this(r,null,DEFAULT_ERROR_LISTENER,(StringTemplateGroup)null);
-    }
+	/** Create a group from the template group defined by a input stream.
+	 *  The name is pulled from the file.  The format is
+	 *
+	 *  group name;
+	 *
+	 *  t1(args) ::= "..."
+	 *  t2() ::= <<
+	 *  >>
+	 *  ...
+	 */
+	public StringTemplateGroup(Reader r) {
+		this(r,null,DEFAULT_ERROR_LISTENER,(StringTemplateGroup)null);
+	}
 
-    public StringTemplateGroup(Reader r, StringTemplateErrorListener errors) {
-        this(r,null,errors,(StringTemplateGroup)null);
-    }
+	public StringTemplateGroup(Reader r, StringTemplateErrorListener errors) {
+		this(r,null,errors,(StringTemplateGroup)null);
+	}
 
 	public StringTemplateGroup(Reader r, Class lexer) {
 		this(r,lexer,null,(StringTemplateGroup)null);
@@ -245,22 +248,22 @@ public class StringTemplateGroup {
 		this(r,lexer,errors,(StringTemplateGroup)null);
 	}
 
-    /** Create a group from the input stream, but use a nondefault lexer
-     *  to break the templates up into chunks.  This is usefor changing
-     *  the delimiter from the default $...$ to <...>, for example.
-     */
-    public StringTemplateGroup(Reader r,
-                               Class lexer,
-                               StringTemplateErrorListener errors,
+	/** Create a group from the input stream, but use a nondefault lexer
+	 *  to break the templates up into chunks.  This is usefor changing
+	 *  the delimiter from the default $...$ to <...>, for example.
+	 */
+	public StringTemplateGroup(Reader r,
+							   Class lexer,
+							   StringTemplateErrorListener errors,
 							   StringTemplateGroup superGroup)
-    {
-        this.templatesDefinedInGroupFile = true;
-        this.templateLexerClass = lexer;
-        this.listener = errors;
+	{
+		this.templatesDefinedInGroupFile = true;
+		this.templateLexerClass = lexer;
+		this.listener = errors;
 		setSuperGroup(superGroup);
-        parseGroup(r);
+		parseGroup(r);
 		verifyInterfaceImplementations();
-    }
+	}
 
 	/** What lexer class to use to break up templates.  If not lexer set
 	 *  for this group, use static default.
@@ -384,8 +387,8 @@ public class StringTemplateGroup {
 	}
 
 	public StringTemplate getEmbeddedInstanceOf(StringTemplate enclosingInstance,
-                                                String name)
-    	throws IllegalArgumentException
+												String name)
+		throws IllegalArgumentException
 	{
 		/*
 		System.out.println("surrounding group is "+
@@ -402,33 +405,33 @@ public class StringTemplateGroup {
 			st = enclosingInstance.getNativeGroup().getInstanceOf(enclosingInstance, name);
 		}
 		else {
-        	st = getInstanceOf(enclosingInstance, name);
+			st = getInstanceOf(enclosingInstance, name);
 		}
 		// make sure all embedded templates have the same group as enclosing
 		// so that polymorphic refs will start looking at the original group
 		st.setGroup(this);
-        st.setEnclosingInstance(enclosingInstance);
-        return st;
-    }
+		st.setEnclosingInstance(enclosingInstance);
+		return st;
+	}
 
 	/** Get the template called 'name' from the group.  If not found,
-     *  attempt to load.  If not found on disk, then try the superGroup
+	 *  attempt to load.  If not found on disk, then try the superGroup
 	 *  if any.  If not even there, then record that it's
-     *  NOT_FOUND so we don't waste time looking again later.  If we've gone
-     *  past refresh interval, flush and look again.
+	 *  NOT_FOUND so we don't waste time looking again later.  If we've gone
+	 *  past refresh interval, flush and look again.
 	 *
 	 *  If I find a template in a super group, copy an instance down here
-     */
-    public StringTemplate lookupTemplate(StringTemplate enclosingInstance,
+	 */
+	public StringTemplate lookupTemplate(StringTemplate enclosingInstance,
 										 String name)
 		throws IllegalArgumentException
 	{
 		//System.out.println("look up "+getName()+"::"+name);
-        if ( name.startsWith("super.") ) {
-            if ( superGroup!=null ) {
-                int dot = name.indexOf('.');
-                name = name.substring(dot+1,name.length());
-                StringTemplate superScopeST =
+		if ( name.startsWith("super.") ) {
+			if ( superGroup!=null ) {
+				int dot = name.indexOf('.');
+				name = name.substring(dot+1,name.length());
+				StringTemplate superScopeST =
 					superGroup.lookupTemplate(enclosingInstance,name);
 				/*
 				System.out.println("superScopeST is "+
@@ -436,34 +439,34 @@ public class StringTemplateGroup {
 								   " with native group "+superScopeST.getNativeGroup().getName());
 				*/
 				return superScopeST;
-            }
-            throw new IllegalArgumentException(getName()+
-                    " has no super group; invalid template: "+name);
-        }
-        checkRefreshInterval();
-        StringTemplate st = (StringTemplate)templates.get(name);
-        if ( st==null ) {
-            // not there?  Attempt to load
-            if ( !templatesDefinedInGroupFile ) {
-                // only check the disk for individual template
-                st = loadTemplateFromBeneathRootDirOrCLASSPATH(getFileNameFromTemplateName(name));
-            }
-            if ( st==null && superGroup!=null ) {
-                // try to resolve in super group
-                st = superGroup.getInstanceOf(name);
+			}
+			throw new IllegalArgumentException(getName()+
+					" has no super group; invalid template: "+name);
+		}
+		checkRefreshInterval();
+		StringTemplate st = (StringTemplate)templates.get(name);
+		if ( st==null ) {
+			// not there?  Attempt to load
+			if ( !templatesDefinedInGroupFile ) {
+				// only check the disk for individual template
+				st = loadTemplateFromBeneathRootDirOrCLASSPATH(getFileNameFromTemplateName(name));
+			}
+			if ( st==null && superGroup!=null ) {
+				// try to resolve in super group
+				st = superGroup.getInstanceOf(name);
 				// make sure that when we inherit a template, that it's
 				// group is reset; it's nativeGroup will remain where it was
 				if ( st!=null ) {
 					st.setGroup(this);
 				}
-            }
-            if ( st!=null ) { // found in superGroup
-                // insert into this group; refresh will allow super
-                // to change it's def later or this group to add
-                // an override.
-                templates.put(name, st);
-            }
-            else {
+			}
+			if ( st!=null ) { // found in superGroup
+				// insert into this group; refresh will allow super
+				// to change it's def later or this group to add
+				// an override.
+				templates.put(name, st);
+			}
+			else {
 				// not found; remember that this sucker doesn't exist
 				templates.put(name, NOT_FOUND_ST);
 				String context = "";
@@ -474,11 +477,11 @@ public class StringTemplateGroup {
 				throw new IllegalArgumentException("Can't find template "+
 												   getFileNameFromTemplateName(name)+
 												   context);
-            }
-        }
-        else if ( st==NOT_FOUND_ST ) {
-            return null;
-        }
+			}
+		}
+		else if ( st==NOT_FOUND_ST ) {
+			return null;
+		}
 		//System.out.println("lookup found "+st.getGroup().getName()+"::"+st.getName());
 		return st;
 	}
@@ -487,29 +490,29 @@ public class StringTemplateGroup {
 		return lookupTemplate(null, name);
 	}
 
-    protected void checkRefreshInterval() {
-        if ( templatesDefinedInGroupFile ) {
-            return;
-        }
-        boolean timeToFlush=refreshIntervalInSeconds==0 ||
-                (System.currentTimeMillis()-lastCheckedDisk)>=refreshIntervalInSeconds*1000;
-        if ( timeToFlush ) {
-            // throw away all pre-compiled references
-            templates.clear();
-            lastCheckedDisk = System.currentTimeMillis();
-        }
-    }
+	protected void checkRefreshInterval() {
+		if ( templatesDefinedInGroupFile ) {
+			return;
+		}
+		boolean timeToFlush=refreshIntervalInSeconds==0 ||
+				(System.currentTimeMillis()-lastCheckedDisk)>=refreshIntervalInSeconds*1000;
+		if ( timeToFlush ) {
+			// throw away all pre-compiled references
+			templates.clear();
+			lastCheckedDisk = System.currentTimeMillis();
+		}
+	}
 
-    protected StringTemplate loadTemplate(String name, BufferedReader r)
-            throws IOException
-    {
-        String line;
-        String nl = System.getProperty("line.separator");
-        StringBuffer buf = new StringBuffer(300);
-        while ((line = r.readLine()) != null) {
-            buf.append(line);
-            buf.append(nl);
-        }
+	protected StringTemplate loadTemplate(String name, BufferedReader r)
+			throws IOException
+	{
+		String line;
+		String nl = System.getProperty("line.separator");
+		StringBuffer buf = new StringBuffer(300);
+		while ((line = r.readLine()) != null) {
+			buf.append(line);
+			buf.append(nl);
+		}
 		// strip newlines etc.. from front/back since filesystem
 		// may add newlines etc...
 		String pattern = buf.toString().trim();
@@ -517,19 +520,19 @@ public class StringTemplateGroup {
 			error("no text in template '"+name+"'");
 			return null;
 		}
-        return defineTemplate(name, pattern);
-    }
+		return defineTemplate(name, pattern);
+	}
 
-    /** Load a template whose name is derived from the template filename.
-     *  If there is no root directory, try to load the template from
-     *  the classpath.  If there is a rootDir, try to load the file
-     *  from there.
-     */
-    protected StringTemplate loadTemplateFromBeneathRootDirOrCLASSPATH(String fileName)
-    {
+	/** Load a template whose name is derived from the template filename.
+	 *  If there is no root directory, try to load the template from
+	 *  the classpath.  If there is a rootDir, try to load the file
+	 *  from there.
+	 */
+	protected StringTemplate loadTemplateFromBeneathRootDirOrCLASSPATH(String fileName)
+	{
 		StringTemplate template = null;
-        String name = getTemplateNameFromFileName(fileName);
-        // if no rootDir, try to load as a resource in CLASSPATH
+		String name = getTemplateNameFromFileName(fileName);
+		// if no rootDir, try to load as a resource in CLASSPATH
 		if ( rootDir==null ) {
 			ClassLoader cl = Thread.currentThread().getContextClassLoader();
 			InputStream is = cl.getResourceAsStream(fileName);
@@ -539,12 +542,12 @@ public class StringTemplateGroup {
 			BufferedReader br = null;
 			try {
 				br = new BufferedReader(getInputStreamReader(is));
-			    template = loadTemplate(name, br);
+				template = loadTemplate(name, br);
 				br.close();
 				br=null;
 			}
 			catch (IOException ioe) {
-                if ( br!=null ) {
+				if ( br!=null ) {
 					try {
 						br.close();
 					}
@@ -555,22 +558,22 @@ public class StringTemplateGroup {
 			}
 			return template;
 		}
-        // load via rootDir
+		// load via rootDir
 		template = loadTemplate(name, rootDir+"/"+fileName);
 		return template;
-    }
+	}
 
-    /** (public so that people can override behavior; not a general
-     *  purpose method)
-     */
+	/** (public so that people can override behavior; not a general
+	 *  purpose method)
+	 */
 	public String getFileNameFromTemplateName(String templateName) {
 		return templateName+".st";
 	}
 
 	/** Convert a filename relativePath/name.st to relativePath/name.
-     *  (public so that people can override behavior; not a general
-     *  purpose method)
-     */
+	 *  (public so that people can override behavior; not a general
+	 *  purpose method)
+	 */
 	public String getTemplateNameFromFileName(String fileName) {
 		String name = fileName;
 		int suffix = name.lastIndexOf(".st");
@@ -581,7 +584,7 @@ public class StringTemplateGroup {
 	}
 
 	protected StringTemplate loadTemplate(String name, String fileName)
-    {
+	{
 		BufferedReader br = null;
 		StringTemplate template = null;
 		try {
@@ -625,28 +628,28 @@ public class StringTemplateGroup {
 	}
 
 	/** Define an examplar template; precompiled and stored
-     *  with no attributes.  Remove any previous definition.
-     */
-    public StringTemplate defineTemplate(String name,
-                                         String template)
-    {
+	 *  with no attributes.  Remove any previous definition.
+	 */
+	public StringTemplate defineTemplate(String name,
+										 String template)
+	{
 		//System.out.println("defineTemplate "+getName()+"::"+name);
-        StringTemplate st = createStringTemplate();
-        st.setName(name);
+		StringTemplate st = createStringTemplate();
+		st.setName(name);
 		st.setGroup(this);
 		st.setNativeGroup(this);
-        st.setTemplate(template);
+		st.setTemplate(template);
 		st.setErrorListener(listener);
-        templates.put(name, st);
-        return st;
-    }
+		templates.put(name, st);
+		return st;
+	}
 
 	/** Track all references to regions <@foo>...<@end> or <@foo()>.  */
 	public StringTemplate defineRegionTemplate(String enclosingTemplateName,
 											   String regionName,
-                                         	   String template,
+											   String template,
 											   int type)
-    {
+	{
 		String mangledName =
 			getMangledRegionName(enclosingTemplateName,regionName);
 		StringTemplate regionST = defineTemplate(mangledName, template);
@@ -658,9 +661,9 @@ public class StringTemplateGroup {
 	/** Track all references to regions <@foo>...<@end> or <@foo()>.  */
 	public StringTemplate defineRegionTemplate(StringTemplate enclosingTemplate,
 											   String regionName,
-                                         	   String template,
+											   String template,
 											   int type)
-    {
+	{
 		StringTemplate regionST =
 			defineRegionTemplate(enclosingTemplate.getOutermostName(),
 								 regionName,
@@ -702,19 +705,19 @@ public class StringTemplateGroup {
 									 mangledName.lastIndexOf("__"));
 	}
 
-    /** Make name and alias for target.  Replace any previous def of name */
-    public StringTemplate defineTemplateAlias(String name, String target) {
-        StringTemplate targetST=getTemplateDefinition(target);
-        if ( targetST==null ){
-            error("cannot alias "+name+" to undefined template: "+target);
-            return null;
-        }
-        templates.put(name, targetST);
-        return targetST;
-    }
+	/** Make name and alias for target.  Replace any previous def of name */
+	public StringTemplate defineTemplateAlias(String name, String target) {
+		StringTemplate targetST=getTemplateDefinition(target);
+		if ( targetST==null ){
+			error("cannot alias "+name+" to undefined template: "+target);
+			return null;
+		}
+		templates.put(name, targetST);
+		return targetST;
+	}
 
-    public boolean isDefinedInThisGroup(String name) {
-        StringTemplate st = (StringTemplate)templates.get(name);
+	public boolean isDefinedInThisGroup(String name) {
+		StringTemplate st = (StringTemplate)templates.get(name);
 		if ( st!=null ) {
 			if ( st.isRegion() ) {
 				// don't allow redef of @t.r() ::= "..." or <@r>...<@end>
@@ -725,12 +728,12 @@ public class StringTemplateGroup {
 			return true;
 		}
 		return false;
-    }
+	}
 
-    /** Get the ST for 'name' in this group only */
+	/** Get the ST for 'name' in this group only */
 	public StringTemplate getTemplateDefinition(String name) {
-        return (StringTemplate)templates.get(name);
-    }
+		return (StringTemplate)templates.get(name);
+	}
 
 	/** Is there *any* definition for template 'name' in this template
 	 *  or above it in the group hierarchy?
@@ -744,21 +747,21 @@ public class StringTemplateGroup {
 		}
 	}
 
-    protected void parseGroup(Reader r) {
-        try {
-            GroupLexer lexer = new GroupLexer(r);
-            GroupParser parser = new GroupParser(lexer);
-            parser.group(this);
-            //System.out.println("read group\n"+this.toString());
-        }
-        catch (Exception e) {
-            String name = "<unknown>";
-            if ( getName()!=null ) {
-                name = getName();
-            }
-            error("problem parsing group "+name+": "+e, e);
-        }
-    }
+	protected void parseGroup(Reader r) {
+		try {
+			GroupLexer lexer = new GroupLexer(r);
+			GroupParser parser = new GroupParser(lexer);
+			parser.group(this);
+			//System.out.println("read group\n"+this.toString());
+		}
+		catch (Exception e) {
+			String name = "<unknown>";
+			if ( getName()!=null ) {
+				name = getName();
+			}
+			error("problem parsing group "+name+": "+e, e);
+		}
+	}
 
 	/** verify that this group satisfies its interfaces */
 	protected void verifyInterfaceImplementations() {
@@ -778,27 +781,27 @@ public class StringTemplateGroup {
 		}
 	}
 
-    public int getRefreshInterval() {
-        return refreshIntervalInSeconds;
-    }
+	public int getRefreshInterval() {
+		return refreshIntervalInSeconds;
+	}
 
-    /** How often to refresh all templates from disk.  This is a crude
-     *  mechanism at the moment--just tosses everything out at this
-     *  frequency.  Set interval to 0 to refresh constantly (no caching).
-     *  Set interval to a huge number like MAX_INT to have no refreshing
-     *  at all (DEFAULT); it will cache stuff.
-     */
-    public void setRefreshInterval(int refreshInterval) {
-        this.refreshIntervalInSeconds = refreshInterval;
-    }
+	/** How often to refresh all templates from disk.  This is a crude
+	 *  mechanism at the moment--just tosses everything out at this
+	 *  frequency.  Set interval to 0 to refresh constantly (no caching).
+	 *  Set interval to a huge number like MAX_INT to have no refreshing
+	 *  at all (DEFAULT); it will cache stuff.
+	 */
+	public void setRefreshInterval(int refreshInterval) {
+		this.refreshIntervalInSeconds = refreshInterval;
+	}
 
 	public void setErrorListener(StringTemplateErrorListener listener) {
 		this.listener = listener;
 	}
 
-    public StringTemplateErrorListener getErrorListener() {
-        return listener;
-    }
+	public StringTemplateErrorListener getErrorListener() {
+		return listener;
+	}
 
 	/** Specify a StringTemplateWriter implementing class to use for
 	 *  filtering output
@@ -869,14 +872,14 @@ public class StringTemplateGroup {
 		return renderer;
 	}
 
-	public void cacheObjectProperty(Object o, String propertyName, Object value) {
-		Object key = new ObjPropCache(o,propertyName);
-		objectPropertyCache.put(key,value);
+	public void cacheClassProperty(Class c, String propertyName, Member member) {
+		Object key = new ClassPropCacheKey(c,propertyName);
+		classPropertyCache.put(key,member);
 	}
 
-	public Object getCachedObjectProperty(final Object o, final String propertyName) {
-		Object key = new ObjPropCache(o,propertyName);
-		return objectPropertyCache.get(key);
+	public Member getCachedClassProperty(Class c, String propertyName) {
+		Object key = new ClassPropCacheKey(c,propertyName);
+		return (Member)classPropertyCache.get(key);
 	}
 
 	public Map getMap(String name) {
@@ -938,7 +941,7 @@ public class StringTemplateGroup {
 				e.printStackTrace();
 			}
 		}
-    }
+	}
 
 	public Set getTemplateNames() {
 		return templates.keySet();
@@ -949,21 +952,21 @@ public class StringTemplateGroup {
 	}
 
 	public String toString(boolean showTemplatePatterns) {
-        StringBuffer buf = new StringBuffer();
+		StringBuffer buf = new StringBuffer();
 		Set templateNameSet = templates.keySet();
 		List sortedNames = new ArrayList(templateNameSet);
 		Collections.sort(sortedNames);
 		Iterator iter = sortedNames.iterator();
-        buf.append("group "+getName()+";\n");
-        StringTemplate formalArgs = new StringTemplate("$args;separator=\",\"$");
-        while (iter.hasNext()) {
-            String tname = (String) iter.next();
-            StringTemplate st = (StringTemplate)templates.get(tname);
+		buf.append("group "+getName()+";\n");
+		StringTemplate formalArgs = new StringTemplate("$args;separator=\",\"$");
+		while (iter.hasNext()) {
+			String tname = (String) iter.next();
+			StringTemplate st = (StringTemplate)templates.get(tname);
 			if ( st!=NOT_FOUND_ST ) {
-                formalArgs = formalArgs.getInstanceOf();
-                formalArgs.setAttribute("args", st.getFormalArguments());
-                buf.append(tname+"("+formalArgs+")");
-                if ( showTemplatePatterns ) {
+				formalArgs = formalArgs.getInstanceOf();
+				formalArgs.setAttribute("args", st.getFormalArguments());
+				buf.append(tname+"("+formalArgs+")");
+				if ( showTemplatePatterns ) {
 					buf.append(" ::= <<");
 					buf.append(st.getTemplate());
 					buf.append(">>\n");
@@ -972,7 +975,7 @@ public class StringTemplateGroup {
 					buf.append('\n');
 				}
 			}
-        }
-        return buf.toString();
-    }
+		}
+		return buf.toString();
+	}
 }

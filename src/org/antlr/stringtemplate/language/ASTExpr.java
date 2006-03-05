@@ -34,9 +34,7 @@ import org.antlr.stringtemplate.*;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.util.*;
 
 /** A single string template expression enclosed in $...; separator=...$
@@ -51,7 +49,7 @@ public class ASTExpr extends Expr {
 
 	// used temporarily for checking obj.prop cache
 	public static int totalObjPropRefs = 0;
-	public static int totalObjPropComputations = 0;
+	public static int totalReflectionLookups = 0;
 
 	AST exprTree = null;
 
@@ -281,6 +279,7 @@ public class ASTExpr extends Expr {
 			return null;
 		}
 		totalObjPropRefs++;
+		/*
 		// see if property is cached in group's cache
 		Object cachedValue =
 			self.getGroup().getCachedObjectProperty(o,propertyName);
@@ -292,11 +291,15 @@ public class ASTExpr extends Expr {
 		// apply templates to the elements etc...
 		value = convertArrayToList(value);
 		self.getGroup().cacheObjectProperty(o,propertyName,value);
+		*/
+		Object value = rawGetObjectProperty(self, o, propertyName);
+		// take care of array properties...convert to a List so we can
+		// apply templates to the elements etc...
+		value = convertArrayToList(value);
 		return value;
 	}
 
 	protected Object rawGetObjectProperty(StringTemplate self, Object o, String propertyName) {
-		totalObjPropComputations++;
 		Class c = o.getClass();
         Object value = null;
 
@@ -333,22 +336,44 @@ public class ASTExpr extends Expr {
         }
 
 		// try getXXX and isXXX properties
+
+		// check cache
+		Method m = null;
+		Member cachedMember =
+			self.getGroup().getCachedClassProperty(c,propertyName);
+		if ( cachedMember!=null ) {
+			try {
+				if ( cachedMember instanceof Method ) {
+					m = (Method)cachedMember;
+					value = invokeMethod(m, o, value);
+				}
+				else {
+					// must be a field
+					Field f = (Field)cachedMember;
+					value = accessField(f, o, value);
+				}
+			}
+			catch (Exception e) {
+				self.error("Can't get property "+propertyName+
+					" from "+c.getName()+" instance", e);
+			}
+			return value;
+		}
+
+		// must look up using reflection
 		String methodSuffix = Character.toUpperCase(propertyName.charAt(0))+
-				propertyName.substring(1,propertyName.length());
-		Method m = getMethod(c,"get"+methodSuffix);
+			propertyName.substring(1,propertyName.length());
+		totalReflectionLookups++;
+		m = getMethod(c,"get"+methodSuffix);
 		if ( m==null ) {
+			totalReflectionLookups++;
 			m = getMethod(c, "is"+methodSuffix);
 		}
 		if ( m != null ) {
+			// save to avoid lookup later
+			self.getGroup().cacheClassProperty(c,propertyName,m);
 			try {
-				try {
-					// make sure it's accessible (stupid java)
-					m.setAccessible(true);
-				}
-				catch (SecurityException se) {
-					; // oh well; security won't let us
-				}
-				value = m.invoke(o,null);
+				value = invokeMethod(m, o, value);
 			}
 			catch (Exception e) {
 				self.error("Can't get property "+propertyName+" using method get/is"+methodSuffix+
@@ -358,16 +383,11 @@ public class ASTExpr extends Expr {
 		else {
 			// try for a visible field
 			try {
+				totalReflectionLookups++;
 				Field f = c.getField(propertyName);
+				self.getGroup().cacheClassProperty(c,propertyName,f);
 				try {
-					try {
-						// make sure it's accessible (stupid java)
-						f.setAccessible(true);
-					}
-					catch (SecurityException se) {
-						; // oh well; security won't let us
-					}
-					value = f.get(o);
+					value = accessField(f, o, value);
 				}
 				catch (IllegalAccessException iae) {
 					self.error("Can't access property "+propertyName+" using method get/is"+methodSuffix+
@@ -382,6 +402,30 @@ public class ASTExpr extends Expr {
 
         return value;
     }
+
+	protected Object accessField(Field f, Object o, Object value) throws IllegalAccessException {
+		try {
+			// make sure it's accessible (stupid java)
+			f.setAccessible(true);
+		}
+		catch (SecurityException se) {
+			; // oh well; security won't let us
+		}
+		value = f.get(o);
+		return value;
+	}
+
+	protected Object invokeMethod(Method m, Object o, Object value) throws IllegalAccessException, InvocationTargetException {
+		try {
+			// make sure it's accessible (stupid java)
+			m.setAccessible(true);
+		}
+		catch (SecurityException se) {
+			; // oh well; security won't let us
+		}
+		value = m.invoke(o,null);
+		return value;
+	}
 
 	protected Method getMethod(Class c, String methodName) {
 		Method m;
