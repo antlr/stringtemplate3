@@ -46,6 +46,10 @@ public class ASTExpr extends Expr {
 	public static final String DEFAULT_INDEX_VARIABLE_NAME = "i";
 	public static final String DEFAULT_INDEX0_VARIABLE_NAME = "i0";
 	public static final String DEFAULT_MAP_VALUE_NAME = "_default_";
+	public static final String DEFAULT_MAP_KEY_NAME = "key";
+
+	/** Used to indicate "default:key" in maps within groups */
+	public static final StringTemplate MAP_KEY_VALUE = new StringTemplate();
 
 	// used temporarily for checking obj.prop cache
 	public static int totalObjPropRefs = 0;
@@ -321,16 +325,20 @@ public class ASTExpr extends Expr {
             }
         }
 
-        // Special case: if it's a HashMap, Hashtable then pull using
-        // key not the property method.  Do NOT allow general Map interface
-        // as people could pass in their database masquerading as a Map.
+        // Special case: if it's a Map then pull using
+        // key not the property method.
         if ( o instanceof Map ) {
             Map map = (Map)o;
-            value = map.get(propertyName);
-			if ( value==null ) {
-				// no property defined; if a map in this group
-				// then there may be a default value
-				value = map.get(DEFAULT_MAP_VALUE_NAME);
+			if ( map.containsKey(propertyName) ) {
+				value = map.get(propertyName);
+			}
+			else {
+				if ( map.containsKey(DEFAULT_MAP_VALUE_NAME) ) {
+					value = map.get(DEFAULT_MAP_VALUE_NAME);
+				}
+			}
+			if ( value == MAP_KEY_VALUE ) {
+				value = propertyName;
 			}
 			return value;
         }

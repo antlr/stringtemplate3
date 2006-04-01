@@ -3148,6 +3148,24 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testMapMissingDefaultValueIsEmpty() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
+				"var(type,w,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("w", "L");
+		st.setAttribute("type", "double"); // double not in typeInit map
+		st.setAttribute("name", "x");
+		String expecting = "double x = ;"; // weird, but tests default value is key
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
 	public void testMapHiddenByFormalArg() throws Exception {
 		String templates =
 				"group test;" +newline+
@@ -3165,6 +3183,23 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testMapEmptyValueAndAngleBracketStrings() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"float\":, \"double\":<<0.0L>>] "+newline+
+				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("type", "float");
+		st.setAttribute("name", "x");
+		String expecting = "float x = ;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
 	public void testMapDefaultValue() throws Exception {
 		String templates =
 				"group test;" +newline+
@@ -3178,6 +3213,40 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("type", "UserRecord");
 		st.setAttribute("name", "x");
 		String expecting = "UserRecord x = null;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testMapEmptyDefaultValue() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"default\":] "+newline+
+				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("type", "UserRecord");
+		st.setAttribute("name", "x");
+		String expecting = "UserRecord x = ;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testMapEmptyDefaultValueIsKey() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0\", \"default\":key] "+newline+
+				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("type", "UserRecord");
+		st.setAttribute("name", "x");
+		String expecting = "UserRecord x = UserRecord;";
 		String result = st.toString();
 		assertEqual(result, expecting);
 	}

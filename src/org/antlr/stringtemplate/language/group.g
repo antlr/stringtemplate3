@@ -204,18 +204,29 @@ Map m=null;
 	;
 
 map returns [Map mapping=new HashMap()]
-	:   LBRACK keyValuePair[mapping] (COMMA keyValuePair[mapping])* RBRACK
+{
+StringTemplate v = null;
+}
+	:   LBRACK
+			keyValuePair[mapping] (COMMA keyValuePair[mapping])*
+			(	COMMA "default" COLON v=keyValue
+	   	 		{mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME,v);}
+			)?
+		RBRACK
 	;
 
 keyValuePair[Map mapping]
-	:	key1:STRING COLON s1:STRING
-	 	{mapping.put(key1.getText(), new StringTemplate(group,s1.getText()));}
-	|	key2:STRING COLON s2:BIGSTRING
-		{mapping.put(key2.getText(), new StringTemplate(group,s2.getText()));}
-	|	"default" COLON s3:STRING
-	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, new StringTemplate(group,s3.getText()));}
-	|	"default" COLON s4:BIGSTRING
-	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, new StringTemplate(group,s4.getText()));}
+{
+StringTemplate v = null;
+}
+	:	key:STRING COLON v=keyValue {mapping.put(key.getText(), v);}
+	;
+
+keyValue returns [StringTemplate value=null]
+	:	s1:BIGSTRING	{value = new StringTemplate(group,s1.getText());}
+	|	s2:STRING		{value = new StringTemplate(group,s2.getText());}
+	|	"key"			{value = ASTExpr.MAP_KEY_VALUE;}
+	|					{value = null;}
 	;
 
 class GroupLexer extends Lexer;
