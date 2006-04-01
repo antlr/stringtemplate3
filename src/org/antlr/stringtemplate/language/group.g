@@ -73,6 +73,9 @@ public void reportError(RecognitionException e) {
 }
 
 group[StringTemplateGroup g]
+{
+this.group = g;
+}
 	:	"group" name:ID {g.setName(name.getText());}
 		( COLON s:ID {g.setSuperGroup(s.getText());} )?
 	    ( "implements" i:ID {g.implementInterface(i.getText());}
@@ -205,12 +208,14 @@ map returns [Map mapping=new HashMap()]
 	;
 
 keyValuePair[Map mapping]
-	:	key1:STRING COLON s1:STRING 	{mapping.put(key1.getText(), s1.getText());}
-	|	key2:STRING COLON s2:BIGSTRING  {mapping.put(key2.getText(), s2.getText());}
+	:	key1:STRING COLON s1:STRING
+	 	{mapping.put(key1.getText(), new StringTemplate(group,s1.getText()));}
+	|	key2:STRING COLON s2:BIGSTRING
+		{mapping.put(key2.getText(), new StringTemplate(group,s2.getText()));}
 	|	"default" COLON s3:STRING
-	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, s3.getText());}
+	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, new StringTemplate(group,s3.getText()));}
 	|	"default" COLON s4:BIGSTRING
-	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, s4.getText());}
+	    {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, new StringTemplate(group,s4.getText()));}
 	;
 
 class GroupLexer extends Lexer;

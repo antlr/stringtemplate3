@@ -29,7 +29,6 @@ package org.antlr.stringtemplate.test;
 
 import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
-import org.antlr.stringtemplate.language.ASTExpr;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -3127,6 +3126,24 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("type", "int");
 		st.setAttribute("name", "x");
 		String expecting = "int x = 0;";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testMapValuesAreTemplates() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0<w>\", \"float\":\"0.0<w>\"] "+newline+
+				"var(type,w,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+						AngleBracketTemplateLexer.class);
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("w", "L");
+		st.setAttribute("type", "int");
+		st.setAttribute("name", "x");
+		String expecting = "int x = 0L;";
 		String result = st.toString();
 		assertEqual(result, expecting);
 	}
