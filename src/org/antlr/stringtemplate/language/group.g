@@ -225,7 +225,8 @@ StringTemplate v = null;
 keyValue returns [StringTemplate value=null]
 	:	s1:BIGSTRING	{value = new StringTemplate(group,s1.getText());}
 	|	s2:STRING		{value = new StringTemplate(group,s2.getText());}
-	|	"key"			{value = ASTExpr.MAP_KEY_VALUE;}
+	|	k:ID			{k.getText().equals("key")}?
+						{value = ASTExpr.MAP_KEY_VALUE;}
 	|					{value = null;}
 	;
 
