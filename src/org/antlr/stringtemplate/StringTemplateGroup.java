@@ -30,6 +30,7 @@ package org.antlr.stringtemplate;
 import org.antlr.stringtemplate.language.DefaultTemplateLexer;
 import org.antlr.stringtemplate.language.GroupLexer;
 import org.antlr.stringtemplate.language.GroupParser;
+import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
 
 import java.util.*;
 import java.io.*;
@@ -233,11 +234,11 @@ public class StringTemplateGroup {
 	 *  ...
 	 */
 	public StringTemplateGroup(Reader r) {
-		this(r,null,DEFAULT_ERROR_LISTENER,(StringTemplateGroup)null);
+		this(r,AngleBracketTemplateLexer.class,DEFAULT_ERROR_LISTENER,(StringTemplateGroup)null);
 	}
 
 	public StringTemplateGroup(Reader r, StringTemplateErrorListener errors) {
-		this(r,null,errors,(StringTemplateGroup)null);
+		this(r,AngleBracketTemplateLexer.class,errors,(StringTemplateGroup)null);
 	}
 
 	public StringTemplateGroup(Reader r, Class lexer) {
