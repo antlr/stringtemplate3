@@ -351,7 +351,8 @@ public class StringTemplateGroup {
 
 	/** StringTemplate object factory; each group can have its own. */
 	public StringTemplate createStringTemplate() {
-		return new StringTemplate();
+		StringTemplate st = new StringTemplate();
+		return st;
 	}
 
 	/** A support routine that gets an instance of name knowing which

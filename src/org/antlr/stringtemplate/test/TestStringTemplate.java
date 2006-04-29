@@ -29,6 +29,7 @@ package org.antlr.stringtemplate.test;
 
 import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
+import org.antlr.stringtemplate.language.DefaultTemplateLexer;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -234,7 +235,9 @@ public class TestStringTemplate extends TestSuite {
 		writeFile(tmpdir, "testG.stg", templates);
 
 		StringTemplateGroup group =
-				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"),
+										DefaultTemplateLexer.class,
+										errors);
 		StringTemplate st = group.getInstanceOf("main");
 		st.setAttribute("x", "foo");
 
@@ -328,7 +331,8 @@ public class TestStringTemplate extends TestSuite {
                 "bold(item) ::= \"<b>$item$</b>\""+newline+
                 "duh() ::= <<"+newline+"xx"+newline+">>"+newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
 
         String expecting = "group test;" +newline+
 				"bold(item) ::= <<<b>$item$</b>>>" +newline+
@@ -356,7 +360,8 @@ public class TestStringTemplate extends TestSuite {
                 "t4(a,b,c,d) ::= <<$a$ $b$ $c$ $d$>>"+newline
                 ;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
 
         // check setting unknown arg in empty formal list
         StringTemplate a = group.getInstanceOf("t");
@@ -405,7 +410,8 @@ public class TestStringTemplate extends TestSuite {
                 ">>"+newline +
                 "body() ::= \"<font face=$font$>my body</font>\"" +newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         t.setAttribute("title","my title");
         t.setAttribute("font","Helvetica"); // body() will see it
@@ -418,7 +424,8 @@ public class TestStringTemplate extends TestSuite {
                 "page() ::= <<$body(font=\"Times\")$>>"+newline +
                 "body(font) ::= \"<font face=$font$>my body</font>\"" +newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         String expecting = "<font face=Times>my body</font>";
         assertEqual(t.toString(), expecting);
@@ -430,7 +437,8 @@ public class TestStringTemplate extends TestSuite {
                 "page(x) ::= <<$body(font=x)$>>"+newline +
                 "body() ::= \"<font face=$font$>my body</font>\"" +newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         t.setAttribute("x","Times");
         String error = "";
@@ -450,7 +458,8 @@ public class TestStringTemplate extends TestSuite {
                 "page(name) ::= <<$name:bold(font=\"Times\")$>>"+newline +
                 "bold(font) ::= \"<font face=$font$><b>$it$</b></font>\"" +newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         t.setAttribute("name", "Ter");
         String expecting = "<font face=Times><b>Ter</b></font>";
@@ -463,7 +472,8 @@ public class TestStringTemplate extends TestSuite {
                 "page(name,x) ::= <<$name:bold(font=x)$>>"+newline +
                 "bold() ::= \"<font face=$font$><b>$it$</b></font>\"" +newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         t.setAttribute("x","Times");
         t.setAttribute("name", "Ter");
@@ -484,7 +494,8 @@ public class TestStringTemplate extends TestSuite {
                 "page() ::= <<$bold()$>>"+newline +
                 "bold() ::= \"$name$\"" +newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         String error = "";
         try {
@@ -503,7 +514,8 @@ public class TestStringTemplate extends TestSuite {
                 "page() ::= <<$bold()$>>"+newline +
                 "bold() ::= \"$it$\"" +newline;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates));
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         String error = "";
         try {
@@ -525,8 +537,7 @@ public class TestStringTemplate extends TestSuite {
         // mainly testing to ensure we don't get parse errors of above
         StringTemplateGroup group =
                 new StringTemplateGroup(
-                        new StringReader(templates),
-                        AngleBracketTemplateLexer.class);
+                        new StringReader(templates));
         StringTemplate t = group.getInstanceOf("a");
         t.setAttribute("s","Test");
         String expecting = "case 1 : Test break;";
@@ -548,7 +559,8 @@ public class TestStringTemplate extends TestSuite {
 				"group test;" +newline+
 				"a() ::= \"X$@r()$Y\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates));
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XY";
@@ -560,7 +572,8 @@ public class TestStringTemplate extends TestSuite {
 				"group test;" +newline+
 				"a() ::= \"X$@r$blort$@end$Y\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates));
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
@@ -572,8 +585,7 @@ public class TestStringTemplate extends TestSuite {
 				"group test;" +newline+
 				"a() ::= \"X<@r()>Y\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XY";
@@ -585,8 +597,7 @@ public class TestStringTemplate extends TestSuite {
 				"group test;" +newline+
 				"a() ::= \"X<@r>blort<@end>Y\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
@@ -601,8 +612,7 @@ public class TestStringTemplate extends TestSuite {
 				"<@end>" +newline+
 				"Y\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
@@ -615,8 +625,7 @@ public class TestStringTemplate extends TestSuite {
 				"a() ::= \"X<@r()>Y\"" +newline+
 				"@a.r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XfooY";
@@ -629,8 +638,7 @@ public class TestStringTemplate extends TestSuite {
 				"a(v) ::= \"X<if(v)>A<@r()>B<endif>Y\"" +newline+
 				"@a.r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("a");
 		st.setAttribute("v", "true");
 		String result = st.toString();
@@ -646,7 +654,6 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class,
 										errors);
 		StringTemplate st = group.getInstanceOf("a");
 		st.setAttribute("v", "true");
@@ -665,8 +672,7 @@ public class TestStringTemplate extends TestSuite {
 				"a() ::= \"X<@r()>Y\"" +
 				"@a.r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates1),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates1));
 
 		String templates2 =
 				"group sub;" +newline+
@@ -689,8 +695,7 @@ public class TestStringTemplate extends TestSuite {
 				"a() ::= \"X<@r()>Y\"" +
 				"@a.r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates1),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates1));
 
 		String templates2 =
 				"group sub;" +newline+
@@ -726,8 +731,7 @@ public class TestStringTemplate extends TestSuite {
 				"a() ::= \"X<@r()>Y\"" +
 				"@a.r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates1),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates1));
 
 		String templates2 =
 				"group sub;" +newline+
@@ -758,8 +762,7 @@ public class TestStringTemplate extends TestSuite {
 				"group super;" +newline+
 				"a() ::= \"X<@r>foo<@end>Y\""+newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates1),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates1));
 
 		String templates2 =
 				"group sub;" +newline+
@@ -785,7 +788,6 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class,
 										errors);
 		StringTemplate st = group.getInstanceOf("a");
 		st.toString();
@@ -804,7 +806,6 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class,
 										errors);
 		StringTemplate st = group.getInstanceOf("a");
 		st.toString();
@@ -819,8 +820,7 @@ public class TestStringTemplate extends TestSuite {
 			"a() ::= \"X<@r()>Y\"" +
 			"@a.r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-			new StringTemplateGroup(new StringReader(templates1),
-									AngleBracketTemplateLexer.class);
+			new StringTemplateGroup(new StringReader(templates1));
 
 		String templates2 =
 			"group sub;" +newline+
@@ -848,7 +848,6 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class,
 										errors);
 		StringTemplate st = group.getInstanceOf("a");
 		st.toString();
@@ -863,8 +862,7 @@ public class TestStringTemplate extends TestSuite {
 			"a() ::= \"X<@r()>Y\"" +
 			"@a.r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-			new StringTemplateGroup(new StringReader(templates1),
-									AngleBracketTemplateLexer.class);
+			new StringTemplateGroup(new StringReader(templates1));
 
 		String templates2 =
 			"group sub;" +newline+
@@ -889,7 +887,10 @@ public class TestStringTemplate extends TestSuite {
 				"a() ::= \"X$@r$foo\"" +newline;
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),errors);
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors,
+										null);
 		StringTemplate st = group.getInstanceOf("a");
 		st.toString();
 		String result = errors.toString();
@@ -905,7 +906,6 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates),
-										AngleBracketTemplateLexer.class,
 										errors);
 		StringTemplate st = group.getInstanceOf("a");
 		st.toString();
@@ -978,16 +978,14 @@ public class TestStringTemplate extends TestSuite {
 			"labels() ::= \"L\"" +newline
 			;
 		StringTemplateGroup base =
-			new StringTemplateGroup(new StringReader(basetemplates),
-									AngleBracketTemplateLexer.class);
+			new StringTemplateGroup(new StringReader(basetemplates));
 		String subtemplates =
 			"group sub;" +newline+
 			"decls() ::= \"<super.decls()>\""+newline+
 			"labels() ::= \"SL\"" +newline
 			;
 		StringTemplateGroup sub =
-				new StringTemplateGroup(new StringReader(subtemplates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(subtemplates));
 		sub.setSuperGroup(base);
 		StringTemplate st = sub.getInstanceOf("decls");
 		String expecting = "DSL";
@@ -1000,8 +998,7 @@ public class TestStringTemplate extends TestSuite {
 				"group super;" +newline+
 				"r() ::= \"foo\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates1),
-										AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates1));
 
 		String templates2 =
 				"group sub;" +newline+
@@ -1395,7 +1392,8 @@ public class TestStringTemplate extends TestSuite {
     public void testFindTemplateInCLASSPATH() throws Exception {
         // Look for templates in CLASSPATH as resources
         StringTemplateGroup mgroup =
-                new StringTemplateGroup("method stuff", AngleBracketTemplateLexer.class);
+                new StringTemplateGroup("method stuff",
+										AngleBracketTemplateLexer.class);
         StringTemplate m = mgroup.getInstanceOf("org/antlr/stringtemplate/test/method");
         // "method.st" references body() so "body.st" will be loaded too
         m.setAttribute("visibility", "public");
@@ -1905,7 +1903,9 @@ public class TestStringTemplate extends TestSuite {
                 ">>"+newline;
         StringTemplateErrorListener errors = new ErrorBuffer();
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates), errors);
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors);
         StringTemplate t = group.getInstanceOf("list");
         t.setAttribute("names", "Terence");
         t.setAttribute("names", "Jim");
@@ -1927,7 +1927,9 @@ public class TestStringTemplate extends TestSuite {
                 ">>"+newline;
         StringTemplateErrorListener errors = new ErrorBuffer();
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates), errors);
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors);
         StringTemplate t = group.getInstanceOf("list");
         t.setAttribute("names", "Terence\nis\na\nmaniac");
         t.setAttribute("names", "Jim");
@@ -1954,7 +1956,9 @@ public class TestStringTemplate extends TestSuite {
 				">>"+newline;
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates), errors);
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors);
 		StringTemplate t = group.getInstanceOf("list");
 		t.setAttribute("names", "Terence\n\nis a maniac");
 		String expecting =
@@ -1976,7 +1980,9 @@ public class TestStringTemplate extends TestSuite {
                 ">>"+newline;
         StringTemplateErrorListener errors = new ErrorBuffer();
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates), errors);
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors);
         StringTemplate t = group.getInstanceOf("list");
         t.setAttribute("names", "Terence");
         t.setAttribute("names", "Jim");
@@ -2009,7 +2015,9 @@ public class TestStringTemplate extends TestSuite {
                 ;
         StringTemplateErrorListener errors = new ErrorBuffer();
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates), errors);
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors);
         StringTemplate t = group.getInstanceOf("method");
         t.setAttribute("name", "foo");
         StringTemplate s1 = group.getInstanceOf("assign");
@@ -2213,7 +2221,9 @@ public class TestStringTemplate extends TestSuite {
                 ;
         StringTemplateErrorListener errors = new ErrorBuffer();
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates), errors);
+                new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors);
         StringTemplate outputST = group.getInstanceOf("output");
         StringTemplate bodyST1 = group.getInstanceOf("mybody");
         StringTemplate bodyST2 = group.getInstanceOf("mybody");
@@ -2233,8 +2243,7 @@ public class TestStringTemplate extends TestSuite {
                 "ifstat(stats) ::= \"IF true then <stats>\""+newline
                 ;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates),
-                        AngleBracketTemplateLexer.class);
+                new StringTemplateGroup(new StringReader(templates));
         StringTemplate b = group.getInstanceOf("block");
         b.setAttribute("stats", group.getInstanceOf("ifstat"));
         b.setAttribute("stats", group.getInstanceOf("ifstat"));
@@ -2256,8 +2265,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate.setLintMode(true);
         StringTemplate.resetTemplateCounter();
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates),
-                        AngleBracketTemplateLexer.class);
+                new StringTemplateGroup(new StringReader(templates));
         StringTemplate b = group.getInstanceOf("block");
         StringTemplate ifstat = group.getInstanceOf("ifstat");
         b.setAttribute("stats", ifstat); // block has if stat
@@ -2295,8 +2303,7 @@ public class TestStringTemplate extends TestSuite {
                 "block(stats) ::= \"{<stats>}\""
                 ;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates),
-                        AngleBracketTemplateLexer.class);
+                new StringTemplateGroup(new StringReader(templates));
         StringTemplate b = group.getInstanceOf("block");
         b.setAttribute("stats", group.getInstanceOf("block"));
         String expecting ="{{}}";
@@ -2313,8 +2320,7 @@ public class TestStringTemplate extends TestSuite {
                 "other ::= page"+newline
                 ;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates),
-                        AngleBracketTemplateLexer.class);
+                new StringTemplateGroup(new StringReader(templates));
         StringTemplate b = group.getInstanceOf("other");  // alias for page
         b.setAttribute("name", "Ter");
         String expecting ="name is Ter";
@@ -2337,8 +2343,7 @@ public class TestStringTemplate extends TestSuite {
                 ">>"+newline
                 ;
         StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates),
-                        AngleBracketTemplateLexer.class);
+                new StringTemplateGroup(new StringReader(templates));
         StringTemplate b = group.getInstanceOf("Cfile");
         StringTemplate f1 = group.getInstanceOf("func");
         StringTemplate f2 = group.getInstanceOf("func");
@@ -2377,8 +2382,7 @@ public class TestStringTemplate extends TestSuite {
 				"intarray(decl) ::= \"int[] <decl.name> = null;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate f = group.getInstanceOf("file");
 		f.setAttribute("variables.{decl,format}", new Decl("i","int"), "intdecl");
 		f.setAttribute("variables.{decl,format}", new Decl("a","int-array"), "intarray");
@@ -2399,8 +2403,7 @@ public class TestStringTemplate extends TestSuite {
 				"second() ::= \"the second\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate f = group.getInstanceOf("test");
 		f.setAttribute("name", "first");
 		String expecting = "the first";
@@ -2418,8 +2421,7 @@ public class TestStringTemplate extends TestSuite {
 				"second(a) ::= \"the second <a>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate f = group.getInstanceOf("test");
 		f.setAttribute("name", "first");
 		String expecting = "the first: foo";
@@ -2436,8 +2438,7 @@ public class TestStringTemplate extends TestSuite {
 				"ind() ::= \"[<it>]\""+newline;
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate f = group.getInstanceOf("test");
 		f.setAttribute("names", "me");
 		f.setAttribute("names", "you");
@@ -2456,8 +2457,7 @@ public class TestStringTemplate extends TestSuite {
 				"second() ::= \"the second\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate f = group.getInstanceOf("test");
 		//f.setAttribute("name", "first");
 		String expecting = "";
@@ -2840,8 +2840,7 @@ public class TestStringTemplate extends TestSuite {
 		// name is not visible in stat because of the formal arg called name.
 		// somehow, it must be set.
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		String expecting = "x=y; // ";
@@ -2862,8 +2861,7 @@ public class TestStringTemplate extends TestSuite {
 		// sense as the rhs is evaluated in the context of method and the lhs
 		// is evaluated in the context of stat's arg list.
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		String expecting = "x=y; // foo";
@@ -2879,8 +2877,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(name) ::= \"x=y; // <name>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		String expecting = "x=y; // foo";
@@ -2898,8 +2895,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(name,value) ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		String expecting = "x=34; // foo";
@@ -2917,8 +2913,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(name,value=\"99\") ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		String expecting = "x=99; // foo";
@@ -2933,8 +2928,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(name,value=\"99\") ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("stat");
 		b.setAttribute("name", "foo");
 		String expecting = "x=99; // foo";
@@ -2952,8 +2946,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(name,value={<name>}) ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		b.setAttribute("size", "2");
@@ -2972,8 +2965,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(name,value={ [<name>] }) ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		b.setAttribute("size", "2");
@@ -2992,8 +2984,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(name,value=\"99\") ::= \"x=<value>; // <name>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		String expecting = "x=34; // foo";
@@ -3010,8 +3001,7 @@ public class TestStringTemplate extends TestSuite {
 				"stat(value) ::= \"x=<value>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		b.setAttribute("size", "34");
@@ -3029,7 +3019,8 @@ public class TestStringTemplate extends TestSuite {
 				"stat(value) ::= \"x=$value$;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates));
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
 		StringTemplate b = group.getInstanceOf("method");
 		b.setAttribute("name", "foo");
 		b.setAttribute("size", "34");
@@ -3044,8 +3035,7 @@ public class TestStringTemplate extends TestSuite {
 				"b(name=\"foo\") ::= \".<name>.\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate b = group.getInstanceOf("b");
 		String expecting = ".foo.";
 		String result = b.toString();
@@ -3084,8 +3074,7 @@ public class TestStringTemplate extends TestSuite {
 				"dateThing(created) ::= \"date: <created>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("dateThing");
 		st.setAttribute("created",
 						new GregorianCalendar(2005, 07-1, 05));
@@ -3101,8 +3090,7 @@ public class TestStringTemplate extends TestSuite {
 				"dateThing(created) ::= \"date: <created>\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("dateThing");
 		st.setAttribute("created",
 						new GregorianCalendar(2005, 07-1, 05));
@@ -3120,8 +3108,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("type", "int");
 		st.setAttribute("name", "x");
@@ -3137,8 +3124,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,w,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("w", "L");
 		st.setAttribute("type", "int");
@@ -3155,8 +3141,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,w,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("w", "L");
 		st.setAttribute("type", "double"); // double not in typeInit map
@@ -3173,8 +3158,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(typeInit,type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("type", "int");
 		st.setAttribute("name", "x");
@@ -3190,8 +3174,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("type", "float");
 		st.setAttribute("name", "x");
@@ -3207,8 +3190,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("type", "UserRecord");
 		st.setAttribute("name", "x");
@@ -3224,8 +3206,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("type", "UserRecord");
 		st.setAttribute("name", "x");
@@ -3241,8 +3222,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("var");
 		st.setAttribute("type", "UserRecord");
 		st.setAttribute("name", "x");
@@ -3259,8 +3239,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate st = group.getInstanceOf("intermediate");
 		st.setAttribute("type", "int");
 		st.setAttribute("name", "x");
@@ -3277,8 +3256,7 @@ public class TestStringTemplate extends TestSuite {
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate interm = group.getInstanceOf("intermediate");
 		StringTemplate var = group.getInstanceOf("var");
 		var.setAttribute("type", "int");
@@ -3295,8 +3273,7 @@ public class TestStringTemplate extends TestSuite {
 				"foo() ::= \"\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate a = group.getInstanceOf("foo");
 		String expecting = "";
 		String result = a.toString();
@@ -3481,7 +3458,8 @@ public class TestStringTemplate extends TestSuite {
 				"other(x) ::= \"$x$, $x$\""+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates));
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
 		StringTemplate e = group.getInstanceOf("root");
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
@@ -3496,8 +3474,7 @@ public class TestStringTemplate extends TestSuite {
 				"bold(item) ::= <<*<item>*>>"+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate e = group.getInstanceOf("test");
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
@@ -3711,8 +3688,7 @@ public class TestStringTemplate extends TestSuite {
 				"italics(y) ::= <<_<y>_>>"+newline
 				;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		StringTemplate e = group.getInstanceOf("test");
 		e.setAttribute("templateName", "italics");
 		e.setAttribute("arg", "Ter");
@@ -3803,7 +3779,8 @@ public class TestStringTemplate extends TestSuite {
 				"	<<$names,phones,salaries:{n,p,s | $value(n)$@$value(p)$: $value(s)$}; separator=\", \"$>>"+newline +
 				"value(x=\"n/a\") ::= \"$x$\"" +newline;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates));
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
 		StringTemplate p = group.getInstanceOf("page");
 		p.setAttribute("names", "Ter");
 		p.setAttribute("names", "Tom");
@@ -3830,8 +3807,7 @@ public class TestStringTemplate extends TestSuite {
 			"f() ::= \"foo\""+newline
 			;
 		StringTemplateGroup group =
-				new StringTemplateGroup(new StringReader(templates),
-						AngleBracketTemplateLexer.class);
+				new StringTemplateGroup(new StringReader(templates));
 		String templates2 =
 				"group sub;" +newline+
 				"f() ::= \"bar\""+newline
