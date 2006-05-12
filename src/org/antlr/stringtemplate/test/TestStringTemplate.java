@@ -3913,6 +3913,31 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(t.toString(), expecting);
 	}
 
+	public void testArgumentContext() throws Exception {
+		// t is referenced within foo and so will be evaluated in that
+		// context.  it can therefore see name.
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplate main = group.defineTemplate("main", "$foo(t={Hi, $name$}, name=\"parrt\")$");
+		StringTemplate foo = group.defineTemplate("foo", "$t$");
+		String expecting="Hi, parrt";
+		assertEqual(main.toString(), expecting);
+	}
+
+	/** Use when super.attr name is implemented
+	public void testArgumentContext2() throws Exception {
+		// t is referenced within foo and so will be evaluated in that
+		// context.  it can therefore see name.
+		StringTemplateGroup group =
+				new StringTemplateGroup("test");
+		StringTemplate main = group.defineTemplate("main", "$foo(t={Hi, $super.name$}, name=\"parrt\")$");
+		main.setAttribute("name", "tombu");
+		StringTemplate foo = group.defineTemplate("foo", "$t$");
+		String expecting="Hi, parrt";
+		assertEqual(main.toString(), expecting);
+	}
+	 */
+
 	public static void writeFile(String dir, String fileName, String content) {
 		try {
 			File f = new File(dir, fileName);

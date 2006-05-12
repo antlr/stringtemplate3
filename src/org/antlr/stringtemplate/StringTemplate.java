@@ -412,7 +412,16 @@ public class StringTemplate {
 	 *  template but does not have any attribute values.
 	 */
 	public StringTemplate getInstanceOf() {
-		StringTemplate t = group.createStringTemplate();
+		StringTemplate t = null;
+		if ( nativeGroup!=null ) {
+			// create a template using the native group for this template
+			// but it's "group" is set to this.group by dup after creation so
+			// polymorphism still works.
+			t = nativeGroup.createStringTemplate();
+		}
+		else {
+			t = group.createStringTemplate();
+		}
 		dup(this, t);
 		return t;
 	}
