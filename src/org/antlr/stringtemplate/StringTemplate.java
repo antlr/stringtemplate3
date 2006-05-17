@@ -1100,17 +1100,22 @@ public class StringTemplate {
 	 *  this template.  If not found, the template's group is queried.
 	 */
 	public AttributeRenderer getAttributeRenderer(Class attributeClassType) {
-		if ( attributeRenderers==null ) {
-			// we have no renderer overrides for the template, check group
-			return group.getAttributeRenderer(attributeClassType);
+		AttributeRenderer renderer = null;
+		if ( attributeRenderers!=null ) {
+			renderer = (AttributeRenderer)attributeRenderers.get(attributeClassType);
 		}
-		AttributeRenderer renderer =
-			(AttributeRenderer)attributeRenderers.get(attributeClassType);
-		if ( renderer==null ) {
-			// no renderer override registered for this class, check group
-			renderer = group.getAttributeRenderer(attributeClassType);
+		if ( renderer!=null ) {
+			// found it!
+			return renderer;
 		}
-		return renderer;
+
+		// we have no renderer overrides for the template or none for class arg
+		// check parent template if we are embedded
+		if ( enclosingInstance!=null ) {
+			return enclosingInstance.getAttributeRenderer(attributeClassType);
+		}
+		// else check group
+		return group.getAttributeRenderer(attributeClassType);
 	}
 
 	// U T I L I T Y  R O U T I N E S

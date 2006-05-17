@@ -3068,6 +3068,24 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testEmbeddedRendererSeesEnclosing() throws Exception {
+		// st is embedded in outer; set renderer on outer, st should
+		// still see it.
+		StringTemplate outer =new StringTemplate(
+				"X: <x>",
+				AngleBracketTemplateLexer.class);
+		StringTemplate st =new StringTemplate(
+				"date: <created>",
+				AngleBracketTemplateLexer.class);
+		st.setAttribute("created",
+						new GregorianCalendar(2005, 07-1, 05));
+		outer.setAttribute("x", st);
+		outer.registerRenderer(GregorianCalendar.class, new DateRenderer());
+		String expecting = "X: date: 2005.07.05";
+		String result = outer.toString();
+		assertEqual(result, expecting);
+	}
+
 	public void testRendererForGroup() throws Exception {
 		String templates =
 				"group test;" +newline+
