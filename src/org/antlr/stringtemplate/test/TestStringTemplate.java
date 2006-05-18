@@ -324,31 +324,57 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(errors.toString(), expecting);
 	}
 
-    public void testGroupFileFormat() throws Exception {
-        String templates =
-                "group test;" +newline+
-                "t() ::= \"literal template\"" +newline+
-                "bold(item) ::= \"<b>$item$</b>\""+newline+
-                "duh() ::= <<"+newline+"xx"+newline+">>"+newline;
-        StringTemplateGroup group =
-                new StringTemplateGroup(new StringReader(templates),
+	public void testGroupFileFormat() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"t() ::= \"literal template\"" +newline+
+				"bold(item) ::= \"<b>$item$</b>\""+newline+
+				"duh() ::= <<"+newline+"xx"+newline+">>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
 										DefaultTemplateLexer.class);
 
-        String expecting = "group test;" +newline+
+		String expecting = "group test;" +newline+
 				"bold(item) ::= <<<b>$item$</b>>>" +newline+
-                "duh() ::= <<xx>>" +newline+
-                "t() ::= <<literal template>>"+newline;
-        assertEqual(group.toString(), expecting);
+				"duh() ::= <<xx>>" +newline+
+				"t() ::= <<literal template>>"+newline;
+		assertEqual(group.toString(), expecting);
 
-        StringTemplate a = group.getInstanceOf("t");
-        expecting = "literal template";
-        assertEqual(a.toString(), expecting);
+		StringTemplate a = group.getInstanceOf("t");
+		expecting = "literal template";
+		assertEqual(a.toString(), expecting);
 
-        StringTemplate b = group.getInstanceOf("bold");
-        b.setAttribute("item", "dork");
-        expecting = "<b>dork</b>";
-        assertEqual(b.toString(), expecting);
-    }
+		StringTemplate b = group.getInstanceOf("bold");
+		b.setAttribute("item", "dork");
+		expecting = "<b>dork</b>";
+		assertEqual(b.toString(), expecting);
+	}
+
+	public void testEscapedTemplateDelimiters() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"t() ::= <<$\"literal\":{a|$a$\\}}$ template\n>>" +newline+
+				"bold(item) ::= <<<b>$item$</b\\>>>"+newline+
+				"duh() ::= <<"+newline+"xx"+newline+">>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
+
+		String expecting = "group test;" +newline+
+				"bold(item) ::= <<<b>$item$</b>>>" +newline+
+				"duh() ::= <<xx>>" +newline+
+				"t() ::= <<$\"literal\":{a|$a$\\}}$ template>>"+newline;
+		assertEqual(group.toString(), expecting);
+
+		StringTemplate b = group.getInstanceOf("bold");
+		b.setAttribute("item", "dork");
+		expecting = "<b>dork</b>";
+		assertEqual(b.toString(), expecting);
+
+		StringTemplate a = group.getInstanceOf("t");
+		expecting = "literal} template";
+		assertEqual(a.toString(), expecting);
+	}
 
     /** Check syntax and setAttribute-time errors */
     public void testTemplateParameterDecls() throws Exception {

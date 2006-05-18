@@ -251,6 +251,7 @@ BIGSTRING
 		:	{LA(3)=='>'&&LA(4)=='>'}? '\r'! '\n'! {newline();} // kill last \r\n
 		|	{LA(2)=='>'&&LA(3)=='>'}? '\n'! {newline();}       // kill last \n
 		|	('\r')? '\n' {newline();}                          // else keep
+		|	'\\'! '>'  // \> escape
 		|	.
 		)*
         ">>"!
@@ -264,6 +265,7 @@ StringTemplateToken t = null;
 	:	'{'!
 		(	options {greedy=false;}  // stop when you see the >>
 		:	('\r')? '\n' {newline();}                          // else keep
+		|	'\\'! '}'   // \} escape
 		|	.
 		)*
 	    '}'!
