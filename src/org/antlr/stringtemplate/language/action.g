@@ -182,7 +182,7 @@ templateInclude
 
 /** Match (foo)() and (foo+".terse")() */
 indirectTemplate!
-    :   LPAREN e:expr RPAREN args:argList
+    :   LPAREN e:templatesExpr RPAREN args:argList
         {#indirectTemplate = #(#[VALUE,"value"],e,args);}
 	;
 

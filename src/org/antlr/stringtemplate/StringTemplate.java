@@ -571,8 +571,11 @@ public class StringTemplate {
 	 *  with arrays of objects and arrays of {int,float,double}.
 	 */
 	public void setAttribute(String name, Object value) {
-		if ( value==null ) {
+		if ( value==null || name==null ) {
 			return;
+		}
+		if ( name.indexOf('.')>=0 ) {
+			throw new IllegalArgumentException("cannot have '.' in attribute names");			
 		}
 		if ( attributes==null ) {
 			attributes = new HashMap();

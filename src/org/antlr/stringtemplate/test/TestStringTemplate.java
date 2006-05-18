@@ -1128,6 +1128,19 @@ public class TestStringTemplate extends TestSuite {
         assertEqual(t.toString(), expecting);
     }
 
+	public void testApplyTemplateNameTemplateEval() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+		StringTemplate foobar = group.defineTemplate("foobar", "foo$it$bar");
+		StringTemplate a = group.defineTemplate("a", "$it$bar");
+        StringTemplate t = new StringTemplate(group, "$data:(\"foo\":a())()$");
+        t.setAttribute("data", "Ter");
+        t.setAttribute("data", "Tom");
+        //System.out.println(t);
+        String expecting="fooTerbarfooTombar";
+        assertEqual(t.toString(), expecting);
+    }
+
     public void testTemplateNameExpression() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
@@ -3851,6 +3864,21 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "Ter@1: big"+newline+"Tom@2: huge"+newline;
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testParallelAttributeIterationHasI() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names,phones,salaries:{n,p,s | $i0$. $n$@$p$: $s$\n}$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("phones", "1");
+		e.setAttribute("phones", "2");
+		e.setAttribute("salaries", "big");
+		e.setAttribute("salaries", "huge");
+		String expecting = "0. Ter@1: big"+newline+"1. Tom@2: huge"+newline;
 		assertEqual(e.toString(), expecting);
 	}
 
