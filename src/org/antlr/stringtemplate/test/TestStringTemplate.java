@@ -3321,6 +3321,35 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
+	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingAngleBracketLexer() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"top() ::= <<<x(a=\"\", b={})\\>>>"+newline+
+				"x(a,b) ::= \"a=<a>, b=<b>\""+newline;
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate a = group.getInstanceOf("top");
+		String expecting = "a=, b=";
+		String result = a.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingDollarLexer() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"top() ::= <<$x(a=\"\", b={})$>>"+newline+
+				"x(a,b) ::= \"a=$a$, b=$b$\""+newline;
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
+		StringTemplate a = group.getInstanceOf("top");
+		String expecting = "a=, b=";
+		String result = a.toString();
+		assertEqual(result, expecting);
+	}
+
 	public void test8BitEuroChars() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"Danish: Å char"

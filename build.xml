@@ -2,6 +2,8 @@
 
 <!-- ===================================================================== -->
 <!-- StringTemplate build file (contributed by Dieter Wimberger)           -->
+<!-- Terence says: I have no idea whether this does anything useful.       -->
+<!-- Somebody can fix it; seems to be almost right                         -->
 <!-- ===================================================================== -->
 <project name="stringtemplate" default="compile" basedir=".">
 
@@ -94,7 +96,7 @@
 
    <target name="generator">
         <antlr target="${action.g}" />
-        <antlr target="${angle.bracket.template}" />
+        <antlr target="${angle.bracket.template.g}" />
         <antlr target="${eval.g}" />
         <antlr target="${group.g}" />
         <antlr target="${interface.g}" />
@@ -104,7 +106,7 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="init, prepare-sources" description="Compiles the sources. (Default)">
+  <target name="compile" depends="init, prepare-sources, generator" description="Compiles the sources. (Default)">
     <!-- Echo compilation properties -->
     <echo level="info" message="Compiler    = ${build.compiler}"/>
     <echo level="info" message="Optimize    = ${compile.optimize}"/>
