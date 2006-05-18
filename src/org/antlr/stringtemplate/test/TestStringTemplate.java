@@ -3635,6 +3635,24 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public void testAnonTemplateWithArgHasNoITArg() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names:{n| $n$:$it$}; separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String error = null;
+		try {
+			e.toString();
+		}
+		catch (NoSuchElementException nse) {
+			error = nse.getMessage();
+		}
+		String expecting = "no such attribute: it in template context [anonymous anonymous]";
+		assertEqual(error, expecting);
+	}
+
 	public void testAnonTemplateArgs2() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names:{n| .$n$.}:{ n | _$n$_}; separator=\", \"$"

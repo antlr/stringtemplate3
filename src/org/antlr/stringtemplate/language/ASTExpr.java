@@ -212,9 +212,15 @@ public class ASTExpr extends Expr {
                 embedded.setEnclosingInstance(self);
                 embedded.setArgumentsAST(args);
                 argumentContext = new HashMap();
+				Map formalArgs = embedded.getFormalArguments();
+				boolean isAnonymous =
+					embedded.getName() == StringTemplate.ANONYMOUS_ST_NAME;
 				setSoleFormalArgumentToIthValue(embedded, argumentContext, ithValue);
-				argumentContext.put(DEFAULT_ATTRIBUTE_NAME, ithValue);
-                argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, ithValue);
+				// if it's an anonymous template with a formal arg, don't set it/attr
+				if ( !(isAnonymous && formalArgs!=null && formalArgs.size()>0) ) {
+					argumentContext.put(DEFAULT_ATTRIBUTE_NAME, ithValue);
+	                argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, ithValue);
+				}
 				argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(i+1));
 				argumentContext.put(DEFAULT_INDEX0_VARIABLE_NAME, new Integer(i));
                 embedded.setArgumentContext(argumentContext);
@@ -240,10 +246,17 @@ public class ASTExpr extends Expr {
             */
             embedded = (StringTemplate)templatesToApply.get(0);
             argumentContext = new HashMap();
+			Map formalArgs = embedded.getFormalArguments();
+			StringTemplateAST args = embedded.getArgumentsAST();
 			setSoleFormalArgumentToIthValue(embedded, argumentContext, attributeValue);
-            argumentContext.put(DEFAULT_ATTRIBUTE_NAME, attributeValue);
-            argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, attributeValue);
-            argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(1));
+			boolean isAnonymous =
+				embedded.getName() == StringTemplate.ANONYMOUS_ST_NAME;
+			// if it's an anonymous template with a formal arg, don't set it/attr
+			if ( !(isAnonymous && formalArgs!=null && formalArgs.size()>0) ) {
+				argumentContext.put(DEFAULT_ATTRIBUTE_NAME, attributeValue);
+				argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, attributeValue);
+			}
+			argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(1));
             embedded.setArgumentContext(argumentContext);
             evaluateArguments(embedded);
             return embedded;
@@ -255,7 +268,7 @@ public class ASTExpr extends Expr {
 		if ( formalArgs!=null ) {
 			String soleArgName = null;
 			boolean isAnonymous =
-				embedded.getName().equals(StringTemplate.ANONYMOUS_ST_NAME);
+				embedded.getName() == StringTemplate.ANONYMOUS_ST_NAME;
 			if ( formalArgs.size()==1 || (isAnonymous&&formalArgs.size()>0) ) {
 				if ( isAnonymous && formalArgs.size()>1 ) {
 					embedded.error("too many arguments on {...} template: "+formalArgs);
