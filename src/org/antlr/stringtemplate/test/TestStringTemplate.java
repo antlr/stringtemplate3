@@ -3548,6 +3548,49 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public void testIncomingListsAreNotModified() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names; separator=\", \"$" // gets 2nd element
+			);
+		e = e.getInstanceOf();
+		List names = new ArrayList();
+		names.add("Ter");
+		names.add("Tom");
+		e.setAttribute("names", names);
+		e.setAttribute("names", "Sriram");
+		String expecting = "Ter, Tom, Sriram";
+		assertEqual(e.toString(), expecting);
+
+		assertEqual(names.size(), 2);
+	}
+
+	public void testIncomingListsAreNotModified2() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names; separator=\", \"$" // gets 2nd element
+			);
+		e = e.getInstanceOf();
+		List names = new ArrayList();
+		names.add("Ter");
+		names.add("Tom");
+		e.setAttribute("names", "Sriram"); // single element first now
+		e.setAttribute("names", names);
+		String expecting = "Sriram, Ter, Tom";
+		assertEqual(e.toString(), expecting);
+
+		assertEqual(names.size(), 2);
+	}
+
+	public void testIncomingArraysAreOk() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names; separator=\", \"$" // gets 2nd element
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", new String[] {"Ter","Tom"});
+		e.setAttribute("names", "Sriram");
+		String expecting = "Ter, Tom, Sriram";
+		assertEqual(e.toString(), expecting);
+	}
+
 	public void testApplyTemplateWithSingleFormalArgs() throws Exception {
 		String templates =
 				"group test;" +newline+

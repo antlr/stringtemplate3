@@ -107,7 +107,8 @@ public class ASTExpr extends Expr {
 			return null; // do not apply if missing templates or empty values
 		}
 		Map argumentContext = null;
-		List results = new ArrayList();
+		// indicate it's an ST-created list
+		List results = new StringTemplate.STAttributeList();
 
 		// convert all attributes to iterators even if just one value
 		for (int a = 0; a < attributes.size(); a++) {
@@ -190,7 +191,8 @@ public class ASTExpr extends Expr {
 		attributeValue = convertAnythingIteratableToIterator(attributeValue);
 
         if ( attributeValue instanceof Iterator ) {
-            List resultVector = new ArrayList();
+			// results can be treated list an attribute, indicate ST created list
+			List resultVector = new StringTemplate.STAttributeList();
             Iterator iter = (Iterator)attributeValue;
             int i = 0;
             while ( iter.hasNext() ) {
@@ -709,18 +711,26 @@ public class ASTExpr extends Expr {
         }
 	}
 
-	/** Do a standard conversion of array attributes to Lists.
+	/** Do a standard conversion of array attributes to Lists.  Create
+	 *  StringTemplate.STAttributeList objects so we know they are ST
+	 *  controlled not user lists.
 	 */
 	public static Object convertArrayToList(Object value) {
 		if ( value==null ) {
 			return null;
 		}
 		if ( value instanceof Object[] ) {
-			value = Arrays.asList((Object[])value);
+			Object[] list = (Object[])value;
+			List v = new StringTemplate.STAttributeList(list.length);
+			for (int i = 0; i < list.length; i++) {
+				Object elem = list[i];
+				v.add(elem);
+			}
+			value = v;
 		}
 		else if ( value instanceof int[] ) {
 			int[] list = (int[])value;
-			List v = new ArrayList(list.length);
+			List v = new StringTemplate.STAttributeList(list.length);
 			for (int i = 0; i < list.length; i++) {
 				int elem = list[i];
 				v.add(new Integer(elem));
@@ -729,7 +739,7 @@ public class ASTExpr extends Expr {
 		}
 		else if ( value instanceof long[] ) {
 			long[] list = (long[])value;
-			List v = new ArrayList(list.length);
+			List v = new StringTemplate.STAttributeList(list.length);
 			for (int i = 0; i < list.length; i++) {
 				long elem = list[i];
 				v.add(new Long(elem));
@@ -738,7 +748,7 @@ public class ASTExpr extends Expr {
 		}
 		else if ( value instanceof float[] ) {
 			float[] list = (float[])value;
-			List v = new ArrayList(list.length);
+			List v = new StringTemplate.STAttributeList(list.length);
 			for (int i = 0; i < list.length; i++) {
 				float elem = list[i];
 				v.add(new Float(elem));
@@ -748,7 +758,7 @@ public class ASTExpr extends Expr {
 
 		else if ( value instanceof double[] ) {
 			double[] list = (double[])value;
-			List v = new ArrayList(list.length);
+			List v = new StringTemplate.STAttributeList(list.length);
 			for (int i = 0; i < list.length; i++) {
 				double elem = list[i];
 				v.add(new Double(elem));
@@ -787,7 +797,7 @@ public class ASTExpr extends Expr {
 			iter = (Iterator)o;
 		}
 		if ( iter==null ) {
-			List singleton = new ArrayList(1);
+			List singleton = new StringTemplate.STAttributeList(1);
 			singleton.add(o);
 			return singleton.iterator();
 		}

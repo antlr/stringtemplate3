@@ -184,6 +184,14 @@ public class StringTemplate {
 		}
 	}
 
+	/** Just an alias for ArrayList, but this way I can track whether a
+	 *  list is something ST created or it's an incoming list.
+	 */
+	public static final class STAttributeList extends ArrayList {
+		public STAttributeList(int size) { super(size); }
+		public STAttributeList() { super(); }
+	}
+
 	public static final String ANONYMOUS_ST_NAME = "anonymous";
 
 	/** track probable issues like setting attribute that is not referenced. */
@@ -557,6 +565,8 @@ public class StringTemplate {
 	 *  can set it back to null after this call if you want.
 	 *  If you send in a List plus other values to the same
 	 *  attribute, they all get flattened into one List of values.
+	 *  This will be a new list object so that incoming objects are
+	 *  not altered.
 	 *  If you send in an array, it is converted to a List.  Works
 	 *  with arrays of objects and arrays of {int,float,double}.
 	 */
@@ -579,44 +589,38 @@ public class StringTemplate {
 		// convert plain collections
 		// get exactly in this scope (no enclosing)
 		Object o = this.attributes.get(name);
-		if ( o!=null ) { // it's a multi-value attribute
-			//System.out.println("exists: "+name+"="+o);
-			ArrayList v = null;
-			if ( o instanceof ArrayList ) { // already a List
-				v = (ArrayList)o;
-				if ( value instanceof List ) {
-					// flatten incoming list into existing
-					// (do nothing if same List to avoid trouble)
-					List v2 = (List)value;
-					for (int i = 0; v!=v2 && i < v2.size(); i++) {
-						// System.out.println("flattening "+name+"["+i+"]="+v2.elementAt(i)+" into existing value");
-						v.add(v2.get(i));
-					}
-				}
-				else {
-					v.add(value);
-				}
-			}
-			else {
-				// second attribute, must convert existing to ArrayList
-				v = new ArrayList(); // make list to hold multiple values
-				// make it point to list now
-				rawSetAttribute(this.attributes, name, v);
-				v.add(o);  // add previous single-valued attribute
-				if ( value instanceof List ) {
-					// flatten incoming list into existing
-					List v2 = (List)value;
-					for (int i = 0; i < v2.size(); i++) {
-						v.add(v2.get(i));
-					}
-				}
-				else {
-					v.add(value);
-				}
+		if ( o==null ) { // new attribute
+			rawSetAttribute(this.attributes, name, value);
+			return;
+		}
+		// it will be a multi-value attribute
+		//System.out.println("exists: "+name+"="+o);
+		STAttributeList v = null;
+		if ( o.getClass() == STAttributeList.class ) { // already a list made by ST
+			v = (STAttributeList)o;
+		}
+		else if ( o instanceof List ) { // existing attribute is non-ST List
+			// must copy to an ST-managed list before adding new attribute
+			List listAttr = (List)o;
+			v = new STAttributeList(listAttr.size());
+			v.addAll(listAttr);
+			rawSetAttribute(this.attributes, name, v); // replace attribute w/list
+		}
+		else {
+			// non-list second attribute, must convert existing to ArrayList
+			v = new STAttributeList(); // make list to hold multiple values
+			// make it point to list now
+			rawSetAttribute(this.attributes, name, v); // replace attribute w/list
+			v.add(o);  // add previous single-valued attribute
+		}
+		if ( value instanceof List ) {
+			// flatten incoming list into existing
+			if ( v!=value ) { // avoid weird cyclic add
+				v.addAll((List)value);
 			}
 		}
 		else {
-			rawSetAttribute(this.attributes, name, value);
+			v.add(value);
 		}
 	}
 
