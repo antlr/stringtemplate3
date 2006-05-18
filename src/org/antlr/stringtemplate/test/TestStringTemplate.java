@@ -2683,7 +2683,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testWhiteSpaceAtEndOfTemplate() throws Exception {
 		StringTemplateGroup group = new StringTemplateGroup("group");
 		StringTemplate pageST = group.getInstanceOf("org/antlr/stringtemplate/test/page");
-		StringTemplate listST = group.getInstanceOf("org/antlr/stringtemplate/test/users.list");
+		StringTemplate listST = group.getInstanceOf("org/antlr/stringtemplate/test/users_list");
 		// users.list references row.st which has a single blank line at the end.
 		// I.e., there are 2 \n in a row at the end
 		// ST should eat all whitespace at end

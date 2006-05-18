@@ -635,6 +635,9 @@ public class StringTemplateGroup {
 										 String template)
 	{
 		//System.out.println("defineTemplate "+getName()+"::"+name);
+		if ( name!=null && name.indexOf('.')>=0 ) {
+			throw new IllegalArgumentException("cannot have '.' in template names");
+		}
 		StringTemplate st = createStringTemplate();
 		st.setName(name);
 		st.setGroup(this);
