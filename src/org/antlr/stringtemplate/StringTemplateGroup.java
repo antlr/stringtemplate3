@@ -260,7 +260,9 @@ public class StringTemplateGroup {
 	{
 		this.templatesDefinedInGroupFile = true;
 		this.templateLexerClass = lexer;
-		this.listener = errors;
+		if ( errors!=null ) { // always have to have a listener
+			this.listener = errors;
+		}
 		setSuperGroup(superGroup);
 		parseGroup(r);
 		verifyInterfaceImplementations();
