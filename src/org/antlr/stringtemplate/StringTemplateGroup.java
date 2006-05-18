@@ -177,9 +177,6 @@ public class StringTemplateGroup {
 			public void warning(String s) {
 				System.out.println(s);
 			}
-			public void debug(String s) {
-				System.out.println(s);
-			}
 		};
 
 	/** Used to indicate that the template doesn't exist.

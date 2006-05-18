@@ -41,9 +41,6 @@ public class StringTemplateGroupInterface {
             public void warning(String s) {
                 System.out.println(s);
             }
-            public void debug(String s) {
-                System.out.println(s);
-            }
         };
 
 	/** All the info we need to track for a template defined in an interface */

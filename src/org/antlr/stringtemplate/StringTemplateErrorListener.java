@@ -33,10 +33,4 @@ package org.antlr.stringtemplate;
 public interface StringTemplateErrorListener {
     public void error(String msg, Throwable e);
     public void warning(String msg);
-    /** I've taken out debug mode, but am leaving this here so as
-	 *  to avoid breaking user code.
-	 *
-	 *  @deprecated 2.2
-	 */
-    public void debug(String msg);
 }

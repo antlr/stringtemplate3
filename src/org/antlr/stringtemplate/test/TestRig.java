@@ -78,8 +78,8 @@ public class TestRig {
                 // if they define a runTests, just call it
                 Method m;
                 try {
-                    m = c.getMethod("runTests",null);
-                    m.invoke(test, null);
+                    m = c.getMethod("runTests",(Class[])null);
+                    m.invoke(test, (Object[])null);
                 }
                 catch (NoSuchMethodException nsme) {
                     // else just call runTest on all methods with "test" prefix

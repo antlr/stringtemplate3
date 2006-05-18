@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+
+<!-- ===================================================================== -->
+<!-- StringTemplate build file (contributed by Dieter Wimberger)           -->
+<!-- ===================================================================== -->
+<project name="stringtemplate" default="compile" basedir=".">
+
+  <target name="init">
+    <tstamp>
+      <format property="src.timestamp" pattern="dd/MM/yyyy"/>
+      <format property="year" pattern="2006-yyyy"/>
+    </tstamp>
+
+    <!-- Allow any user specific values to override the defaults -->
+    <property file="./build.properties"/>
+
+    <property name="language.dir"
+       value="${basedir}${file.separator}src${file.separator}org${file.separator}antlr${file.separator}stringtemplate${file.separator}language"/>
+
+    <property name="action.g" value="${language.dir}/action.g" />
+    <property name="angle.bracket.template.g" value="${language.dir}/angle.bracket.template.g" />
+    <property name="eval.g" value="${language.dir}/eval.g" />
+    <property name="group.g" value="${language.dir}/group.g" />
+    <property name="interface.g" value="${language.dir}/interface.g" />
+    <property name="template.g" value="${language.dir}/template.g" />
+
+    <property name="Name" value="stringtemplate"/>
+    <property name="name" value="stringtemplate"/>
+    <property name="copyright" value="${year} Terence Parr"/>
+
+    <!-- Filters -->
+    <filter token="date" value="${src.timestamp}"/>
+    <filter token="version" value="${version}"/>
+    <filter token="copyright" value="${copyright}"/>
+
+    <!-- Source related properties -->
+    <property name="src.dir" value="${basedir}${file.separator}src"/>
+    <property name="src.java" value="${src.dir}"/>
+    <property name="lib.dir" value="${basedir}${file.separator}lib${file.separator}"/>
+    <property name="src.excludes" value=""/>
+
+    <!-- Build related properties -->
+    <property name="build.dir" value="${basedir}${file.separator}build"/>
+    <property name="build.src" value="${build.dir}${file.separator}src"/>
+    <property name="build.classes" value="${build.dir}${file.separator}classes"/>
+    <property name="build.javadocs" value="${basedir}${file.separator}docs${file.separator}api"/>
+    <property name="build.jar" value="${build.dir}${file.separator}${name}.jar"/>
+
+    <path id="build.classpath">
+        <pathelement location="${antlr2.jar}"/>
+    </path>
+
+<!--
+    <path id="build.classpath">
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar" />
+        </fileset>
+    </path>
+-->
+
+    <property name="build.dist" value="${build.dir}${file.separator}${name}-${version}"/>
+
+    <property name="dist.basedir" value="${build.dir}"/>
+    <property name="dist.includes" value="${name}${file.separator}**"/>
+    <property name="dist.excludes"
+      value="**/prj/**,
+            **/dist/**,
+             **/test/**,
+             **/model/**,
+             **/build/**,
+             **/.DS_Store"
+      />
+    <property name="packages" value="${build.packages}"/>
+    <property name="library.includes" value="${bundle.includes}"/>
+
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- Basic build targets                                                 -->
+  <!-- =================================================================== -->
+  <target name="prepare-sources" depends="init">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.src}"/>
+    <!-- specific filters -->
+    <filter token="commentstart" value="${line.separator}"/>
+    <filter token="commentend" value=""/>
+
+    <copy todir="${build.src}" filtering="true">
+      <fileset dir="${src.java}" excludes="${src.excludes}"/>
+    </copy>
+  </target>
+
+
+   <target name="generator">
+        <antlr target="${action.g}" />
+        <antlr target="${angle.bracket.template}" />
+        <antlr target="${eval.g}" />
+        <antlr target="${group.g}" />
+        <antlr target="${interface.g}" />
+        <antlr target="${template.g}" />
+   </target>
+
+  <!-- =================================================================== -->
+  <!-- Compiles the source code                                            -->
+  <!-- =================================================================== -->
+  <target name="compile" depends="init, prepare-sources" description="Compiles the sources. (Default)">
+    <!-- Echo compilation properties -->
+    <echo level="info" message="Compiler    = ${build.compiler}"/>
+    <echo level="info" message="Optimize    = ${compile.optimize}"/>
+    <echo level="info" message="Deprecation = ${compile.deprecation}"/>
+    <echo level="info" message="Debug       = ${compile.debug}"/>
+
+    <mkdir dir="${build.classes}"/>
+    <javac srcdir="${build.src}"
+      destdir="${build.classes}"
+      debug="${compile.debug}"
+      optimize="${compile.optimize}"
+      deprecation="${compile.deprecation}"
+      >
+      <classpath refid="build.classpath"/>
+      </javac>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the jar archive                                             -->
+  <!-- =================================================================== -->
+  <target name="jar" depends="init,compile" description="Builds the library (.jar).">
+    <jar jarfile="${build.jar}"
+      basedir="${build.classes}"
+      includes="${library.includes}">
+    </jar>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Create gzipped tarball                                              -->
+  <!-- =================================================================== -->
+  <target name="dist" depends="init,compile,jar">
+    <mkdir dir="${build.dist}"/>
+    <tar tarfile="${build.dist}${file.separator}${name}${version}.tar"
+      basedir="${dist.basedir}"
+      includes="${dist.includes}"
+      excludes="${dist.excludes}"
+      />
+    <gzip zipfile="${build.dist}${file.separator}${name}${version}.tar.gz" src="${build.dist}${file.separator}${name}${version}.tar"/>
+    <delete file="${build.dist}${file.separator}${name}${version}.tar"/>
+
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Create zip distribution                                             -->
+  <!-- =================================================================== -->
+  <target name="zipdist" depends="init,compile,jar">
+    <mkdir dir="${build.dist}"/>
+    <echo level="info" message="build.dist = ${build.dist}"/>
+    <echo level="info" message="dist.includes = ${dist.includes}"/>
+
+    <zip zipfile="${build.dist}${file.separator}${name}${version}.zip"
+      basedir="${dist.basedir}"
+      includes="${dist.includes}"
+      excludes="${dist.excludes}"
+      />
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- Create docs distribution                                            -->
+  <!-- =================================================================== -->
+  <target name="docsdist" depends="init,javadocs">
+    <zip zipfile="${build.dist}${file.separator}${name}${version}_docs.zip"
+      basedir="${basedir}"
+      includes="docs/**"
+      />
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Generate release                                                    -->
+  <!-- =================================================================== -->
+  <target name="release" depends="clean-all,jar,javadocs,dist,zipdist">
+    <echo message="Created release ${version}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the API documentation                                       -->
+  <!-- =================================================================== -->
+  <target name="javadocs" depends="init,prepare-sources">
+    <mkdir dir="${build.javadocs}"/>
+    <javadoc packagenames="${packages}"
+      sourcepath="${build.src}"
+      destdir="${build.javadocs}"
+      author="true"
+      version="true"
+      windowtitle="${Name} API"
+      doctitle="${Name} API Documentation"
+      bottom="Copyright &#169; ${copyright}"
+      additionalparam="${javadocs.additionalparam}"
+      />
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Cleans up generated classes                                         -->
+  <!-- =================================================================== -->
+  <target name="clean-classes" depends="init">
+    <delete dir="${build.classes}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Cleans up generated javadocs                                        -->
+  <!-- =================================================================== -->
+  <target name="clean-docs" depends="init">
+    <delete dir="${build.javadocs}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Cleans up generated jars                                             -->
+  <!-- =================================================================== -->
+  <target name="clean-jars" depends="init">
+    <delete file="${build.jar}"/>
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- Cleans up generated distributions                               -->
+  <!-- =================================================================== -->
+  <target name="clean-dist" depends="init">
+    <delete dir="${build.dist}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Cleans up all                                                       -->
+  <!-- =================================================================== -->
+  <target name="clean-all" depends="clean-classes,clean-jars, clean-dist">
+    <echo message="Cleaned all."/>
+  </target>
+
+</project>
+

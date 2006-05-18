@@ -86,10 +86,6 @@ public class TestStringTemplate extends TestSuite {
 			n++;
 			errorOutput.append(msg);
 		}
-		public void debug(String msg) {
-			n++;
-			errorOutput.append(msg);
-		}
         public boolean equals(Object o) {
             String me = toString();
             String them = o.toString();
@@ -3506,6 +3502,17 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplateGroup(new StringReader(templates),
 										DefaultTemplateLexer.class);
 		StringTemplate e = group.getInstanceOf("root");
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		String expecting = "Tom, Tom";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testIncomingLists() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$rest(names)$, $rest(names)$" // gets 2nd element
+			);
+		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Tom, Tom";

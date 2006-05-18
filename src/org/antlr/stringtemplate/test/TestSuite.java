@@ -107,8 +107,8 @@ public abstract class TestSuite {
 		testName = name;
 		try {
 			Class c = this.getClass();
-			Method m = c.getMethod(name,null);
-			m.invoke(this,null);
+			Method m = c.getMethod(name,(Class[])null);
+			m.invoke(this,(Object[])null);
 		}
 		catch (IllegalAccessException iae) {
 			System.err.println("no permission to exec test "+name);

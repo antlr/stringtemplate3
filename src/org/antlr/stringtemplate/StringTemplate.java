@@ -1138,17 +1138,6 @@ public class StringTemplate {
 		}
 	}
 
-	/** @deprecated 2.2
-	 */
-	public void debug(String msg) {
-		if ( getErrorListener()!=null ) {
-			getErrorListener().debug(msg);
-		}
-		else {
-			System.err.println("StringTemplate: debug: "+msg);
-		}
-	}
-
 	public void error(String msg, Throwable e) {
 		if ( getErrorListener()!=null ) {
 			getErrorListener().error(msg,e);
