@@ -672,7 +672,7 @@ public class StringTemplate {
 	}
 
 	/** Split "aggrName.{propName1,propName2}" into list [propName1,propName2]
-	 *  and the aggrName.
+	 *  and the aggrName. Space is allowed around ','.
 	 */
 	protected String parseAggregateAttributeSpec(String aggrSpec, List properties) {
 		int dot = aggrSpec.indexOf('.');
@@ -687,14 +687,19 @@ public class StringTemplate {
 		match:
 		if ( tokenizer.hasMoreTokens() ) {
 			String token = tokenizer.nextToken(); // advance to {
+			token = token.trim();
 			if ( token.equals("{") ) {
 				token = tokenizer.nextToken();    // advance to first prop name
+				token = token.trim();
 				properties.add(token);
 				token = tokenizer.nextToken();    // advance to a comma
+				token = token.trim();
 				while ( token.equals(",") ) {
 					token = tokenizer.nextToken();    // advance to a prop name
+					token = token.trim();
 					properties.add(token);
 					token = tokenizer.nextToken();    // advance to a "," or "}"
+					token = token.trim();
 				}
 				if ( token.equals("}") ) {
 					error = false;

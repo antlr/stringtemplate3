@@ -1470,8 +1470,9 @@ public class TestStringTemplate extends TestSuite {
     public void testApplyAnonymousTemplateToAggregateAttribute() throws Exception {
         StringTemplate st =
                 new StringTemplate("$items:{$it.lastName$, $it.firstName$\n}$");
-        st.setAttribute("items.{firstName,lastName}", "Ter", "Parr");
-        st.setAttribute("items.{firstName,lastName}", "Tom", "Burns");
+		// also testing wacky spaces in aggregate spec
+		st.setAttribute("items.{ firstName ,lastName}", "Ter", "Parr");
+        st.setAttribute("items.{firstName, lastName }", "Tom", "Burns");
         String expecting =
                 "Parr, Ter"+newline +
                 "Burns, Tom"+newline;
