@@ -4094,6 +4094,34 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(main.toString(), expecting);
 	}
 
+	public void testNoDotsInAttributeNames() throws Exception {
+		StringTemplateGroup group = new StringTemplateGroup("dummy", ".");
+		StringTemplate t = new StringTemplate(group, "$user.Name$");
+		String error=null;
+		try {
+			t.setAttribute("user.Name", "Kunle");
+		}
+		catch (IllegalArgumentException e) {
+			error = e.getMessage();
+		}
+		String expecting = "cannot have '.' in attribute names";
+		assertEqual(error, expecting);
+	}
+
+	public void testNoDotsInTemplateNames() throws Exception {
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String templates =
+				"group test;" +newline+
+				"a.b() ::= <<foo>>"+newline;
+		String error = null;
+			StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class,
+										errors);
+		String expecting = "template group parse error: line 2:1: unexpected token:";
+		assertTrue(errors.toString().startsWith(expecting));
+	}
+
 	/** Use when super.attr name is implemented
 	public void testArgumentContext2() throws Exception {
 		// t is referenced within foo and so will be evaluated in that
