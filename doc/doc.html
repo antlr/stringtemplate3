@@ -1,6 +1,8 @@
-<HTML>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang=en lang=en>
 <HEAD>
-<body bgcolor=#FFFFFF text=#000000>
+	<meta http-equiv=content-type content="text/html; charset=utf-8" />
+	<link rel=stylesheet href="http://www.cs.usfca.edu/~parrt/lecture-wiki.css" type="text/css" />
 <title>StringTemplate Documentation</title>
 </HEAD>
 <BODY>
@@ -17,9 +19,7 @@ University of San Francisco <BR>
 <A HREF="http://www.stringtemplate.org"><B>http://www.stringtemplate.org</B></A> <BR>
 (StringTemplate released under BSD License)
 
-<P>Version 2.2, August 5, 2005
-
-<P><em>Version 2.3 coming early 2006</em>
+<P><em>Version 2.3 coming Summer 2006</em>
 
 <P>Please see the <A HREF="http://www.stringtemplate.org/bugs.tml"><B> changes and bugs</B></A> page.
 
@@ -55,19 +55,19 @@ when you call <TT>StringTemplate.toString()</TT>.  For example, the following
 template has two chunks, a literal and a reference to attribute
 <TT>name</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 Hello, $name$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Using templates in Java code is very easy. Here is the requisite example that prints "<TT>Hello, World</TT>":
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate hello = new StringTemplate("Hello, $name$");
 hello.setAttribute("name", "World");
 System.out.println(hello.toString());
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -204,7 +204,7 @@ programs, but pulling attributes introduces <em>order-of-computation
 dependencies</em>.  Imagine a simple web page that displays a list of
 names (using some mythical template engine notation):
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;body&gt;
 &lt;ol&gt;
@@ -215,7 +215,7 @@ $end$
 There are $numberNames$ names.
 &lt;/body&gt;
 &lt;/html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -263,12 +263,12 @@ references.
 
 <P>Here is a simple piece of Java that creates and uses a template on the fly:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate query =
   new StringTemplate("SELECT $column$ FROM $table$;");
 query.setAttribute("column", "name");
 query.setAttribute("table", "User");
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -278,9 +278,9 @@ it needs to pay attention to.  By setting attributes, you are
 printed out.  The attribute values are set by referencing their names.
 Invoking <TT>query.toString()</TT> would yield
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 SELECT name FROM User;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -288,41 +288,41 @@ SELECT name FROM User;
 attribute is multi-valued.  For example, adding another
 <TT>setAttribute()</TT> call makes attribute <TT>column</TT> multi-valued:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate query =
   new StringTemplate("SELECT $column$ FROM $table$;");
 query.setAttribute("column", "name");
 query.setAttribute("column", "email");
 query.setAttribute("table", "User");
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Invoking <TT>query.toString()</TT> would now yield
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 SELECT nameemail FROM User;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Ooops...there is no separator between the multiple values.  If you want a comma, say, between the column names, then change the template to record that formatting information:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate query =
   new StringTemplate("SELECT $column; separator=\",\"$ FROM $table$;");
 query.setAttribute("column", "name");
 query.setAttribute("column", "email");
 query.setAttribute("table", "User");
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Note that the right-hand-side of the separator specification in this case is a string literal; therefore, I have escaped the double-quotes as the template is specified in a Java string.  In general, the right-hand-side can be any attribute expression.  Invoking <TT>query.toString()</TT> would now yield
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 SELECT name,email FROM User;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -337,9 +337,9 @@ not waste time talking to the disk for each template fetch request
 template groups.  Here is a simple example that loads the previous SQL
 template from file <TT>/tmp/theQuery.st</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 SELECT $column; separator=","$ FROM $table$;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -347,14 +347,14 @@ SELECT $column; separator=","$ FROM $table$;
 at <TT>/tmp</TT> so that requests for template <TT>theQuery</TT> forces a load of
 file <TT>/tmp/theQuery.st</TT>.
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup group =
   new StringTemplateGroup("myGroup", "/tmp");
 StringTemplate query = group.getInstanceOf("theQuery");
 query.setAttribute("column", "name");
 query.setAttribute("column", "email");
 query.setAttribute("table", "User");
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -370,19 +370,19 @@ end of the file to get an extra carriage return.
 
 <P>When deploying applications or providing a library for use by other programmers, you will not know where your templates files live specifically on the disk.  You will, however, know relative to the classpath where your templates reside.  For example, if your code is in package <TT>com.mycompany.server</TT> you might put your templates in a <TT>templates</TT> subdirectory of <TT>server</TT>.  If you do not specify an absolute directory with the <TT>StringTemplateGroup</TT> constructor, future loads via that group will happen relative to the <TT>CLASSPATH</TT>.  For example, to load template file <TT>page.st</TT> you would do the following:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 // Look for templates in CLASSPATH as resources
 StringTemplateGroup group = new StringTemplateGroup("mygroup");
 StringTemplate st = group.getInstanceOf("com/mycompany/server/templates/page");
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>If <TT>page.st</TT> references, say, <TT>searchbox</TT> template, it must be fully qualified as:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;font size=2&gt;SEARCH&lt;/font&gt;: $com/mycompany/server/templates/page/searchbox()$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -399,7 +399,7 @@ attributes) and make the templates easier to read.  Here is a sample
 group file (I'm using <TT>&lt;...&gt;</TT> delimiters) with two templates, <TT>vardef</TT>
 and <TT>method</TT>, that could be used to generate C files:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 group simple;
 
 vardef(type,name) ::= "&lt;type&gt; &lt;name&gt;;"
@@ -409,7 +409,7 @@ method(type,name,args) ::= &lt;&lt;
   &lt;statements; separator="\n"&gt;
 }
 &gt;&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -417,7 +417,7 @@ method(type,name,args) ::= &lt;&lt;
 
 <P>Using templates in a group file is straightforwards.  A <TT>StringTemplateGroup</TT> constructor accepts a <TT>Reader</TT> so you can pass in a string or file or whatever:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 String templates =
    "group simple; vardef(type,name) ..."; // templates from above
 StringTemplateGroup group = new StringTemplateGroup(new StringReader(templates));
@@ -425,7 +425,7 @@ StringTemplate t = group.getInstanceOf("vardef");
 t.setAttribute("type", "int");
 t.setAttribute("name", "foo");
 System.out.println(t);
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -440,9 +440,9 @@ generated object to be <TT>Parser</TT> unless the ANTLR user uses an option
 to set the super class to some custom class.  For example, here is a
 partial <TT>parser</TT> template definition:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 parser(name, rules, superClass="Parser") ::= ...
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -471,7 +471,7 @@ have <TT>StringTemplate</TT> support mappings.  For example, here is how
 ANTLR v3 knows how to initialize local variables to their default
 values:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 typeInitMap ::= [
         "int":"0",
         "long":"0",
@@ -483,7 +483,7 @@ typeInitMap ::= [
         "char":"0",
         default:"null" // anything other than an atomic type
 ]
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -513,22 +513,22 @@ ignored as it is usually used just to get the first line of text for
 the template at the start of a line.  In other words, if you want to
 have a blank line at the start of your template, use:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 foo() ::= &lt;&lt;
 
 2nd line is not blank, but first is
 &gt;&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>or
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 foo() ::= &lt;&lt;&lt;\n&gt;
 same as before; newline then this line
 &gt;&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -536,46 +536,46 @@ same as before; newline then this line
 the output.  To add a final newline, add an extra line or <TT>&lt;\n&gt;</TT>
 before the <TT>&gt;&gt;</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 foo() ::= &lt;&lt;
 rodent
 
 &gt;&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>or
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 foo() ::= &lt;&lt;
 rodent&lt;\n&gt;
 &gt;&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Template:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 foo() ::= &lt;&lt;
 rodent
 &gt;&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>on the other hand, is identical to
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 foo() ::= "rodent"
-</PRE></FONT>
+</PRE></div>
 
 
 <H3>Group file format</H3>
 
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 group
     :	"group" ID ';' (template|mapdef)*
     ;
@@ -603,7 +603,7 @@ keyValuePair
     :   STRING ':' STRING
     |   "default" ':' STRING
     ;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -625,9 +625,9 @@ keyValuePair
 
 <P>The most common thing in a template besides plain text is a simple named attribute reference such as:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 Your email: $email$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -639,10 +639,10 @@ Your email: $email$
 or a simple data field, you may reference that property using
 <em>attribute</em>.<em>property</em>.  For example:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 Your name: $person.name$
 Your email: $person.email$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -660,49 +660,49 @@ methods.
 <P>Because the type is ignored, you can pass in whatever existing Java
 aggregate (class) you have such as <TT>User</TT> or <TT>Person</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 User u = database.lookupPerson("parrt@jguru.com");
 st.setAttribute("person", u);
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Or, if a suitable aggregate doesn't exist, you can make a connector or "glue" object and pass that in instead:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 st.setAttribute("person", new Connector());
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>where <TT>Connector</TT> is defined as:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 public class Connector {
     public String getName() { return "Terence"; }
     public String getEmail() { return "parrt@jguru.com"; }
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The ability to reference aggregrate properties saves you the trouble
 of having to pull out the properties with Java code like this:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 User u = database.lookupPerson("parrt@jguru.com");
 st.setAttribute("name", u.getName());
 st.setAttribute("email", u.getEmail());
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>and having template:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 Your name: $name$
 Your email: $email$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -717,9 +717,9 @@ evaluation independence.
 <P>Sometimes the property name is itself in which case you need to use
 indirect property access notation:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $person.(propertyName)$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -739,14 +739,14 @@ aggregate object (though I make it easier for you with the automatic
 aggregate creation in the next section) you can pass in a <TT>HashMap</TT>
 that has keys referencable within templates.  For example, 
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate a = new StringTemplate("$user.name$, $user.phone$");
 HashMap user = new HashMap();
 user.put("name", "Terence");
 user.put("phone", "none-of-your-business");
 a.setAttribute("user", user);
 String results = a.toString();
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -760,7 +760,7 @@ makes it easy to group data during <TT>setAttribute()</TT> calls.  You may
 pass in an aggregrate attribute name to <TT>setAttribute()</TT> with the data
 to aggregate:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate st =
         new StringTemplate("$items:{$it.last$, $it.first$\n}$");
 st.setAttribute("items.{first,last}", "John", "Smith");
@@ -768,15 +768,15 @@ st.setAttribute("items.{first,last}", "Baron", "Von Munchhausen");
 String expecting =
         "Smith, John\n" +
         "Von Munchhausen, Baron\n";
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Note that the template, <TT>st</TT>, expects the <TT>items</TT> to be aggregates with properties <TT>first</TT> and <TT>last</TT>.  By using attribute name
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 items.{first,last}
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -792,9 +792,9 @@ multi-valued attribute in a syntax similar to the group map feature.
 Catenate attributes by placing them in square brackets in a
 comma-separated list.  For example,
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $[mine,yours]$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -809,17 +809,17 @@ data from a new perspective.
 <P>Naturally you may combine the list construction with template
 application:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $[mine,yours]:{ v | ...}$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Note that this is very different than
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $mine,yours:{ x,y | ...}$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -834,38 +834,38 @@ attribute differently than the others.  For example, if you have a
 list of integers in an attribute and you need to generate code to sum
 those numbers, you could start like this:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;numbers:{ n | sum += &lt;n&gt;;}&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>You need to define <TT>sum</TT>, however:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 int sum = 0;
 &lt;numbers:{ n | sum += &lt;n&gt;;}&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>What if <TT>numbers</TT> is empty though?  No need to create the <TT>sum</TT>
 definition so you could do this:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;if(numbers)&gt;int sum = 0;&lt;endif&gt;
 &lt;numbers:{ n | sum += &lt;n&gt;;}&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>A more specific strategy (and one that generates slightly better code as
 it avoids an unnecessary initialization to 0) is the following:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;first(numbers):{ n | int sum += &lt;n&gt;;}&gt;
 &lt;rest(numbers):{ n | sum += &lt;n&gt;;}&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -901,7 +901,7 @@ attribute value
 
 <P>Using method call syntax, just reference the foreign template:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;body&gt;
 ...
@@ -909,17 +909,17 @@ $searchbox()$
 ...
 &lt;/body&gt;
 &lt;/html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The invoking Java code would still just create the overall page and the enclosing page template would automatically create an instance of the referenced template and insert it:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup group =
   new StringTemplateGroup("webpages", "/usr/local/site/templates");
 StringTemplate page = group.getInstanceOf("page");
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -931,22 +931,22 @@ StringTemplate page = group.getInstanceOf("page");
 
 <P>Any included template can reference the attributes of the enclosing template instance.  So if <TT>searchbox</TT> references an attribute called <TT>resource</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;form ...&gt;
 ...
 &lt;input type=hidden name=resource value=$resource$&gt;
 ...
 &lt;/form&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>you could set attribute <TT>resource</TT> in the enclosing template <TT>page</TT> object:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate page = group.getInstanceOf("page");
 page.setAttribute("resource", "faqs");
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -959,7 +959,7 @@ reference it in any nested template in the body.
 
 <P>Another, more obvious, way to set the attributes of an included template is to pass in values as parameters, making them look like C macro invocations rather than includes.  The syntax looks like a set of attribute assignments:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;body&gt;
 ...
@@ -967,7 +967,7 @@ $searchbox(resource="faqs")$
 ...
 &lt;/body&gt;
 &lt;/html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -976,17 +976,17 @@ string literal <TT>"faqs"</TT>.
 
 <P>The right-hand-side of the assignment may be any expression such as an attribute reference or even a reference to another template like this:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $boldMe(item=copyrightNotice())$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>You may also use an anonymous template such as:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $bold(it={$firstName$ $lastName$})$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1028,33 +1028,33 @@ because the <TT>item</TT> on the right is evaluated in a different scope.
 
 <P>When setting parameters or testing IF conditionals, you may find it handy to use the plus "string concatenate" operator.  For example, when building web pages, you will find it useful to create a template called <TT>link</TT> and then use it to generate HTML link tags; you may want to change the way every link looks on your site and it's convenient to have one place to change things.  The template might look like:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;a href="$url$"&gt;&lt;b&gt;$title$&lt;/b&gt;&lt;/a&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Then in a page template you might reference:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 ...$link(url="http://www.jguru.com", title="jGuru")$...
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>or you could use attributes to set the link parameters:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 ...$link(url=person.homePage, title=person.name)$...
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Sometimes you may want to compute the URL; usually it is enough to concatenate strings:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 ...$link(url="/faq/view?ID="+faqid, title=faqtitle)$...
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1064,9 +1064,9 @@ the template that referenced <TT>link</TT>.
 <P>Terence says: <em>I'm a little uncomfortable with this catenation
 operation.  Please use a template instead</em>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 ...$link(url={/faq/view?ID=$faqid$}, title=faqtitle)$...
-</PRE></FONT>
+</PRE></div>
 
 
 <H3>Template Application</H3>
@@ -1074,33 +1074,33 @@ operation.  Please use a template instead</em>:
 
 <P>Imagine a simple template called <TT>bold</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;b&gt;$item$&lt;/b&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Just as with template <TT>link</TT> described above, you can reference it from a template by invoking it like a method call:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $bold(item=name)$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>What if you want something bold and italicized?  You could simply nest the template reference:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $bold(item=italics(item=name))$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>where template <TT>italics</TT> is defined as:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;i&gt;$item$&lt;/i&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1108,25 +1108,25 @@ $bold(item=italics(item=name))$
 
 <P>Think about what you are really trying to say here.  You want to say "make name italics and then make it bold", or "apply italics to the name and then apply bold."  There is an "apply template" syntax that is a literal translation:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $name:italics():bold()$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>where the templates are applied in the order specified from left to right.  This is much more clear, particularly if you had three templates to apply:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $name:courierFont():italics():bold()$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>For this syntax to work, however, the applied templates have to reference a standard attribute because you are not setting the attribute in a parameter assignment.  In general for syntax <em>expr</em>:<em>template</em>(), an attribute called <TT>it</TT> is set to the value of <em>expr</em>.  So, the definition of <TT>bold</TT> (and analogously <TT>italics</TT>), would have to be:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;b&gt;$it$&lt;/b&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1137,9 +1137,9 @@ parameter by using formal arguments.  For expression <TT>$x:y()$</TT>,
 <TT>StringTemplate</TT> will assign the value of <TT>x</TT> to <TT>it</TT> and any sole
 formal argument of <TT>y</TT>.  For example, if <TT>y</TT> is:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 y(item) ::= "_$item$_"
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1151,31 +1151,31 @@ y(item) ::= "_$item$_"
 
 <P>Consider a list of names (i.e., you set attribute <TT>names</TT> multiple times) that you want in a bullet list.  If you have a template called <TT>listItem</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;li&gt;$it$&lt;/li&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>then you can do this:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;ul&gt;
 $names:listItem()$
 &lt;/ul&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>and each name will appear as a bullet item. For example, if you set <TT>names</TT> to <TT>"Terence"</TT>, <TT>"Tom"</TT>, and <TT>"Jim"</TT>, then you would see:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;ul&gt;
 &lt;li&gt;Terence&lt;/li&gt;
 &lt;li&gt;Tom&lt;/li&gt;
 &lt;li&gt;Jim&lt;/li&gt;
 &lt;/ul&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1183,27 +1183,27 @@ $names:listItem()$
 
 <P>Whenever you apply a template to an attribute or multi-valued attribute, the default attribute <TT>it</TT> is set.  Another attribute <TT>i</TT> (of type <TT>Integer</TT>) is also set to the value's index number starting from 1.  For example, if you wanted to make your own style of numbered list, you could reference <TT>i</TT> to get the index:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $names:numberedListItem()$
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>where template <TT>numberedListItem</TT> is defined as:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $i$. $it$&lt;br&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>In this case, the output would be:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 1. Terence&lt;br&gt;
 2. Tom&lt;br&gt;
 3. Jim&lt;br&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1213,9 +1213,9 @@ $i$. $it$&lt;br&gt;
 also set to the iterated value.  For example, you could define
 <TT>numberedListItem</TT> as follows in a <TT>StringTemplateGroup</TT> file:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 numberedListItem(item) ::= "$i$. $item$&lt;br&gt;"
-</PRE></FONT>
+</PRE></div>
 
 
 <H4>Applying Multiple Templates To Multi-Valued Attributes</H4>
@@ -1223,17 +1223,17 @@ numberedListItem(item) ::= "$i$. $item$&lt;br&gt;"
 
 <P>The result of applying a template to a multi-valued attribute is another multi-valued attribute containing the results of the application.  You may apply another template to the results of the first template application, which comes in handy when you need to format the elements of a list before they go into the list.  For example, to bold the elements of a list do the following (given the appropriate template definitions from above):
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $names:bold():listItem()$
-</PRE></FONT>
+</PRE></div>
 
  
 
 <P>If you actually want to apply a template to the combined (string) result of a previous template application, enclose the previous application in parenthesis.  The parenthesis will force immediate evaluation of the template application, resulting in a string.  For example,
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $(names:bold()):listItem()$
-</PRE></FONT>
+</PRE></div>
 
  
 
@@ -1243,9 +1243,9 @@ $(names:bold()):listItem()$
 
 <P>When generating lists of things, you often need to change the color or other formatting instructions depending on the list position.  For example, you might want to alternate the color of the background for the elements of a list.  The easiest and most natural way to specify this is with an alternating list of templates to apply to an expression of the form: <TT>$</TT><em>expr</em>:<em>t1</em>(),<em>t2</em>(),...,<em>tN</em>()<TT>$</TT>.  To make an alternating list of blue and green names, you might say:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $names:blueListItem(),greenListItem()$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1259,11 +1259,11 @@ $names:blueListItem(),greenListItem()$
 
 <P>For example, to show a name list do the following:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;ul&gt;
 $names:{&lt;li&gt;$it$&lt;/li&gt;}$
 &lt;/ul&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1271,23 +1271,23 @@ $names:{&lt;li&gt;$it$&lt;/li&gt;}$
 
 <P>You can apply multiple templates very conveniently.  Here is the bold list of names again with anonymous templates:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;ul&gt;
 $names:{&lt;b&gt;$it$&lt;/b&gt;}:{&lt;li&gt;$it$&lt;/li&gt;}$
 &lt;/ul&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The output would look like:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;ul&gt;
 &lt;li&gt;&lt;b&gt;Terence&lt;/b&gt;&lt;/li&gt;
 &lt;li&gt;&lt;b&gt;Tom&lt;/b&gt;&lt;/li&gt;
 &lt;li&gt;&lt;b&gt;Jim&lt;/b&gt;&lt;/li&gt;
 &lt;/ul&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1301,11 +1301,11 @@ Python.  Use a comma-separated list of argument names followed by the
 following the pipe is ignored.  The following example bolds the names
 in a list using an argument to avoid the monotonous use of <TT>it</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;ul&gt;
 $names:{ n | &lt;b&gt;$n$&lt;/b&gt;}$
 &lt;/ul&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1320,9 +1320,9 @@ multi-valued attributes <TT>names</TT> and <TT>phones</TT> rather than a single
 <TT>users</TT> multi-valued attribute.  As of 2.2, you may iterate over
 multiple attributes:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $names,phones:{ n,p | $n$: $p$}$
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1357,7 +1357,7 @@ template for <TT>int</TT>, <TT>Object</TT>, <TT>Array</TT>, etc... declarations 
 pass in an aggregate object that has the variable declaration object
 and the format.  In a template group file you might have:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 group Java;
 
 file(variables,methods) ::= &lt;&lt;
@@ -1366,13 +1366,13 @@ file(variables,methods) ::= &lt;&lt;
 &gt;&gt;
 intdecl(decl) ::= "int &lt;decl.name&gt; = 0;"
 intarray(decl) ::= "int[] &lt;decl.name&gt; = null;"
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Your code might look like:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup group =
         new StringTemplateGroup(new StringReader(templates),
                 AngleBracketTemplateLexer.class);
@@ -1381,13 +1381,13 @@ f.setAttribute("variables.{decl,format}", new Decl("i","int"), "intdecl");
 f.setAttribute("variables.{decl,format}", new Decl("a","int-array"), "intarray");
 System.out.println("f="+f);
 String expecting = ""+newline+newline;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>For this simple unit test, I used the following dummy decl class:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 public static class Decl {
     String name;
     String type;
@@ -1395,16 +1395,16 @@ public static class Decl {
     public String getName() {return name;}
     public String getType() {return type;}
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The value of <TT>f.toString()</TT> is:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 int i = 0;
 int[] a = null;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1416,7 +1416,7 @@ attribute.
 
 <P>There are many situations when you want to conditionally include some text or another template.  <TT>StringTemplate</TT> provides simple IF-statements to let you specify conditional includes.  For example, in a dynamic web page you usually want a slightly different look depending on whether or not the viewer is "logged in" or not.  Without a conditional include, you would need two templates: <TT>page_logged_in</TT> and <TT>page_logged_out</TT>.  You can use a single <TT>page</TT> definition with <TT>if(</TT><em>expr</em><TT>)</TT> attribute actions instead:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 ...
 &lt;body&gt;
@@ -1428,7 +1428,7 @@ $endif$
 ...
 &lt;/body&gt;
 &lt;/html&gt;
-</PRE></FONT>
+</PRE></div>
 
  
 
@@ -1447,22 +1447,22 @@ object is a <TT>Boolean</TT>, in which case it tests the attribute for
 on a line by itself) . Kill newlines <B>before</B> <TT>&lt;else&gt;</TT> and <TT>&lt;endif&gt;</TT>
 and <TT>&gt;&gt;</TT>.  For example,
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 a &lt;if(foo)&gt;big&lt;else&gt;small&lt;endif&gt; dog
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>is identical to:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 a &lt;if(foo)&gt;
 big
 &lt;else&gt;
 small
 &lt;endif&gt;
  dog
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1481,12 +1481,12 @@ template into chunks.  It properly handles <TT>StringTemplate</TT> objects as
 attributes and other nested structures.  Here is the way to launch a
 Swing frame to view your template:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate st = ...;
 StringTemplateTreeView viz =
     new StringTemplateTreeView("sample",st);
 viz.setVisible(true);
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1676,7 +1676,7 @@ templates or groups and groups inherit the renderers from super groups
 object is rendered to string.  Here is a renderer that renders
 <TT>Calendar</TT> date objects tersely.
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 public class DateRenderer implements AttributeRenderer {
 	public String toString(Object o) {
 		SimpleDateFormat f = new SimpleDateFormat("yyyy.MM.dd");
@@ -1691,7 +1691,7 @@ st.setAttribute("created", new GregorianCalendar(2005, 07-1, 05));
 st.registerRenderer(GregorianCalendar.class, new DateRenderer());
 String expecting = "date: 2005.07.05";
 String result = st.toString();
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1737,7 +1737,7 @@ meantime, you must explicitly set the super.
 
 <P>From my unit tests, here is a simple inheritance of a template, <TT>bold</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup supergroup = new StringTemplateGroup("super");
 StringTemplateGroup subgroup = new StringTemplateGroup("sub");
 supergroup.defineTemplate("bold", "&lt;b&gt;$it$&lt;/b&gt;");
@@ -1745,7 +1745,7 @@ subgroup.setSuperGroup(supergroup);
 StringTemplate st = new StringTemplate(subgroup, "$name:bold()$");
 st.setAttribute("name", "Terence");
 String expecting = "&lt;b&gt;Terence&lt;/b&gt;";
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1753,16 +1753,16 @@ String expecting = "&lt;b&gt;Terence&lt;/b&gt;";
 
 <P>You may override templates:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 supergroup.defineTemplate("bold", "&lt;b&gt;$it$&lt;/b&gt;");
 subgroup.defineTemplate("bold", "&lt;strong&gt;$it$&lt;/strong&gt;");
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>And you may refer to a template in a supergroup via <TT>super.</TT><em>template</em><TT>()</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup group = new StringTemplateGroup(...);
 StringTemplateGroup subGroup = new StringTemplateGroup(...);
 subGroup.setSuperGroup(group);
@@ -1770,7 +1770,7 @@ group.defineTemplate("page", "$font()$:text");
 group.defineTemplate("font", "Helvetica");
 subGroup.defineTemplate("font", "$super.font()$ and Times");
 StringTemplate st = subGroup.getInstanceOf("page");
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1778,7 +1778,7 @@ StringTemplate st = subGroup.getInstanceOf("page");
 
 <P>Just like object-oriented programming languages, <TT>StringTemplate</TT> has polymorphism.  That is, template names are looked up dynamically relative to the invoking templates group.  The classic demonstration of dynamic message sends in Java, for example, would be the following example that catches my students all the time: ;)
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 class A {
   public void page() {bold();}
   public void bold() {System.out.println("A.bold");}
@@ -1789,7 +1789,7 @@ class B extends A {
 ...
 A a = new B();
 a.page();
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1797,7 +1797,7 @@ a.page();
 
 <P>Similarly, a template's group determines where it starts looking for a template.  In this case, both super and sub groups define a <TT>bold</TT> template mirroring the Java above.  Because I create template <TT>st</TT> as a member of the <TT>subGroup</TT> and reference to <TT>bold</TT> starts looking in <TT>subGroup</TT> even though <TT>page</TT> is the template referring to <TT>bold</TT>.
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup group = new StringTemplateGroup("super");
 StringTemplateGroup subGroup = new StringTemplateGroup("sub");
 subGroup.setSuperGroup(group);
@@ -1807,7 +1807,7 @@ subGroup.defineTemplate("bold", "&lt;strong&gt;$it$&lt;/strong&gt;");
 StringTemplate st = subGroup.getInstanceOf("page");
 st.setAttribute("name", "Ter");
 String expecting = "&lt;strong&gt;Ter&lt;/strong&gt;";
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1863,7 +1863,7 @@ formal arguments on template <em>t</em> hide any attribute value with that
 name in any enclosing scope.  Here is a test case that illustrates the
 point.
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 String templates =
         "group test;" +newline+
         "block(stats) ::= \"{$stats$}\""
@@ -1873,7 +1873,7 @@ StringTemplateGroup group =
 StringTemplate b = group.getInstanceOf("block");
 b.setAttribute("stats", group.getInstanceOf("block"));
 String expecting ="{{}}";
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1888,7 +1888,7 @@ a template instance is being evaluated during the evaluation of
 itself.  For example, here is a test case that causes and traps
 infinite recursion.
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 String templates =
         "group test;" +newline+
         "block(stats) ::= \"$stats$\"" +
@@ -1907,19 +1907,19 @@ try {
 catch (IllegalStateException ise) {
     ...
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The nested template stack trace from <TT>ise.getMessage()</TT> will be similar to:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 infinite recursion to &lt;ifstat([stats])@4&gt; referenced in &lt;block([stats])@3&gt;; stack trace:
 &lt;ifstat([stats])@4&gt;, attributes=[stats=&lt;block()@3&gt;]&gt;
 &lt;block([stats])@3&gt;, attributes=[stats=&lt;ifstat()@4&gt;], references=[stats]&gt;
 &lt;ifstat([stats])@4&gt; (start of recursive cycle)
 ...
-</PRE></FONT>
+</PRE></div>
 
 
 <H2>Setting the Expression Delimiters</H2>
@@ -1936,14 +1936,14 @@ and to make the expressions stand out.
 
 <P>To use the angle bracket delimiters you must create a <TT>StringTemplateGroup</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup group =
   new StringTemplateGroup("sqlstuff", "/tmp", AngleBracketTemplateLexer.class);
 StringTemplate query =
   new StringTemplate(group, "SELECT &lt;column&gt; FROM &lt;table&gt;;");
 query.setAttribute("column", "name");
 query.setAttribute("table", "User");
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -1974,7 +1974,7 @@ auto-indentation for code generation, but it also could be used to
 remove whitespace (as a compression) from HTML output.  If you don't
 care about indentation, you can simply implement <TT>write()</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 public interface StringTemplateWriter {
     void pushIndentation(String indent);
 
@@ -1982,13 +1982,13 @@ public interface StringTemplateWriter {
 
     void write(String str) throws IOException;
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Here is a "pass through" writer that is already defined:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 /** Just pass through the text */
 public class NoIndentWriter extends AutoIndentWriter {
     public NoIndentWriter(Writer out) {
@@ -1999,13 +1999,13 @@ public class NoIndentWriter extends AutoIndentWriter {
 	    out.write(str);
     }
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Use it like this:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringWriter out = new StringWriter();
 StringTemplateGroup group =
                 new StringTemplateGroup("test");
@@ -2015,7 +2015,7 @@ nameST.setAttribute("name", "Terence");
 // write to 'out' with no indentation
 nameST.write(new NoIndentWriter(out));
 System.out.println("output: "+out.toString());
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2023,9 +2023,9 @@ System.out.println("output: "+out.toString());
 
 <P>If you want to always use a particular output filter, then use
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplateGroup.setStringTemplateWriter(Class userSpecifiedWriterClass);
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2039,23 +2039,23 @@ use <TT>NoIndentWriter</TT> rather than (the default) <TT>AutoIndentWriter</TT>.
 
 <P>At the simplest level, the indentation looks like a simple column count:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 My dogs' names 
   $names; separator="\n"$
 The last, unindented line
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>will yield output like:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 My dog's names
   Fido
   Rex
   Stinky
 The last, unindented line
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2064,7 +2064,7 @@ The last, unindented line
 <P>When there are nested templates, <TT>StringTemplate</TT> tracks the combined
 indentation:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 // &lt;user&gt; is indented two spaces
 main(user) ::= &lt;&lt;
 Hi
@@ -2072,18 +2072,18 @@ Hi
 &gt;&gt;
 
 quote ::= " '$it$'"
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>In this case, you would get output like:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 Hi
 \t 'Bob'
 \t 'Ephram'
 \t 'Mary'
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2096,7 +2096,7 @@ at least the tab.
 inside must be nested 4 spaces.  Here are two templates that could
 take care of this:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 function(name,body) ::= &lt;&lt;
 void $name$() $body$
 &gt;&gt;
@@ -2105,7 +2105,7 @@ slist(statements) ::= &lt;&lt;
 {
     $statements; separator="\n"$
 }&gt;&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2113,7 +2113,7 @@ slist(statements) ::= &lt;&lt;
 instance, which gets passed to the <TT>function</TT> template as attribute
 <TT>body</TT>.  The following Java code:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate f = group.getInstanceOf("function");
 f.setAttribute("name", "foo");
 StringTemplate body = group.getInstanceOf("slist");
@@ -2123,13 +2123,13 @@ nestedSList.setAttribute("statements", "i=2;");
 body.setAttribute("statements", nestedSList);
 body.setAttribute("statements", "i=3;");
 f.setAttribute("body", body);
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>should generate something like:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 void foo() {
     i=1;
     {
@@ -2137,7 +2137,7 @@ void foo() {
     }
     i=3;
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2150,13 +2150,13 @@ the subtemplates (THEN and ELSE clauses) will see indentations.  For
 example, in the following template, the two subtemplates are indented
 by exactly 1 space each:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
      $if(foo)$
  $x$
 \t\t$else
  $y$
 $endif$
-</PRE></FONT>
+</PRE></div>
 
 
 <H2>Examples</H2>
@@ -2178,7 +2178,7 @@ the model.
 <P>First, imagine we have objects of type <TT>User</TT> that we will pull from a
 simulated database:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 public static class User {
     String name;
     int age;
@@ -2189,26 +2189,26 @@ public static class User {
     public String getName() { return name; }
     public int getAge() { return age; }
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Our database is just a static list:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 static User[] users = new User[] {
     new User("Boris", 39),
     new User("Natasha", 31),
     new User("Jorge", 25),
     new User("Vladimir", 28)
 };
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Here is my simple overall page design template, <TT>page.st</TT>:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;head&gt;
 &lt;title&gt;$title$&lt;/title&gt;
@@ -2220,14 +2220,14 @@ $body$
 
 &lt;/body&gt;
 &lt;/html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The body attribute of <TT>page.st</TT> will be set to the following template
 <TT>users.inline.st</TT> by my web server infrastructure (part of the controller):
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;table border=1&gt;
 $users:{
   &lt;tr&gt;
@@ -2235,7 +2235,7 @@ $users:{
   &lt;/tr&gt;
 }$
 &lt;/table&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2253,7 +2253,7 @@ all the page definition should do--interpret the data and set some
 attributes in the view.  The view only formats data and does no
 interpretation.
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 public static class UserListPage extends SamplePage {
     /** This "controller" pulls from "model" and pushes to "view" */
     public void generateBody(StringTemplate bodyST) throws Exception {
@@ -2264,7 +2264,7 @@ public static class UserListPage extends SamplePage {
 
     public String getTitle() { return "User List"; }
 }
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2278,40 +2278,40 @@ controller pulls the right data from the model.
 <P>Pushing factorization further, you could make a <TT>row.st</TT> component in
 order to reuse the table row HTML:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;tr&gt;
   &lt;td&gt;$it.name$&lt;/td&gt;&lt;td&gt;$it.age$&lt;/td&gt;
 &lt;/tr&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Then the user list template reduces to the more readable:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;table border=1&gt;
 $users:row()$
 &lt;/table&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Naturally, you could go one step further and make another component
 for the entire table (putting it in file <TT>table.st</TT>):
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;table border=1&gt;
 $elements:row()$
 &lt;/table&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>then the body template would simply be:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 $table(elements=users)$
-</PRE></FONT>
+</PRE></div>
 
 
 <H3>Internationalization and localization</H3>
@@ -2341,29 +2341,29 @@ loaded for this example.
 templates directly from there.  In my example, I made two skins, blue
 and red.  Here is how the group is loaded:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 String skin="blue";
 ClassLoader cl = Thread.currentThread().getContextClassLoader();
 // get a template group rooted at appropriate skin
 String absoluteSkinRootDirectoryName = cl.getResource(skin).getFile();
 StringTemplateGroup templates =
     new StringTemplateGroup("test", absoluteSkinRootDirectoryName);
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Then, when you ask for an instance of a page, it pulls from whichever
 directory <TT>skin</TT> is set to:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate page1ST = templates.getInstanceOf("page1");
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>Here is page 1 in the  <font color=blue>blue</font>  skin:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;title&gt;$strings.page1_title$&lt;/title&gt;
 &lt;body&gt;
@@ -2374,13 +2374,13 @@ StringTemplate page1ST = templates.getInstanceOf("page1");
 &lt;/font&gt;
 &lt;/body&gt;
 &lt;html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>and here is page 2:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;title&gt;$strings.page2_title$&lt;/title&gt;
 &lt;body&gt;
@@ -2389,13 +2389,13 @@ StringTemplate page1ST = templates.getInstanceOf("page1");
 &lt;/font&gt;
 &lt;/body&gt;
 &lt;html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>For the  <font color=red>red</font>  here is page 1:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;title&gt;$strings.page1_title$&lt;/title&gt;
 &lt;body&gt;
@@ -2408,13 +2408,13 @@ StringTemplate page1ST = templates.getInstanceOf("page1");
 &lt;/font&gt;
 &lt;/body&gt;
 &lt;html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>and page 2:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;title&gt;$strings.page2_title$&lt;/title&gt;
 &lt;body&gt;
@@ -2425,7 +2425,7 @@ StringTemplate page1ST = templates.getInstanceOf("page1");
 &lt;/font&gt;
 &lt;/body&gt;
 &lt;html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2443,31 +2443,31 @@ storing them in a Java properties file called
 <em>language</em><TT>.strings</TT> where <em>language</em> is the
 two-letter language code.  Here is my <TT>en.strings</TT> file:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 intro=Welcome to my test page for internationalization with StringTemplate
 page1_title=Page 1 testing I18N
 page2_title=Page 2 testing I18N
 page1_content=This is page 1's simple page content
 page2_content=This is page 2's simple page content
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>and here is my <TT>fr.strings</TT> file:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 intro=Bienvenue sur la page de test d'internationalisation avec StringTemplate
 page1_title=Page 1 test de I18N
 page2_title=Page 2 test de I18N
 page1_content=Le contenu de la page 1
 page2_content=Le contenu de la page 2
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>To load these per the current locale is pretty easy:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 // use Locale to get 2 letter country code for this computer
 Locale locale = Locale.getDefault();
 String defaultLanguage = locale.getLanguage();
@@ -2485,31 +2485,31 @@ if ( stringsFile==null ) {
 Properties strings = new Properties();
 InputStream is = stringsFile.openStream();
 strings.load(is);
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The <TT>strings</TT> properties object is just a <TT>Hashtable</TT> so
 you can directly pass to StringTemplate templates as an attribute:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 StringTemplate page1ST = templates.getInstanceOf("page1");
 page1ST.setAttribute("strings", strings);
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>To generate the page, just say:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 System.out.println(page1ST);
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The output will be (for the <TT>en</TT> locale):
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;title&gt;Page 1 testing I18N&lt;/title&gt;
 &lt;body&gt;
@@ -2521,14 +2521,14 @@ StringTemplate
 &lt;/font&gt;
 &lt;/body&gt;
 &lt;html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>If I change the locale to <TT>fr</TT> then without changes templates,
 the following is generated:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 &lt;html&gt;
 &lt;title&gt;Page 1 test de I18N&lt;/title&gt;
 &lt;body&gt;
@@ -2539,7 +2539,7 @@ the following is generated:
 &lt;/font&gt;
 &lt;/body&gt;
 &lt;html&gt;
-</PRE></FONT>
+</PRE></div>
 
 
 <H4>Source and compilation</H4>
@@ -2565,10 +2565,10 @@ get it here</B></A>.
 
 <P>You can compile this example like this:
 
-<FONT SIZE=2><PRE>
-javac -classpath .:antlr-2.7.6.jar:stringtemplate-2.3b5.jar Test.java
-java -classpath .:antlr-2.7.6.jar:stringtemplate-2.3b5.jar Test
-</PRE></FONT>
+<div class="code"><PRE>
+javac -classpath .:antlr-2.7.6.jar:stringtemplate-2.3.jar Test.java
+java -classpath .:antlr-2.7.6.jar:stringtemplate-2.3.jar Test
+</PRE></div>
 
 
 <H4>Summary</H4>
@@ -2620,17 +2620,17 @@ translated outside of strings; for example, text outside of attribute
 expressions do not get escape chars translated except <TT>\\$</TT>, <TT>\\&lt;</TT> and
 <TT>\\&gt;</TT>).
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 STRING
     :   '"' (ESC_CHAR | ~'"')* '"'
     ;
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>The translated escapes are:
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 ESC_CHAR
     :   '\\'
         (   'n'
@@ -2642,7 +2642,7 @@ ESC_CHAR
         |   '\\'
         )
      ;
-</PRE></FONT>
+</PRE></div>
 
 
 
@@ -2656,17 +2656,17 @@ specification of <TT>StringTemplate</TT>'s various components.
 <P>Why have a template like:
  
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 Check this faq entry: $link(url="/faq/view?ID="+id, title="A FAQ")$.
-</PRE></FONT>
+</PRE></div>
 
 
 
 <P>instead of 
 
-<FONT SIZE=2><PRE>
+<div class="code"><PRE>
 Check this faq entry: $link(url="/faq/view?ID="+$id$, title="A FAQ")$.
-</PRE></FONT>
+</PRE></div>
 
 
 
