@@ -446,14 +446,14 @@ public class ASTExpr extends Expr {
 		catch (SecurityException se) {
 			; // oh well; security won't let us
 		}
-		value = m.invoke(o,null);
+		value = m.invoke(o,(Object[])null);
 		return value;
 	}
 
 	protected Method getMethod(Class c, String methodName) {
 		Method m;
 		try {
-			m = c.getMethod(methodName, null);
+			m = c.getMethod(methodName, (Class[])null);
 		}
 		catch (NoSuchMethodException nsme) {
 			m = null;
