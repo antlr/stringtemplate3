@@ -122,7 +122,7 @@ A StringTemplate describes an output pattern/language like an exemplar.
  *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-	public static final String VERSION = "2.3b6";
+	public static final String VERSION = "2.3b7";
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;
@@ -575,7 +575,7 @@ public class StringTemplate {
 			return;
 		}
 		if ( name.indexOf('.')>=0 ) {
-			throw new IllegalArgumentException("cannot have '.' in attribute names");			
+			throw new IllegalArgumentException("cannot have '.' in attribute names");
 		}
 		if ( attributes==null ) {
 			attributes = new HashMap();
