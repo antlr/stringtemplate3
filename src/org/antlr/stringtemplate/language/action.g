@@ -239,7 +239,7 @@ StringTemplateToken t = null;
 	          }
 	        |
 	        )
-	        ('\\'! '}' | ESC_CHAR[false] | NESTED_ANONYMOUS_TEMPLATE | ~'}')*
+	        ('\\'! '{' | '\\'! '}' | ESC_CHAR[false] | NESTED_ANONYMOUS_TEMPLATE | ~'}')*
 	        {
 	        if ( t!=null ) {
 	        	t.setText($getText);
@@ -257,7 +257,7 @@ TEMPLATE_ARGS returns [List args=new ArrayList()]
 
 protected
 NESTED_ANONYMOUS_TEMPLATE
-	:	'{' ('\\'! '}' | ESC_CHAR[false] | NESTED_ANONYMOUS_TEMPLATE | ~'}')* '}'
+	:	'{' ('\\'! '{' | '\\'! '}' | ESC_CHAR[false] | NESTED_ANONYMOUS_TEMPLATE | ~'}')* '}'
 	;
 
 /** Match escape sequences, optionally translating them for strings, but not
