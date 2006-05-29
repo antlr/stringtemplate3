@@ -1702,16 +1702,22 @@ public class StringTemplate {
 	}
 
 	public String toString() {
+		return toString(StringTemplateWriter.NO_WRAP);
+	}
+
+	public String toString(int lineWidth) {
 		StringWriter out = new StringWriter();
 		// Write the output to a StringWriter
-		// TODO seems slow to create all these objects, can I use a singleton?
 		StringTemplateWriter wr = group.getStringTemplateWriter(out);
+		wr.setLineWidth(lineWidth);
 		try {
 			write(wr);
 		}
 		catch (IOException io) {
 			error("Got IOException writing to writer "+wr.getClass().getName());
 		}
+		// reset so next toString() does not wrap
+		wr.setLineWidth(StringTemplateWriter.NO_WRAP);
 		return out.toString();
 	}
 

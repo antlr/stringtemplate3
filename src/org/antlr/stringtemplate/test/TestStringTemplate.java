@@ -2090,9 +2090,17 @@ public class TestStringTemplate extends TestSuite {
 			public String popIndentation() {
 				return null;
 			}
+			public int getCurrentCharPositionInLine() {
+				return 0;
+			}
+			public void setCurrentCharPositionOfExpr(int charPos) { }
+			public void setLineWidth(int lineWidth) { }
 			public int write(String str) throws IOException {
 				buf.append(str); // just pass thru
 				return str.length();
+			}
+			public int writeSeparator(String str) throws IOException {
+				return write(str);
 			}
 		};
 		StringTemplateGroup group =
@@ -4120,6 +4128,208 @@ public class TestStringTemplate extends TestSuite {
 										errors);
 		String expecting = "template group parse error: line 2:1: unexpected token:";
 		assertTrue(errors.toString().startsWith(expecting));
+	}
+
+	public void testLineWrap() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"array(values) ::= <<int[] a = { <values; separator=\",\"> };>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("array");
+		a.setAttribute("values",
+					   new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
+						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
+					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
+		String expecting =
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
+			"            2,1,6,32,5,6,77,4,9,20,2,1,4,\n" +
+			"            63,9,20,2,1,4,6,32,5,6,77,6,\n" +
+			"            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
+			"            5,6,77,888,1,6,32,5 };";
+		assertEqual(a.toString(40), expecting);
+	}
+
+	public void testLineWrapEdgeCase() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"duh(chars) ::= \"<chars>\""+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("duh");
+		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
+		// lineWidth==3 implies that we can have 3 characters at most
+		String expecting =
+			"abc\n"+
+			"de";
+		assertEqual(a.toString(3), expecting);
+	}
+
+	public void testLineWrapLastCharIsNewline() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"duh(chars) ::= \"<chars>\""+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("duh");
+		a.setAttribute("chars", new String[] {"a","b","\n","d","e"});
+		// don't do \n if it's last element anyway
+		String expecting =
+			"ab\n"+
+			"de";
+		assertEqual(a.toString(3), expecting);
+	}
+
+	public void testLineWrapCharAfterWrapIsNewline() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"duh(chars) ::= \"<chars>\""+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("duh");
+		a.setAttribute("chars", new String[] {"a","b","c","\n","d","e"});
+		// Once we wrap, we must dump chars as we see them.  A newline right
+		// after a wrap is just an "unfortunate" event.  People will expect
+		// a newline if it's in the data.
+		String expecting =
+			"abc\n" +
+			"\n" +
+			"de";
+		assertEqual(a.toString(3), expecting);
+	}
+
+	public void testIndentBeyondLineWidth() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"duh(chars) ::= \"    <chars>\""+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("duh");
+		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
+		//
+		String expecting =
+			"    a\n" +
+			"    b\n" +
+			"    c\n" +
+			"    d\n" +
+			"    e";
+		assertEqual(a.toString(2), expecting);
+	}
+
+	public void testIndentedExpr() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"duh(chars) ::= \"    <chars>\""+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("duh");
+		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
+		//
+		String expecting =
+			"    ab\n" +
+			"    cd\n" +
+			"    e";
+		// width=4 spaces + 2 char.
+		assertEqual(a.toString(6), expecting);
+	}
+
+	public void testNestedIndentedExpr() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"top(d) ::= <<  <d>!>>"+newline+
+				"duh(chars) ::= \"  <chars>\""+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate top = group.getInstanceOf("top");
+		StringTemplate duh = group.getInstanceOf("duh");
+		duh.setAttribute("chars", new String[] {"a","b","c","d","e"});
+		top.setAttribute("d", duh);
+		//
+		String expecting =
+			"    ab\n" +
+			"    cd\n" +
+			"    e!";
+		// width=4 spaces + 2 char.
+		assertEqual(top.toString(6), expecting);
+	}
+
+	public void testNestedWithIndentAndTrackStartOfExpr() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"top(d) ::= <<  <d>!>>"+newline+
+				"duh(chars) ::= \"x: <chars>\""+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate top = group.getInstanceOf("top");
+		StringTemplate duh = group.getInstanceOf("duh");
+		duh.setAttribute("chars", new String[] {"a","b","c","d","e"});
+		top.setAttribute("d", duh);
+		//
+		String expecting =
+			"  x: ab\n" +
+			"     cd\n" +
+			"     e!";
+		assertEqual(top.toString(7), expecting);
+	}
+
+	public void testLineWrapDueToLiteral() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"m(args,body) ::= <<public void foo(<args; separator=\", \">) throws Ick { <body> }>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("m");
+		a.setAttribute("args",
+					   new String[] {"a", "b", "c"});
+		a.setAttribute("body", "i=3;");
+		// make it wrap because of ") throws Ick { " literal
+		int n = "public void foo(a, b, c".length();
+		String expecting =
+			"public void foo(a, b, c\n" +
+			") throws Ick { i=3; }";
+		assertEqual(a.toString(n), expecting);
+	}
+
+	public void testLineWrapInNestedExpr() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"top(arrays) ::= <<Arrays: <arrays>done>>"+newline+
+				"array(values) ::= <<int[] a = { <values; separator=\",\"> };<\\n\\>>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate top = group.getInstanceOf("top");
+		StringTemplate a = group.getInstanceOf("array");
+		a.setAttribute("values",
+					   new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
+						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
+					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
+		top.setAttribute("arrays", a);
+		top.setAttribute("arrays", a); // add twice
+		String expecting =
+			"Arrays: int[] a = { 3,9,20,2,1,4,6,32,5,\n" +
+			"                    6,77,888,2,1,6,32,5,\n" +
+			"                    6,77,4,9,20,2,1,4,63,\n" +
+			"                    9,20,2,1,4,6,32,5,6,\n" +
+			"                    77,6,32,5,6,77,3,9,20,\n" +
+			"                    2,1,4,6,32,5,6,77,888,\n" +
+			"                    1,6,32,5 };\n" +
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
+			"            2,1,6,32,5,6,77,4,9,20,2,1,4,\n" +
+			"            63,9,20,2,1,4,6,32,5,6,77,6,\n" +
+			"            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
+			"            5,6,77,888,1,6,32,5 };\n" +
+			"done";
+		assertEqual(top.toString(40), expecting);
 	}
 
 	/** Use when super.attr name is implemented

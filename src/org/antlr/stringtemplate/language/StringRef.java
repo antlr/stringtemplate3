@@ -27,11 +27,9 @@
 */
 package org.antlr.stringtemplate.language;
 
-import org.antlr.stringtemplate.*;
-import org.antlr.stringtemplate.language.Expr;
 import org.antlr.stringtemplate.StringTemplate;
+import org.antlr.stringtemplate.StringTemplateWriter;
 
-import java.io.Writer;
 import java.io.IOException;
 
 /** Represents a chunk of just simple text to spit out; nothing to "evaluate" */
@@ -48,7 +46,10 @@ public class StringRef extends Expr {
      */
     public int write(StringTemplate self, StringTemplateWriter out) throws IOException {
 		if ( str!=null ) {
+			int saveCharPos = out.getCurrentCharPositionInLine();
+			out.setCurrentCharPositionOfExpr(0); // literals don't line up with last expr
 			int n = out.write(str);
+			out.setCurrentCharPositionOfExpr(saveCharPos);
 			return n;
 		}
 		return 0;

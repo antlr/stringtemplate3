@@ -29,12 +29,17 @@ package org.antlr.stringtemplate.language;
 
 import antlr.RecognitionException;
 import antlr.collections.AST;
-import org.antlr.stringtemplate.*;
+import org.antlr.stringtemplate.AttributeRenderer;
+import org.antlr.stringtemplate.StringTemplate;
+import org.antlr.stringtemplate.StringTemplateGroup;
+import org.antlr.stringtemplate.StringTemplateWriter;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /** A single string template expression enclosed in $...; separator=...$
@@ -79,7 +84,9 @@ public class ASTExpr extends Expr {
         if ( exprTree==null || self==null || out==null ) {
             return 0;
         }
-        out.pushIndentation(getIndentation());
+		int saveCharPos = out.getCurrentCharPositionInLine();
+		out.pushIndentation(getIndentation());
+		out.setCurrentCharPositionOfExpr(saveCharPos);
         //System.out.println("evaluating tree: "+exprTree.toStringList());
         ActionEvaluator eval =
                 new ActionEvaluator(self,this,out);
@@ -91,6 +98,7 @@ public class ASTExpr extends Expr {
             self.error("can't evaluate tree: "+exprTree.toStringList(), re);
         }
         out.popIndentation();
+		out.setCurrentCharPositionOfExpr(saveCharPos);
 		return n;
     }
 
@@ -611,7 +619,7 @@ public class ASTExpr extends Expr {
 						boolean emptyIteratedValue =
 							valueIsPureConditional && charWrittenForValue==0;
                         if ( !emptyIteratedValue && separator!=null ) {
-							n += out.write(separatorString);
+							n += out.writeSeparator(separatorString);
                         }
                     }
                 }
@@ -636,7 +644,9 @@ public class ASTExpr extends Expr {
 
 	/** A separator is normally just a string literal, but is still an AST that
      *  we must evaluate.  The separator can be any expression such as a template
-     *  include or string cat expression etc...
+     *  include or string cat expression etc...  Evaluate with its own writer
+	 *  so that we can convert to string and then reuse, don't want to compute
+	 *  all the time; must precompute w/o writing to output buffer.
      */
     protected String computeSeparator(StringTemplate self,
 									  StringTemplateWriter out,
@@ -650,9 +660,12 @@ public class ASTExpr extends Expr {
             // must evaluate, writing to a string so we can hand on to it
             ASTExpr e = new ASTExpr(getEnclosingTemplate(),separatorTree,null);
             StringWriter buf = new StringWriter();
+			StringTemplateWriter sw =
+				self.getGroup().getStringTemplateWriter(buf);
+			/* TJP: removed May 29, 2006; not sure why I didn't ask group before
 			// create a new instance of whatever StringTemplateWriter
 			// implementation they are using.  Default is AutoIndentWriter.
-			// Defalut behavior is to indent but without
+			// Default behavior is to indent but without
             // any prior indents surrounding this attribute expression
 			StringTemplateWriter sw = null;
 			Class writerClass = out.getClass();
@@ -666,7 +679,7 @@ public class ASTExpr extends Expr {
 				self.error("cannot make implementation of StringTemplateWriter",exc);
 				sw = new AutoIndentWriter(buf);
 			}
-
+			*/
 			try {
 				e.write(self,sw);
             }
