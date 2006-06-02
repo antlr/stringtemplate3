@@ -39,6 +39,10 @@ import java.util.List;
  *  not just the same number of columns (don't have to worry about tabs vs
  *  spaces then).
  *
+ *  Anchors are char positions (tabs won't work) that indicate where all
+ *  future wraps should justify to.  The wrap position is actually the
+ *  larger of either the last anchor or the indentation level.
+ *
  *  This is a filter on a Writer.
  *
  *  It may be screwed up for '\r' '\n' on PC's.
@@ -47,9 +51,15 @@ public class AutoIndentWriter implements StringTemplateWriter {
 	public static final String newline = System.getProperty("line.separator");
 
 	/** stack of indents; use List as it's much faster than Stack. Grows
-	 *  from 0..n-1.
+	 *  from 0..n-1.  List<String>
 	 */
 	protected List indents = new ArrayList();
+
+	/** Stack of integer anchors (char positions in line); avoid Integer
+	 *  creation overhead.
+	 */
+	protected int[] anchors = new int[10];
+	protected int anchors_sp = -1;
 
 	protected Writer out = null;
     protected boolean atStartOfLine = true;
@@ -84,6 +94,20 @@ public class AutoIndentWriter implements StringTemplateWriter {
         return (String)indents.remove(indents.size()-1);
     }
 
+	public void pushAnchorPoint() {
+		if ( (anchors_sp +1)>=anchors.length ) {
+			int[] a = new int[anchors.length*2];
+			System.arraycopy(anchors, 0, a, 0, anchors.length-1);
+			anchors = a;
+		}
+		anchors_sp++;
+		anchors[anchors_sp] = charPosition;
+	}
+
+	public void popAnchorPoint() {
+		anchors_sp--;
+	}
+
 	public int getIndentationWidth() {
 		int n = 0;
         for (int i=0; i<indents.size(); i++) {
@@ -95,43 +119,9 @@ public class AutoIndentWriter implements StringTemplateWriter {
 		return n;
 	}
 
-	public int getCurrentCharPositionInLine() {
-		return charPosition;
-	}
-
-	public void setCurrentCharPositionOfExpr(int charPos) {
-		charPositionOfStartOfExpr = charPos;
-	}
-
-	/** Write out a string literal or attribute expression or expression element.
-	 *
-	 *  If doing line wrap, then check wrap before emitting this str.  If
-	 *  at or beyond desired line width then emit a \n and any indentation
-	 *  before spitting out this str.
-	 */
+	/** Write out a string literal or attribute expression or expression element.*/
 	public int write(String str) throws IOException {
-        //System.out.println("write("+str+"); indents="+indents);
 		int n = 0;
-
-		// if want wrap and not already at start of line (last char was \n)
-		// and we have hit or exceeded the threshold
-		if ( lineWidth!=NO_WRAP && !atStartOfLine && charPosition>=lineWidth ) {
-			out.write(newline);
-			n++; // have to count the extra \n we wrote
-			charPosition = 0;
-			if ( charPositionOfStartOfExpr>0 ) {
-				// we know absolute position, don't bother indenting
-				n+=indent(charPositionOfStartOfExpr);
-			}
-			else {
-				n+=indent();
-			}
-		}
-
-		return writeWork(str, n);
-	}
-
-	protected int writeWork(String str, int n) throws IOException {
 		for (int i=0; i<str.length(); i++) {
 			char c = str.charAt(i);
 			if ( c=='\n' ) {
@@ -152,7 +142,43 @@ public class AutoIndentWriter implements StringTemplateWriter {
 	}
 
 	public int writeSeparator(String str) throws IOException {
-		return writeWork(str, 0);
+		return write(str);
+	}
+
+	/** Write out a string literal or attribute expression or expression element.
+	 *
+	 *  If doing line wrap, then check wrap before emitting this str.  If
+	 *  at or beyond desired line width then emit a \n and any indentation
+	 *  before spitting out this str.
+	 */
+	public int write(String str, String wrap) throws IOException {
+		int n = 0;
+
+		// if want wrap and not already at start of line (last char was \n)
+		// and we have hit or exceeded the threshold
+		if ( lineWidth!=NO_WRAP && wrap!=null && !atStartOfLine &&
+			 charPosition >= lineWidth )
+		{
+			// ok to wrap
+			out.write(wrap);
+			n+=wrap.length(); // have to count the wrap chars
+			charPosition = 0; // we're back to left edge by default
+			int indentWidth = getIndentationWidth();
+			int lastAnchor = 0;
+			if ( anchors_sp>=0 ) {
+				lastAnchor = anchors[anchors_sp];
+			}
+			if ( lastAnchor > indentWidth ) {
+				// use anchor not indentation
+				n+=indent(lastAnchor);
+			}
+			else {
+				// indent is farther over than last anchor, ignore anchor
+				n+=indent();
+			}
+		}
+
+		return n + write(str);
 	}
 
     public int indent() throws IOException {

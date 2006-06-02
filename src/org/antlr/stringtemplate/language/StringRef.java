@@ -42,14 +42,13 @@ public class StringRef extends Expr {
 	}
 
 	/** Just print out the string; no reference to self because this
-     *  is a literal--not sensitive to attribute values.
+     *  is a literal--not sensitive to attribute values.  These strings
+	 *  never wrap because they are not part of an <...> expression.
+	 *  <"foo"; wrap="\n"> should wrap though if necessary.
      */
     public int write(StringTemplate self, StringTemplateWriter out) throws IOException {
 		if ( str!=null ) {
-			int saveCharPos = out.getCurrentCharPositionInLine();
-			out.setCurrentCharPositionOfExpr(0); // literals don't line up with last expr
 			int n = out.write(str);
-			out.setCurrentCharPositionOfExpr(saveCharPos);
 			return n;
 		}
 		return 0;

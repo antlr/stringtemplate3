@@ -56,6 +56,18 @@ public class ASTExpr extends Expr {
 	/** Used to indicate "default:key" in maps within groups */
 	public static final StringTemplate MAP_KEY_VALUE = new StringTemplate();
 
+	/** Using an expr option w/o value, makes options table hold EMPTY_OPTION
+	 *  value for that key.
+	 */
+	public static final String EMPTY_OPTION = "empty expr option";
+
+	public static final Map defaultOptionValues = new HashMap() {
+		{
+			put("anchor", new StringTemplateAST(ActionEvaluator.STRING,"true"));
+			put("wrap", new StringTemplateAST(ActionEvaluator.STRING,"\n"));
+		}
+	};
+
 	// used temporarily for checking obj.prop cache
 	public static int totalObjPropRefs = 0;
 	public static int totalReflectionLookups = 0;
@@ -65,7 +77,19 @@ public class ASTExpr extends Expr {
     /** store separator etc... */
     Map options = null;
 
-    public ASTExpr(StringTemplate enclosingTemplate, AST exprTree, Map options) {
+	/** A cached value of wrap=expr from the <...> expression.
+	 *  Computed in write(StringTemplate, StringTemplateWriter) and used
+	 *  in writeAttribute.
+	 */
+	String wrapString = null;
+
+	/** A cached value of separator=expr from the <...> expression.
+	 *  Computed in write(StringTemplate, StringTemplateWriter) and used
+	 *  in writeAttribute.
+	 */
+	String separatorString = null;
+
+	public ASTExpr(StringTemplate enclosingTemplate, AST exprTree, Map options) {
 		super(enclosingTemplate);
         this.exprTree = exprTree;
         this.options = options;
@@ -79,15 +103,32 @@ public class ASTExpr extends Expr {
     /** To write out the value of an ASTExpr, invoke the evaluator in eval.g
      *  to walk the tree writing out the values.  For efficiency, don't
      *  compute a bunch of strings and then pack them together.  Write out directly.
+	 *
+	 *  Compute separator and wrap expressions, save as strings so we don't
+	 *  recompute for each value in a multi-valued attribute or expression.
+	 *
+	 *  If they set anchor option, then inform the writer to push current
+	 *  char position.
      */
     public int write(StringTemplate self, StringTemplateWriter out) throws IOException {
         if ( exprTree==null || self==null || out==null ) {
             return 0;
         }
-		int saveCharPos = out.getCurrentCharPositionInLine();
 		out.pushIndentation(getIndentation());
-		out.setCurrentCharPositionOfExpr(saveCharPos);
-        //System.out.println("evaluating tree: "+exprTree.toStringList());
+		// handle options, anchor, wrap, separator...
+		StringTemplateAST anchorAST = (StringTemplateAST)getOption("anchor");
+		if ( anchorAST!=null ) { // any non-empty expr means true; check presence
+			out.pushAnchorPoint();
+		}
+		StringTemplateAST wrapAST = (StringTemplateAST)getOption("wrap");
+		if ( wrapAST!=null ) {
+			wrapString = evaluateExpression(self,wrapAST);
+		}
+		StringTemplateAST separatorAST = (StringTemplateAST)getOption("separator");
+		if ( separatorAST!=null ) {
+			separatorString = evaluateExpression(self, separatorAST);
+		}
+		//System.out.println("evaluating tree: "+exprTree.toStringList());
         ActionEvaluator eval =
                 new ActionEvaluator(self,this,out);
 		int n = 0;
@@ -98,7 +139,9 @@ public class ASTExpr extends Expr {
             self.error("can't evaluate tree: "+exprTree.toStringList(), re);
         }
         out.popIndentation();
-		out.setCurrentCharPositionOfExpr(saveCharPos);
+		if ( anchorAST!=null ) {
+			out.popAnchorPoint();
+		}
 		return n;
     }
 
@@ -550,17 +593,12 @@ public class ASTExpr extends Expr {
      *  a separator arg; used when is a vector.
      */
     public int writeAttribute(StringTemplate self, Object o, StringTemplateWriter out) {
-        Object separator = null;
-        if ( options!=null ) {
-            separator = options.get("separator");
-        }
-        return write(self,o,out,separator);
+        return write(self,o,out);
     }
 
 	protected int write(StringTemplate self,
 						Object o,
-						StringTemplateWriter out,
-						Object separator)
+						StringTemplateWriter out)
     {
         if ( o==null ) {
             return 0;
@@ -597,14 +635,10 @@ public class ASTExpr extends Expr {
 			o = convertAnythingIteratableToIterator(o);
 			if ( o instanceof Iterator ) {
 				Iterator iter = (Iterator)o;
-                String separatorString = null;
-                if ( separator!=null ) {
-                    separatorString = computeSeparator(self, out, separator);
-                }
                 while ( iter.hasNext() ) {
                     Object iterValue = iter.next();
                     int charWrittenForValue =
-						write(self, iterValue, out, separator);
+						write(self, iterValue, out);
 					n += charWrittenForValue;
                     if ( iter.hasNext() ) {
 						boolean valueIsPureConditional = false;
@@ -618,7 +652,7 @@ public class ASTExpr extends Expr {
 						}
 						boolean emptyIteratedValue =
 							valueIsPureConditional && charWrittenForValue==0;
-                        if ( !emptyIteratedValue && separator!=null ) {
+                        if ( !emptyIteratedValue && separatorString!=null ) {
 							n += out.writeSeparator(separatorString);
                         }
                     }
@@ -627,11 +661,18 @@ public class ASTExpr extends Expr {
             else {
 				AttributeRenderer renderer =
 					self.getAttributeRenderer(o.getClass());
+				String v = null;
 				if ( renderer!=null ) {
-					n = out.write( renderer.toString(o) );
+					v = renderer.toString(o);
 				}
 				else {
-                	n = out.write( o.toString() );
+					v = o.toString();
+				}
+				if ( wrapString!=null ) {
+					n = out.write(v, wrapString);
+				}
+				else {
+					n = out.write( v );
 				}
 				return n;
             }
@@ -642,55 +683,40 @@ public class ASTExpr extends Expr {
 		return n;
     }
 
-	/** A separator is normally just a string literal, but is still an AST that
-     *  we must evaluate.  The separator can be any expression such as a template
+	/** A expr is normally just a string literal, but is still an AST that
+     *  we must evaluate.  The expr can be any expression such as a template
      *  include or string cat expression etc...  Evaluate with its own writer
 	 *  so that we can convert to string and then reuse, don't want to compute
 	 *  all the time; must precompute w/o writing to output buffer.
      */
-    protected String computeSeparator(StringTemplate self,
-									  StringTemplateWriter out,
-									  Object separator)
+    protected String evaluateExpression(StringTemplate self,
+										Object expr)
 	{
-        if ( separator==null ) {
+        if ( expr ==null ) {
             return null;
         }
-        if ( separator instanceof StringTemplateAST ) {
-            StringTemplateAST separatorTree = (StringTemplateAST)separator;
-            // must evaluate, writing to a string so we can hand on to it
-            ASTExpr e = new ASTExpr(getEnclosingTemplate(),separatorTree,null);
+        if ( expr instanceof StringTemplateAST ) {
+			StringTemplateAST exprAST = (StringTemplateAST)expr;
+			// must evaluate, writing to a string so we can hang on to it
             StringWriter buf = new StringWriter();
 			StringTemplateWriter sw =
 				self.getGroup().getStringTemplateWriter(buf);
-			/* TJP: removed May 29, 2006; not sure why I didn't ask group before
-			// create a new instance of whatever StringTemplateWriter
-			// implementation they are using.  Default is AutoIndentWriter.
-			// Default behavior is to indent but without
-            // any prior indents surrounding this attribute expression
-			StringTemplateWriter sw = null;
-			Class writerClass = out.getClass();
-			try {
-				Constructor ctor =
-						writerClass.getConstructor(new Class[] {Writer.class});
-				sw = (StringTemplateWriter)ctor.newInstance(new Object[] {buf});
-			}
-			catch (Exception exc) {
-				// default new AutoIndentWriter(buf)
-				self.error("cannot make implementation of StringTemplateWriter",exc);
-				sw = new AutoIndentWriter(buf);
-			}
-			*/
-			try {
-				e.write(self,sw);
-            }
-            catch (IOException ioe) {
-                self.error("can't evaluate separator expression", ioe);
+			 {
+				ActionEvaluator eval =
+						new ActionEvaluator(self,this,sw);
+				int n = 0;
+				try {
+					n = eval.action(exprAST); // eval tree
+				}
+				catch (RecognitionException re) {
+					self.error("can't evaluate tree: "+exprTree.toStringList(), re);
+				}
             }
             return buf.toString();
         }
         else {
             // just in case we expand in the future and it's something else
-            return separator.toString();
+            return expr.toString();
         }
     }
 
@@ -895,6 +921,17 @@ public class ASTExpr extends Expr {
 		}
 
 		return last;
+	}
+
+	public Object getOption(String name) {
+		Object value = null;
+		if ( options!=null ) {
+			value = options.get(name);
+			if ( value==EMPTY_OPTION ) {
+				return defaultOptionValues.get(name);
+			}
+		}
+		return value;
 	}
 
 	public String toString() {

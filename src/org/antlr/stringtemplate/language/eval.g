@@ -83,21 +83,11 @@ expr returns [Object value=null]
     |   #(VALUE e=expr)
         // convert to string (force early eval)
         {
-        StringWriter buf = new StringWriter();
-        Class writerClass = out.getClass();
-        StringTemplateWriter sw = null;
-        try {
-            Constructor ctor =
-            	writerClass.getConstructor(new Class[] {Writer.class});
-            sw = (StringTemplateWriter)ctor.newInstance(new Object[] {buf});
-        }
-        catch (Exception exc) {
-        	// default new AutoIndentWriter(buf)
-        	self.error("cannot make implementation of StringTemplateWriter",exc);
-        	sw = new AutoIndentWriter(buf);
-      	}
-        chunk.writeAttribute(self,e,sw);
-        value = buf.toString();
+		StringWriter buf = new StringWriter();
+		StringTemplateWriter sw =
+			self.getGroup().getStringTemplateWriter(buf);
+		chunk.writeAttribute(self,e,sw);
+		value = buf.toString();
         }
     ;
 

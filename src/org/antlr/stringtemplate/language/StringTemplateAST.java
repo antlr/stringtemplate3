@@ -27,15 +27,20 @@
 */
 package org.antlr.stringtemplate.language;
 
-import org.antlr.stringtemplate.StringTemplate;
 import antlr.CommonAST;
-
-import java.util.Vector;
+import org.antlr.stringtemplate.StringTemplate;
 
 public class StringTemplateAST extends CommonAST {
     protected StringTemplate st = null; // track template for ANONYMOUS blocks
 
-    public StringTemplate getStringTemplate() {
+	public StringTemplateAST() {;}
+	
+	public StringTemplateAST(int type, String text) {
+		this.setType(type);
+		this.setText(text);
+	}
+
+	public StringTemplate getStringTemplate() {
         return st;
     }
 

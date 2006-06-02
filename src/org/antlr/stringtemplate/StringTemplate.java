@@ -122,7 +122,7 @@ A StringTemplate describes an output pattern/language like an exemplar.
  *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-	public static final String VERSION = "2.3b7";
+	public static final String VERSION = "2.3b8";
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;
@@ -1716,7 +1716,9 @@ public class StringTemplate {
 		catch (IOException io) {
 			error("Got IOException writing to writer "+wr.getClass().getName());
 		}
-		// reset so next toString() does not wrap
+		// reset so next toString() does not wrap; normally this is a new writer
+		// each time, but just in case they override the group to reuse the
+		// writer.
 		wr.setLineWidth(StringTemplateWriter.NO_WRAP);
 		return out.toString();
 	}

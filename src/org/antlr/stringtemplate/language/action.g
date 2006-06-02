@@ -77,8 +77,19 @@ action returns [Map opts=null]
 	;
 
 optionList! returns [Map opts=new HashMap()]
-    :   "separator" ASSIGN e:expr {opts.put("separator",#e);}
+    :   option[opts] (COMMA option[opts])*
     ;
+
+option[Map opts]
+{
+Object v=null;
+}
+	:	i:ID
+		( ASSIGN e:expr {v=#e;}
+		| {v=ASTExpr.EMPTY_OPTION;}
+		)
+		{opts.put(#i.getText(),v);}
+	;
 
 templatesExpr
     :   (parallelArrayTemplateApplication)=> parallelArrayTemplateApplication

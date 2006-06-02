@@ -43,29 +43,22 @@ public interface StringTemplateWriter {
 
     String popIndentation();
 
-	/** Return the char position from 0..n-1 where the writer is about to
-	 *  write.  This does not handle tabs!  Tabs count as 1 char.
-	 *  This does not count any indentation--it's a raw value of where
-	 *  the next output char will go.
-	 */
-	int getCurrentCharPositionInLine();
+	void pushAnchorPoint();
 
-	/** Set the starting char position for the evaluation of an expression.
-	 *  For "hi: <name>", the char pos of <name> will be 4.  Used for word
-	 *  wrap so the writer knows to indent, lining up wrapped lines with
-	 *  start of the expression.  Using getCurrentCharPositionInLine(),
-	 *  the invoker can stack these up so nested expression evaluation
-	 *  works.
-	 */
-	void setCurrentCharPositionOfExpr(int charPos);
+	void popAnchorPoint();
 
 	void setLineWidth(int lineWidth);
 
 	/** Write the string and return how many actual chars were written.
 	 *  With autoindentation and wrapping, more chars than length(str)
-	 *  can be emitted.
+	 *  can be emitted.  No wrapping is done.
 	 */
 	int write(String str) throws IOException;
+
+	/** Same as write, but wrap lines using the indicated string as the
+	 *  wrap character (such as "\n").
+	 */
+	int write(String str, String wrap) throws IOException;
 
 	/** Write a separator.  Same as write() except that a \n cannot
 	 *  be inserted before emitting a separator.

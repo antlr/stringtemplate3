@@ -2090,11 +2090,14 @@ public class TestStringTemplate extends TestSuite {
 			public String popIndentation() {
 				return null;
 			}
-			public int getCurrentCharPositionInLine() {
+			public void pushAnchorPoint() {
+			}
+			public void popAnchorPoint() {
+			}
+			public void setLineWidth(int lineWidth) { }
+			public int write(String str, String wrap) throws IOException {
 				return 0;
 			}
-			public void setCurrentCharPositionOfExpr(int charPos) { }
-			public void setLineWidth(int lineWidth) { }
 			public int write(String str) throws IOException {
 				buf.append(str); // just pass thru
 				return str.length();
@@ -4133,7 +4136,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testLineWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"array(values) ::= <<int[] a = { <values; separator=\",\"> };>>"+newline;
+				"array(values) ::= <<int[] a = { <values; anchor, wrap=\"\\n\", separator=\",\"> };>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4151,10 +4154,46 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(a.toString(40), expecting);
 	}
 
+	public void testFortranLineWrap() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"func(args) ::= <<       FUNCTION line( <args; wrap=\"\\n      c\", separator=\",\"> )\\>>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("func");
+		a.setAttribute("args",
+					   new String[] {"a","b","c","d","e","f"});
+		String expecting =
+			"       FUNCTION line( a,b,c,d,\n" +
+			"      ce,f )>";
+		assertEqual(a.toString(30), expecting);
+	}
+
+	public void testLineWrapWithDiffAnchor() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"array(values) ::= <<int[] a = { <{1,9,2,<values; wrap, separator=\",\">}; anchor> };>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("array");
+		a.setAttribute("values",
+					   new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
+						4,9,20,2,1,4,63,9,20,2,1,4,6});
+		String expecting =
+			"int[] a = { 1,9,2,3,9,20,2,1,4,\n" +
+			"            6,32,5,6,77,888,2,\n" +
+			"            1,6,32,5,6,77,4,9,\n" +
+			"            20,2,1,4,63,9,20,2,\n" +
+			"            1,4,6 };";
+		assertEqual(a.toString(30), expecting);
+	}
+
 	public void testLineWrapEdgeCase() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"duh(chars) ::= \"<chars>\""+newline;
+				"duh(chars) ::= <<<chars; wrap=\"\\n\"\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4170,7 +4209,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testLineWrapLastCharIsNewline() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"duh(chars) ::= \"<chars>\""+newline;
+				"duh(chars) ::= <<<chars; wrap=\"\\n\"\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4186,7 +4225,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testLineWrapCharAfterWrapIsNewline() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"duh(chars) ::= \"<chars>\""+newline;
+				"duh(chars) ::= <<<chars; wrap=\"\\n\"\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4205,7 +4244,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testIndentBeyondLineWidth() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"duh(chars) ::= \"    <chars>\""+newline;
+				"duh(chars) ::= <<    <chars; wrap=\"\\n\"\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4224,7 +4263,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testIndentedExpr() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"duh(chars) ::= \"    <chars>\""+newline;
+				"duh(chars) ::= <<    <chars; wrap=\"\\n\"\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4243,7 +4282,7 @@ public class TestStringTemplate extends TestSuite {
 		String templates =
 				"group test;" +newline+
 				"top(d) ::= <<  <d>!>>"+newline+
-				"duh(chars) ::= \"  <chars>\""+newline;
+				"duh(chars) ::= <<  <chars; wrap=\"\\n\"\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4251,7 +4290,6 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate duh = group.getInstanceOf("duh");
 		duh.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		top.setAttribute("d", duh);
-		//
 		String expecting =
 			"    ab\n" +
 			"    cd\n" +
@@ -4264,7 +4302,7 @@ public class TestStringTemplate extends TestSuite {
 		String templates =
 				"group test;" +newline+
 				"top(d) ::= <<  <d>!>>"+newline+
-				"duh(chars) ::= \"x: <chars>\""+newline;
+				"duh(chars) ::= <<x: <chars; anchor, wrap=\"\\n\"\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4280,10 +4318,10 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(top.toString(7), expecting);
 	}
 
-	public void testLineWrapDueToLiteral() throws Exception {
+	public void testLineDoesNotWrapDueToLiteral() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"m(args,body) ::= <<public void foo(<args; separator=\", \">) throws Ick { <body> }>>"+newline;
+				"m(args,body) ::= <<public void foo(<args; wrap=\"\\n\",separator=\", \">) throws Ick { <body> }>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4294,16 +4332,31 @@ public class TestStringTemplate extends TestSuite {
 		// make it wrap because of ") throws Ick { " literal
 		int n = "public void foo(a, b, c".length();
 		String expecting =
-			"public void foo(a, b, c\n" +
-			") throws Ick { i=3; }";
+			"public void foo(a, b, c) throws Ick { i=3; }";
 		assertEqual(a.toString(n), expecting);
+	}
+
+	public void testSingleValueWrap() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"m(args,body) ::= <<{ <body; anchor, wrap=\"\\n\"> }>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate m = group.getInstanceOf("m");
+		m.setAttribute("body", "i=3;");
+		// make it wrap because of ") throws Ick { " literal
+		String expecting =
+			"{ \n"+
+			"  i=3; }";
+		assertEqual(m.toString(2), expecting);
 	}
 
 	public void testLineWrapInNestedExpr() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"top(arrays) ::= <<Arrays: <arrays>done>>"+newline+
-				"array(values) ::= <<int[] a = { <values; separator=\",\"> };<\\n\\>>>"+newline;
+				"array(values) ::= <<int[] a = { <values; anchor, wrap=\"\\n\", separator=\",\"> };<\\n\\>>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
