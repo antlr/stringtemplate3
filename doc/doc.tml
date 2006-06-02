@@ -477,7 +477,7 @@ same as before; newline then this line
 \>>
 >>
 
-The last newline before the {>>} is also ignored and is included in
+The last newline before the {>>} is also ignored and is not included in
 the output.  To add a final newline, add an extra line or {<\n>}
 before the {>>}:
 
