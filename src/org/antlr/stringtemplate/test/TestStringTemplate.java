@@ -4395,6 +4395,16 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(t.toString(), expecting);
 	}
 
+	public void testEscapeEscapeNestedAngle() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t = group.defineTemplate("t", "<v:{a|\\\\<a>}>");
+		t.setAttribute("v", "Joe");
+		//System.out.println(t);
+		String expecting="\\Joe";
+		assertEqual(t.toString(), expecting);
+	}
+
 	/** Use when super.attr name is implemented
 	public void testArgumentContext2() throws Exception {
 		// t is referenced within foo and so will be evaluated in that
