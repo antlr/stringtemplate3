@@ -84,6 +84,7 @@ LITERAL
           }
         : '\\'! '<'  // allow escaped delimiter
         | '\\'! '>'
+        | '\\'! '\\' // always replace \\ with \
         | '\\' ~('<'|'>')   // otherwise ignore escape char
         | ind:INDENT
           {
