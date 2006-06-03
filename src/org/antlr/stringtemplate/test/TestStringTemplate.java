@@ -4405,6 +4405,22 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(t.toString(), expecting);
 	}
 
+	public void testListOfIntArrays() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data:array()>");
+		group.defineTemplate("array", "[<it:element(); separator=\",\">]");
+		group.defineTemplate("element", "<it>");
+		List data = new ArrayList();
+		data.add(new int[] {1,2,3});
+		data.add(new int[] {10,20,30});
+		t.setAttribute("data", data);
+		//System.out.println(t);
+		String expecting="[1,2,3][10,20,30]";
+		assertEqual(t.toString(), expecting);
+	}
+
 	/** Use when super.attr name is implemented
 	public void testArgumentContext2() throws Exception {
 		// t is referenced within foo and so will be evaluated in that

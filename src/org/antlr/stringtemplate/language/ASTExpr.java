@@ -239,6 +239,7 @@ public class ASTExpr extends Expr {
 
         // normalize collections and such to use iterators
         // anything iteratable can be used for "APPLY"
+		attributeValue = convertArrayToList(attributeValue);
 		attributeValue = convertAnythingIteratableToIterator(attributeValue);
 
         if ( attributeValue instanceof Iterator ) {
@@ -771,6 +772,11 @@ public class ASTExpr extends Expr {
 		if ( value==null ) {
 			return null;
 		}
+		/*
+		if ( !(value instanceof StringTemplate) ) {
+			System.out.println("convert "+value+" to array?");
+		}
+		*/
 		if ( value instanceof Object[] ) {
 			Object[] list = (Object[])value;
 			List v = new StringTemplate.STAttributeList(list.length);
@@ -807,7 +813,6 @@ public class ASTExpr extends Expr {
 			}
 			value = v;
 		}
-
 		else if ( value instanceof double[] ) {
 			double[] list = (double[])value;
 			List v = new StringTemplate.STAttributeList(list.length);
