@@ -2102,6 +2102,9 @@ public class TestStringTemplate extends TestSuite {
 				buf.append(str); // just pass thru
 				return str.length();
 			}
+			public int writeWrapSeparator(String wrap) throws IOException {
+				return 0;
+			}
 			public int writeSeparator(String str) throws IOException {
 				return write(str);
 			}
@@ -4239,6 +4242,59 @@ public class TestStringTemplate extends TestSuite {
 			"\n" +
 			"de";
 		assertEqual(a.toString(3), expecting);
+	}
+
+	public void testLineWrapForAnonTemplate() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"duh(data) ::= <<!<data:{v|[<v>]}; wrap>!>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("duh");
+		a.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
+		String expecting =
+			"![1][2][3]\n" + // width=9 is the 3 char; don't break til after ]
+			"[4][5][6]\n" +
+			"[7][8][9]!";
+		assertEqual(a.toString(9), expecting);
+	}
+
+	public void testLineWrapForAnonTemplateAnchored() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"duh(data) ::= <<!<data:{v|[<v>]}; anchor, wrap>!>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("duh");
+		a.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
+		String expecting =
+			"![1][2][3]\n" +
+			" [4][5][6]\n" +
+			" [7][8][9]!";
+		assertEqual(a.toString(9), expecting);
+	}
+
+	public void testLineWrapForAnonTemplateComplicatedWrap() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"top(s) ::= <<  <s>.>>"+
+				"str(data) ::= <<!<data:{v|[<v>]}; wrap=\"!+\\n!\">!>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate t = group.getInstanceOf("top");
+		StringTemplate s = group.getInstanceOf("str");
+		s.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
+		t.setAttribute("s", s);
+		String expecting =
+			"  ![1][2]!+\n" +
+			"  ![3][4]!+\n" +
+			"  ![5][6]!+\n" +
+			"  ![7][8]!+\n" +
+			"  ![9]!.";
+		assertEqual(t.toString(9), expecting);
 	}
 
 	public void testIndentBeyondLineWidth() throws Exception {

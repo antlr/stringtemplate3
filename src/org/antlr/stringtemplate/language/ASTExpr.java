@@ -628,6 +628,11 @@ public class ASTExpr extends Expr {
                             "; stack trace:\n"+stToWrite.getEnclosingInstanceStackTrace());
                 }
                 else {
+					// if we have a wrap string, then inform writer it
+					// might need to wrap
+					if ( wrapString!=null ) {
+						n = out.writeWrapSeparator(wrapString);
+					}
                     n = stToWrite.write(out);
                 }
                 return n;
@@ -764,6 +769,17 @@ public class ASTExpr extends Expr {
         }
 	}
 
+	/*
+	public static final Set arraysConvertibleToList = new HashSet() {
+		{
+			add(int[].class);
+			add(long[].class);
+			add(float[].class);
+			add(double[].class);
+		}
+	};
+	*/
+
 	/** Do a standard conversion of array attributes to Lists.  Create
 	 *  StringTemplate.STAttributeList objects so we know they are ST
 	 *  controlled not user lists.
@@ -775,6 +791,13 @@ public class ASTExpr extends Expr {
 		/*
 		if ( !(value instanceof StringTemplate) ) {
 			System.out.println("convert "+value+" to array?");
+		}
+		*/
+		/*
+		if ( !arraysConvertibleToList.contains(value.getClass()) &&
+			 !(value instanceof Object[]) )
+		{
+			return value;
 		}
 		*/
 		if ( value instanceof Object[] ) {

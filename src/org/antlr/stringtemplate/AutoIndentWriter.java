@@ -152,47 +152,65 @@ public class AutoIndentWriter implements StringTemplateWriter {
 	 *  before spitting out this str.
 	 */
 	public int write(String str, String wrap) throws IOException {
-		int n = 0;
+		int n = writeWrapSeparator(wrap);
+		return n + write(str);
+	}
 
+	public int writeWrapSeparator(String wrap) throws IOException {
+		int n = 0;
 		// if want wrap and not already at start of line (last char was \n)
 		// and we have hit or exceeded the threshold
 		if ( lineWidth!=NO_WRAP && wrap!=null && !atStartOfLine &&
 			 charPosition >= lineWidth )
 		{
 			// ok to wrap
-			out.write(wrap);
-			n+=wrap.length(); // have to count the wrap chars
-			charPosition = 0; // we're back to left edge by default
-			int indentWidth = getIndentationWidth();
-			int lastAnchor = 0;
-			if ( anchors_sp>=0 ) {
-				lastAnchor = anchors[anchors_sp];
-			}
-			if ( lastAnchor > indentWidth ) {
-				// use anchor not indentation
-				n+=indent(lastAnchor);
-			}
-			else {
-				// indent is farther over than last anchor, ignore anchor
-				n+=indent();
+			// Walk wrap string and look for A\nB.  Spit out A\n
+			// then spit indent or anchor, whichever is larger
+			// then spit out B
+			for (int i=0; i<wrap.length(); i++) {
+				char c = wrap.charAt(i);
+				if ( c=='\n' ) {
+					n++;
+					out.write(c);
+					//atStartOfLine = true;
+					charPosition = 0;
+					int indentWidth = getIndentationWidth();
+					int lastAnchor = 0;
+					if ( anchors_sp>=0 ) {
+						lastAnchor = anchors[anchors_sp];
+					}
+					if ( lastAnchor > indentWidth ) {
+						// use anchor not indentation
+						n+=indent(lastAnchor);
+					}
+					else {
+						// indent is farther over than last anchor, ignore anchor
+						n+=indent();
+					}
+					// continue writing any chars out
+				}
+				else {  // write A or B part
+					n++;
+					out.write(c);
+					charPosition++;
+				}
 			}
 		}
-
-		return n + write(str);
+		return n;
 	}
 
-    public int indent() throws IOException {
+	public int indent() throws IOException {
 		int n = 0;
-        for (int i=0; i<indents.size(); i++) {
-            String ind = (String)indents.get(i);
-            if ( ind!=null ) {
-                n+=ind.length();
+		for (int i=0; i<indents.size(); i++) {
+			String ind = (String)indents.get(i);
+			if ( ind!=null ) {
+				n+=ind.length();
 				out.write(ind);
 			}
-        }
+		}
 		charPosition += n;
 		return n;
-    }
+	}
 
 	public int indent(int spaces) throws IOException {
 		for (int i=1; i<=spaces; i++) {

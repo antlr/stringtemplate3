@@ -60,6 +60,13 @@ public interface StringTemplateWriter {
 	 */
 	int write(String str, String wrap) throws IOException;
 
+	/** Because we might need to wrap at a non-atomic string boundary
+	 *  (such as when we wrap in between template applications
+	 *   <data:{v|[<v>]}; wrap>) we need to expose the wrap string
+	 *  writing just like for the separator.
+	 */
+	public int writeWrapSeparator(String wrap) throws IOException;
+
 	/** Write a separator.  Same as write() except that a \n cannot
 	 *  be inserted before emitting a separator.
 	 */
