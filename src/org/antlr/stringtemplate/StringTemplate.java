@@ -30,6 +30,7 @@ package org.antlr.stringtemplate;
 import java.io.*;
 import java.util.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import org.antlr.stringtemplate.language.*;
 import antlr.*;
@@ -1152,6 +1153,9 @@ public class StringTemplate {
 		else {
 			if ( e!=null ) {
 				System.err.println("StringTemplate: error: "+msg+": "+e.toString());
+				if ( e instanceof InvocationTargetException ) {
+					e = ((InvocationTargetException)e).getTargetException();
+				}
 				e.printStackTrace(System.err);
 			}
 			else {
