@@ -86,8 +86,10 @@ expr returns [Object value=null]
 		StringWriter buf = new StringWriter();
 		StringTemplateWriter sw =
 			self.getGroup().getStringTemplateWriter(buf);
-		chunk.writeAttribute(self,e,sw);
-		value = buf.toString();
+		int n = chunk.writeAttribute(self,e,sw);
+		if ( n > 0 ) {
+		    value = buf.toString();
+		}
         }
     ;
 
