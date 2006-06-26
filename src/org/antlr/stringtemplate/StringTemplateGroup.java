@@ -116,6 +116,11 @@ public class StringTemplateGroup {
 	 */
 	protected Class userSpecifiedWriter;
 
+	protected boolean debugTemplateOutput = false;
+
+	/** The set of templates to ignore when dumping start/stop debug strings */
+	protected Set noDebugStartStopStrings;
+
 	/** A Map<Class,Object> that allows people to register a renderer for
 	 *  a particular kind of object to be displayed for any template in this
 	 *  group.  For example, a date should be formatted differently depending
@@ -949,6 +954,42 @@ public class StringTemplateGroup {
 
 	public Set getTemplateNames() {
 		return templates.keySet();
+	}
+
+	/** Indicate whether ST should emit <templatename>...</templatename>
+	 *  strings for debugging around output for templates from this group.
+	 */
+	public void emitDebugStartStopStrings(boolean emit) {
+		this.debugTemplateOutput = emit;
+	}
+
+	public void doNotEmitDebugStringsForTemplate(String templateName) {
+		if ( noDebugStartStopStrings==null ) {
+			noDebugStartStopStrings = new HashSet();
+		}
+		noDebugStartStopStrings.add(templateName);
+	}
+
+	public void emitTemplateStartDebugString(StringTemplate st,
+											 StringTemplateWriter out)
+		throws IOException
+	{
+		if ( noDebugStartStopStrings==null ||
+			 !noDebugStartStopStrings.contains(st.getName()) )
+		{
+			out.write("<"+st.getName()+">");
+		}
+	}
+
+	public void emitTemplateStopDebugString(StringTemplate st,
+										    StringTemplateWriter out)
+		throws IOException
+	{
+		if ( noDebugStartStopStrings==null ||
+			 !noDebugStartStopStrings.contains(st.getName()) )
+		{
+			out.write("</"+st.getName()+">");
+		}
 	}
 
 	public String toString() {

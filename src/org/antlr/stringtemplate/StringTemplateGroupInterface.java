@@ -150,7 +150,7 @@ public class StringTemplateGroupInterface {
 					}
 				}
 				if ( ack ) {
-					System.out.println(d.formalArgs+"!="+formalArgs);
+					//System.out.println(d.formalArgs+"!="+formalArgs);
 					mismatched.add(getTemplateSignature(d));
 				}
 			}

@@ -778,6 +778,9 @@ public class StringTemplate {
 	 *  for all instances of this template.
 	 */
 	public int write(StringTemplateWriter out) throws IOException {
+		if ( group.debugTemplateOutput ) {
+			group.emitTemplateStartDebugString(this,out);
+		}
 		int n = 0;
 		setPredefinedAttributes();
 		setDefaultArgumentValues();
@@ -803,6 +806,9 @@ public class StringTemplate {
 				i++; // make it skip over the next chunk, the NEWLINE
 			}
 			n += chunkN;
+		}
+		if ( group.debugTemplateOutput ) {
+			group.emitTemplateStopDebugString(this,out);
 		}
 		if ( lintMode ) {
 			checkForTrouble();
@@ -1102,7 +1108,7 @@ public class StringTemplate {
 	/** Register a renderer for all objects of a particular type.  This
 	 *  overrides any renderer set in the group for this class type.
 	 */
-	public void registerRenderer(Class attributeClassType, Object renderer) {
+	public void registerRenderer(Class attributeClassType, AttributeRenderer renderer) {
 		if ( attributeRenderers==null ) {
 			attributeRenderers = new HashMap();
 		}

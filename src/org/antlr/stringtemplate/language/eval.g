@@ -197,6 +197,9 @@ Object n = null;
             |	anon:ANONYMOUS_TEMPLATE
                 {
                 StringTemplate anonymous = anon.getStringTemplate();
+                // to properly see overridden templates, always set
+                // anonymous' group to be self's group
+				anonymous.setGroup(self.getGroup());
                 templatesToApply.addElement(anonymous);
                 }
 
