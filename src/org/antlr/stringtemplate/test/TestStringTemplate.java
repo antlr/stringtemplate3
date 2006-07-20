@@ -2673,7 +2673,7 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(result, expecting);
 	}
 
-	public void testEmptyIteratedConditionalValueGetsNoSeparator() throws Exception {
+	public void testEmptyIteratedConditionalValueGetsSeparator() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -2685,7 +2685,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
 		t.setAttribute("users.{name,ok}", "Johnny", new Boolean(false));
 		// empty conditional values get no separator
-		String expecting="Terence,Frank,"; // haven't solved the last empty value problem yet
+		String expecting="Terence,,Frank,";
 		String result = t.toString();
 		assertEqual(result, expecting);
 	}
@@ -2702,7 +2702,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
 		t.setAttribute("users.{name,ok}", "Johnny", new Boolean(false));
 		// empty conditional values get no separator
-		String expecting="Terence,,Frank,"; // haven't solved the last empty value problem yet
+		String expecting="Terence,,Frank,";
 		String result = t.toString();
 		assertEqual(result, expecting);
 	}
@@ -4474,6 +4474,117 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="[1,2,3][10,20,30]";
+		assertEqual(t.toString(), expecting);
+	}
+
+	// Test null option
+
+	public void testNullOptionSingleNullValue() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data; null=\"0\">");
+		//System.out.println(t);
+		String expecting="0";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testNullOptionHasEmptyNullValue() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data; null=\"\", separator=\", \">");
+		List data = new ArrayList();
+		data.add(null);
+		data.add(new Integer(1));
+		t.setAttribute("data", data);
+		String expecting=", 1";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testNullOptionSingleNullValueInList() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data; null=\"0\">");
+		List data = new ArrayList();
+		data.add(null);
+		t.setAttribute("data", data);
+		//System.out.println(t);
+		String expecting="0";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testNullValueInList() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data; null=\"-1\", separator=\", \">");
+		List data = new ArrayList();
+		data.add(null);
+		data.add(new Integer(1));
+		data.add(null);
+		data.add(new Integer(3));
+		data.add(new Integer(4));
+		data.add(null);
+		t.setAttribute("data", data);
+		//System.out.println(t);
+		String expecting="-1, 1, -1, 3, 4, -1";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testNullValueInListWithTemplateApply() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data:array(); null=\"-1\", separator=\", \">");
+		group.defineTemplate("array", "<it>");
+		List data = new ArrayList();
+		data.add(new Integer(0));
+		data.add(null);
+		data.add(new Integer(2));
+		data.add(null);
+		t.setAttribute("data", data);
+		String expecting="0, -1, 2, -1";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testNullValueInListWithTemplateApplyNullFirstValue() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data:array(); null=\"-1\", separator=\", \">");
+		group.defineTemplate("array", "<it>");
+		List data = new ArrayList();
+		data.add(null);
+		data.add(new Integer(0));
+		data.add(null);
+		data.add(new Integer(2));
+		t.setAttribute("data", data);
+		String expecting="-1, 0, -1, 2";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testNullSingleValueInListWithTemplateApply() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data:array(); null=\"-1\", separator=\", \">");
+		group.defineTemplate("array", "<it>");
+		List data = new ArrayList();
+		data.add(null);
+		t.setAttribute("data", data);
+		String expecting="-1";
+		assertEqual(t.toString(), expecting);
+	}
+
+	public void testNullSingleValueWithTemplateApply() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data:array(); null=\"-1\", separator=\", \">");
+		group.defineTemplate("array", "<it>");
+		String expecting="-1";
 		assertEqual(t.toString(), expecting);
 	}
 

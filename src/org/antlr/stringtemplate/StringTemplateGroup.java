@@ -85,10 +85,10 @@ public class StringTemplateGroup {
 	protected String rootDir = null;
 
 	/** Track all groups by name; maps name to StringTemplateGroup */
-	protected static Map nameToGroupMap = new HashMap();
+	protected static Map nameToGroupMap = Collections.synchronizedMap(new HashMap());
 
 	/** Track all interfaces by name; maps name to StringTemplateGroupInterface */
-	protected static Map nameToInterfaceMap = new HashMap();
+	protected static Map nameToInterfaceMap = Collections.synchronizedMap(new HashMap());
 
 	/** Are we derived from another group?  Templates not found in this group
 	 *  will be searched for in the superGroup recursively.
@@ -132,12 +132,13 @@ public class StringTemplateGroup {
 	 *  These render objects are used way down in the evaluation chain
 	 *  right before an attribute's toString() method would normally be
 	 *  called in ASTExpr.write().
-	  */
+	 *
+	 *  Synchronized at creation time.
+	 */
 	protected Map attributeRenderers;
 
 	/** Maps obj.prop to a value to avoid reflection costs; track one
 	 *  set of all class.property -> Member mappings for all ST usage in VM.
-	 */
 	protected static Map classPropertyCache = new HashMap();
 
 	public static class ClassPropCacheKey {
@@ -158,6 +159,7 @@ public class StringTemplateGroup {
 			return c.hashCode()+propertyName.hashCode();
 		}
 	}
+	 */
 
 	/** If a group file indicates it derives from a supergroup, how do we
 	 *  find it?  Shall we make it so the initial StringTemplateGroup file
@@ -428,8 +430,8 @@ public class StringTemplateGroup {
 	 *
 	 *  If I find a template in a super group, copy an instance down here
 	 */
-	public StringTemplate lookupTemplate(StringTemplate enclosingInstance,
-										 String name)
+	public synchronized StringTemplate lookupTemplate(StringTemplate enclosingInstance,
+													  String name)
 		throws IllegalArgumentException
 	{
 		//System.out.println("look up "+getName()+"::"+name);
@@ -636,8 +638,8 @@ public class StringTemplateGroup {
 	/** Define an examplar template; precompiled and stored
 	 *  with no attributes.  Remove any previous definition.
 	 */
-	public StringTemplate defineTemplate(String name,
-										 String template)
+	public synchronized StringTemplate defineTemplate(String name,
+													  String template)
 	{
 		//System.out.println("defineTemplate "+getName()+"::"+name);
 		if ( name!=null && name.indexOf('.')>=0 ) {
@@ -715,7 +717,7 @@ public class StringTemplateGroup {
 	}
 
 	/** Make name and alias for target.  Replace any previous def of name */
-	public StringTemplate defineTemplateAlias(String name, String target) {
+	public synchronized StringTemplate defineTemplateAlias(String name, String target) {
 		StringTemplate targetST=getTemplateDefinition(target);
 		if ( targetST==null ){
 			error("cannot alias "+name+" to undefined template: "+target);
@@ -725,7 +727,7 @@ public class StringTemplateGroup {
 		return targetST;
 	}
 
-	public boolean isDefinedInThisGroup(String name) {
+	public synchronized boolean isDefinedInThisGroup(String name) {
 		StringTemplate st = (StringTemplate)templates.get(name);
 		if ( st!=null ) {
 			if ( st.isRegion() ) {
@@ -740,7 +742,7 @@ public class StringTemplateGroup {
 	}
 
 	/** Get the ST for 'name' in this group only */
-	public StringTemplate getTemplateDefinition(String name) {
+	public synchronized StringTemplate getTemplateDefinition(String name) {
 		return (StringTemplate)templates.get(name);
 	}
 
@@ -853,7 +855,7 @@ public class StringTemplateGroup {
 	 */
 	public void registerRenderer(Class attributeClassType, Object renderer) {
 		if ( attributeRenderers==null ) {
-			attributeRenderers = new HashMap();
+			attributeRenderers = Collections.synchronizedMap(new HashMap());
 		}
 		attributeRenderers.put(attributeClassType, renderer);
 	}
@@ -881,6 +883,7 @@ public class StringTemplateGroup {
 		return renderer;
 	}
 
+	/*
 	public void cacheClassProperty(Class c, String propertyName, Member member) {
 		Object key = new ClassPropCacheKey(c,propertyName);
 		classPropertyCache.put(key,member);
@@ -890,6 +893,7 @@ public class StringTemplateGroup {
 		Object key = new ClassPropCacheKey(c,propertyName);
 		return (Member)classPropertyCache.get(key);
 	}
+	*/
 
 	public Map getMap(String name) {
 		if ( maps==null ) {
@@ -905,6 +909,9 @@ public class StringTemplateGroup {
 		return m;
 	}
 
+	/** Define a map for this group; not thread safe...do not keep adding
+	 *  these while you reference them.
+	 */
 	public void defineMap(String name, Map mapping) {
 		maps.put(name, mapping);
 	}
@@ -952,7 +959,7 @@ public class StringTemplateGroup {
 		}
 	}
 
-	public Set getTemplateNames() {
+	public synchronized Set getTemplateNames() {
 		return templates.keySet();
 	}
 

@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -83,6 +82,16 @@ public class ASTExpr extends Expr {
 	 */
 	String wrapString = null;
 
+	/** For null values in iterated attributes and single attributes that
+	 *  are null, use this value instead of skipping.  For single valued
+	 *  attributes like <name; null="n/a"> it's a shorthand for
+	 *  <if(name)><name><else>n/a<endif>
+	 *  For iterated values <values; null="0", separator=",">, you get 0 for
+	 *  for null list values.  Works for template application like:
+	 *  <values:{v| <v>}; null="0"> also.
+	 */
+	String nullValue = null;
+
 	/** A cached value of separator=expr from the <...> expression.
 	 *  Computed in write(StringTemplate, StringTemplateWriter) and used
 	 *  in writeAttribute.
@@ -120,14 +129,7 @@ public class ASTExpr extends Expr {
 		if ( anchorAST!=null ) { // any non-empty expr means true; check presence
 			out.pushAnchorPoint();
 		}
-		StringTemplateAST wrapAST = (StringTemplateAST)getOption("wrap");
-		if ( wrapAST!=null ) {
-			wrapString = evaluateExpression(self,wrapAST);
-		}
-		StringTemplateAST separatorAST = (StringTemplateAST)getOption("separator");
-		if ( separatorAST!=null ) {
-			separatorString = evaluateExpression(self, separatorAST);
-		}
+		handleExprOptions(self);
 		//System.out.println("evaluating tree: "+exprTree.toStringList());
         ActionEvaluator eval =
                 new ActionEvaluator(self,this,out);
@@ -145,7 +147,22 @@ public class ASTExpr extends Expr {
 		return n;
     }
 
-    // HELP ROUTINES CALLED BY EVALUATOR TREE WALKER
+	private void handleExprOptions(StringTemplate self) {
+		StringTemplateAST wrapAST = (StringTemplateAST)getOption("wrap");
+		if ( wrapAST!=null ) {
+			wrapString = evaluateExpression(self,wrapAST);
+		}
+		StringTemplateAST nullValueAST = (StringTemplateAST)getOption("null");
+		if ( nullValueAST!=null ) {
+			nullValue = evaluateExpression(self,nullValueAST);
+		}
+		StringTemplateAST separatorAST = (StringTemplateAST)getOption("separator");
+		if ( separatorAST!=null ) {
+			separatorString = evaluateExpression(self, separatorAST);
+		}
+	}
+
+	// HELP ROUTINES CALLED BY EVALUATOR TREE WALKER
 
 	/** For <names,phones:{n,p | ...}> treat the names, phones as lists
 	 *  to be walked in lock step as n=names[i], p=phones[i].
@@ -250,9 +267,11 @@ public class ASTExpr extends Expr {
             while ( iter.hasNext() ) {
                 Object ithValue = iter.next();
                 if ( ithValue==null ) {
-                    // weird...a null value in the list; ignore
-                    continue;
-                }
+					if ( nullValue==null ) {
+						continue;
+					}
+					ithValue = nullValue;
+				}
                 int templateIndex = i % templatesToApply.size(); // rotate through
                 embedded = (StringTemplate)templatesToApply.get(templateIndex);
                 // template to apply is an actual StringTemplate (created in
@@ -414,6 +433,7 @@ public class ASTExpr extends Expr {
 
 		// check cache
 		Method m = null;
+		/*
 		Member cachedMember =
 			self.getGroup().getCachedClassProperty(c,propertyName);
 		if ( cachedMember!=null ) {
@@ -434,6 +454,7 @@ public class ASTExpr extends Expr {
 			}
 			return value;
 		}
+		*/
 
 		// must look up using reflection
 		String methodSuffix = Character.toUpperCase(propertyName.charAt(0))+
@@ -446,7 +467,7 @@ public class ASTExpr extends Expr {
 		}
 		if ( m != null ) {
 			// save to avoid lookup later
-			self.getGroup().cacheClassProperty(c,propertyName,m);
+			//self.getGroup().cacheClassProperty(c,propertyName,m);
 			try {
 				value = invokeMethod(m, o, value);
 			}
@@ -460,7 +481,7 @@ public class ASTExpr extends Expr {
 			try {
 				totalReflectionLookups++;
 				Field f = c.getField(propertyName);
-				self.getGroup().cacheClassProperty(c,propertyName,f);
+				//self.getGroup().cacheClassProperty(c,propertyName,f);
 				try {
 					value = accessField(f, o, value);
 				}
@@ -602,8 +623,11 @@ public class ASTExpr extends Expr {
 						StringTemplateWriter out)
     {
         if ( o==null ) {
-            return 0;
-        }
+			if ( nullValue==null ) {
+				return 0;
+			}
+			o = nullValue; // continue with null option if specified
+		}
 		int n = 0;
         try {
             if ( o instanceof StringTemplate ) {
@@ -641,28 +665,19 @@ public class ASTExpr extends Expr {
 			o = convertAnythingIteratableToIterator(o);
 			if ( o instanceof Iterator ) {
 				Iterator iter = (Iterator)o;
-                while ( iter.hasNext() ) {
+				Object prevIterValue = null;
+				while ( iter.hasNext() ) {
                     Object iterValue = iter.next();
-                    int charWrittenForValue =
-						write(self, iterValue, out);
-					n += charWrittenForValue;
-                    if ( iter.hasNext() ) {
-						boolean valueIsPureConditional = false;
-						if ( iterValue instanceof StringTemplate ) {
-							StringTemplate iterValueST = (StringTemplate)iterValue;
-							List chunks = (List)iterValueST.getChunks();
-							Expr firstChunk = (Expr)chunks.get(0);
-							valueIsPureConditional =
-								firstChunk instanceof ConditionalExpr &&
-								((ConditionalExpr)firstChunk).getElseSubtemplate()==null;
-						}
-						boolean emptyIteratedValue =
-							valueIsPureConditional && charWrittenForValue==0;
-                        if ( !emptyIteratedValue && separatorString!=null ) {
-							n += out.writeSeparator(separatorString);
-                        }
-                    }
-                }
+					if ( iterValue==null ) {
+						iterValue = nullValue;
+					}
+					if ( iterValue!=null && prevIterValue!=null && separatorString!=null ) {
+						n += out.writeSeparator(separatorString);
+					}
+					int nw = write(self, iterValue, out);
+					n += nw;
+					prevIterValue = iterValue;
+				}
             }
             else {
 				AttributeRenderer renderer =
