@@ -142,6 +142,9 @@ function
 	:	(	"first"
    	 	|	"rest"
     	|	"last"
+    	|	"length"
+    	|	"strip"
+    	|	"trunc"
     	)
     	singleArg
         {#function = #(#[FUNCTION],function);}

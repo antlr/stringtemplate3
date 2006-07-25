@@ -168,6 +168,9 @@ Object a;
     		(	"first" a=singleFunctionArg	{value=chunk.first(a);}
     		|	"rest" 	a=singleFunctionArg	{value=chunk.rest(a);}
     		|	"last"  a=singleFunctionArg	{value=chunk.last(a);}
+    		|	"length" a=singleFunctionArg	{value=chunk.length(a);}
+    		|	"strip" a=singleFunctionArg	{value=chunk.strip(a);}
+    		|	"trunc" a=singleFunctionArg	{value=chunk.trunc(a);}
     		)
 
     	 )

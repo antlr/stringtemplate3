@@ -966,6 +966,79 @@ public class ASTExpr extends Expr {
 		return last;
 	}
 
+	/** Return an iterator that skips all null values. */
+	public Object strip(Object attribute) {
+		return null;
+		/*
+		if ( attribute==null ) {
+			return null;
+		}
+		Object stripped = attribute;
+		attribute = convertAnythingIteratableToIterator(attribute);
+		if ( attribute instanceof Iterator ) {
+			Iterator it = (Iterator)attribute;
+			if ( !it.hasNext() ) {
+				return null; // if not even one value return null
+			}
+			it.next(); // ignore first value
+			if ( !it.hasNext() ) {
+				return null; // if not more than one value, return null
+			}
+			stripped = it;    // return suitably altered iterator
+		}
+		else {
+			stripped = attribute;  // strip(x)==x when x single-valued attribute
+		}
+
+		return stripped;
+		*/
+	}
+
+	/** Return all but the last element.  trunc(x)=null if x is single-valued. */
+	public Object trunc(Object attribute) {
+		return null; // not impl.
+	}
+
+	/** Return the length of a multiple valued attribute or 1 if it is a
+	 *  single attribute. If attribute is null return 0.
+	 *  Special case several common collections and primitive arrays for
+	 *  speed.  This method by Kay Roepke.
+	 */
+	public Object length(Object attribute) {
+		if ( attribute == null) {
+			return new Integer(0);
+		}
+		int i = 1;		// we have at least one of something. Iterator and arrays might be empty.
+		if (attribute instanceof Map) {
+			i = ((Map)attribute).size();
+		} else if (attribute instanceof List) {
+			i = ((List)attribute).size();
+		} else if ( attribute instanceof Object[] ) {
+			Object[] list = (Object[])attribute;
+			i = list.length;
+		} else if ( attribute instanceof int[] ) {
+			int[] list = (int[])attribute;
+			i = list.length;
+		} else if ( attribute instanceof long[] ) {
+			long[] list = (long[])attribute;
+			i = list.length;
+		} else if ( attribute instanceof float[] ) {
+			float[] list = (float[])attribute;
+			i = list.length;
+		} else if ( attribute instanceof double[] ) {
+			double[] list = (double[])attribute;
+			i = list.length;
+		} else if ( attribute instanceof Iterator) {
+			Iterator it = (Iterator)attribute;
+			i = 0;
+			while ( it.hasNext() ) {
+				it.next();
+				i++;
+			}
+		}
+		return new Integer(i);
+	}
+
 	public Object getOption(String name) {
 		Object value = null;
 		if ( options!=null ) {

@@ -4588,6 +4588,63 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(t.toString(), expecting);
 	}
 
+	public void testLengthOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(names)$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		String expecting = "3";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLengthOpNull() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(names)$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", null);
+		String expecting = "0";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLengthOpSingleValue() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(names)$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		String expecting = "1";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLengthOpPrimitive() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(ints)$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("ints", new int[] {1,2,3,4} );
+		String expecting = "4";
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLengthOpOfListWithNulls() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(ints)$"
+			);
+		e = e.getInstanceOf();
+		List data = new ArrayList();
+		data.add("Hi");
+		data.add(null);
+		data.add("mom");
+		data.add(null);
+		e.setAttribute("ints", data);
+		String expecting = "4"; // nulls are counted
+		assertEqual(e.toString(), expecting);
+	}
+
 	/** Use when super.attr name is implemented
 	public void testArgumentContext2() throws Exception {
 		// t is referenced within foo and so will be evaluated in that
