@@ -4632,7 +4632,7 @@ public class TestStringTemplate extends TestSuite {
 
 	public void testLengthOpOfListWithNulls() throws Exception {
 		StringTemplate e = new StringTemplate(
-				"$length(ints)$"
+				"$length(data)$"
 			);
 		e = e.getInstanceOf();
 		List data = new ArrayList();
@@ -4640,8 +4640,79 @@ public class TestStringTemplate extends TestSuite {
 		data.add(null);
 		data.add("mom");
 		data.add(null);
-		e.setAttribute("ints", data);
+		e.setAttribute("data", data);
 		String expecting = "4"; // nulls are counted
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testStripOpOfListWithNulls() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$strip(data)$"
+			);
+		e = e.getInstanceOf();
+		List data = new ArrayList();
+		data.add("Hi");
+		data.add(null);
+		data.add("mom");
+		data.add(null);
+		e.setAttribute("data", data);
+		String expecting = "Himom"; // nulls are skipped
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testStripOpOfSingleAlt() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$strip(data)$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("data", "hi");
+		String expecting = "hi"; // nulls are skipped
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testStripOpOfNull() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$strip(data)$"
+			);
+		e = e.getInstanceOf();
+		String expecting = ""; // nulls are skipped
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLengthOpOfStrippedListWithNulls() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(strip(data))$"
+			);
+		e = e.getInstanceOf();
+		List data = new ArrayList();
+		data.add("Hi");
+		data.add(null);
+		data.add("mom");
+		data.add(null);
+		e.setAttribute("data", data);
+		String expecting = "2"; // nulls are counted
+		assertEqual(e.toString(), expecting);
+	}
+
+	public void testLengthOpOfStrippedListWithNullsFrontAndBack() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(strip(data))$"
+			);
+		e = e.getInstanceOf();
+		List data = new ArrayList();
+		data.add(null);
+		data.add(null);
+		data.add(null);
+		data.add("Hi");
+		data.add(null);
+		data.add(null);
+		data.add(null);
+		data.add("mom");
+		data.add(null);
+		data.add(null);
+		data.add(null);
+		e.setAttribute("data", data);
+		String expecting = "2"; // nulls are counted
 		assertEqual(e.toString(), expecting);
 	}
 

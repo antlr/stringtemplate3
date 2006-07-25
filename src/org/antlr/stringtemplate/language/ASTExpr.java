@@ -968,30 +968,14 @@ public class ASTExpr extends Expr {
 
 	/** Return an iterator that skips all null values. */
 	public Object strip(Object attribute) {
-		return null;
-		/*
 		if ( attribute==null ) {
 			return null;
 		}
-		Object stripped = attribute;
 		attribute = convertAnythingIteratableToIterator(attribute);
 		if ( attribute instanceof Iterator ) {
-			Iterator it = (Iterator)attribute;
-			if ( !it.hasNext() ) {
-				return null; // if not even one value return null
-			}
-			it.next(); // ignore first value
-			if ( !it.hasNext() ) {
-				return null; // if not more than one value, return null
-			}
-			stripped = it;    // return suitably altered iterator
+			return new StripIterator((Iterator)attribute);
 		}
-		else {
-			stripped = attribute;  // strip(x)==x when x single-valued attribute
-		}
-
-		return stripped;
-		*/
+		return attribute; // strip(x)==x when x single-valued attribute
 	}
 
 	/** Return all but the last element.  trunc(x)=null if x is single-valued. */
