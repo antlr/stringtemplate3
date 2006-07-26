@@ -3541,6 +3541,29 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	/** If an iterator is sent into ST, it must be cannot be reset after each
+	 *  use so repeated refs yield empty values.  This would
+	 *  work if we passed in a List not an iterator.  Avoid sending in iterators
+	 *  if you ref it twice.
+	 */
+	public void testRepeatedIteratedAttrFromArg() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"root(names) ::= \"$other(names)$\""+newline+
+				"other(x) ::= \"$x$, $x$\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates),
+										DefaultTemplateLexer.class);
+		StringTemplate e = group.getInstanceOf("root");
+		List names = new ArrayList();
+		names.add("Ter");
+		names.add("Tom");
+		e.setAttribute("names", names.iterator());
+		String expecting = "TerTom, ";  // This does not give TerTom twice!!
+		assertEqual(e.toString(), expecting);
+	}
+
 	/** BUG!  Fix this.  Iterator is not reset from first to second $x$
 	 *  Either reset the iterator or pass an attribute that knows to get
 	 *  the iterator each time.  Seems like first, tail do not
