@@ -4556,6 +4556,24 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(t.toString(), expecting);
 	}
 
+	public void testNullValueInListNoNullOption() throws Exception {
+		StringTemplateGroup group =
+				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			group.defineTemplate("t", "<data; separator=\", \">");
+		List data = new ArrayList();
+		data.add(null);
+		data.add(new Integer(1));
+		data.add(null);
+		data.add(new Integer(3));
+		data.add(new Integer(4));
+		data.add(null);
+		t.setAttribute("data", data);
+		//System.out.println(t);
+		String expecting="1, 3, 4";
+		assertEqual(t.toString(), expecting);
+	}
+
 	public void testNullValueInListWithTemplateApply() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
@@ -4737,6 +4755,32 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("data", data);
 		String expecting = "2"; // nulls are counted
 		assertEqual(e.toString(), expecting);
+	}
+
+	public void testMapKeys() throws Exception {
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			new StringTemplate(group,
+				"<aMap.keys:{k|<k>:<aMap.(k)>}; separator=\", \">");
+		HashMap map = new LinkedHashMap();
+		map.put("int","0");
+		map.put("float","0.0");
+		t.setAttribute("aMap", map);
+		assertEqual(t.toString(), "int:0, float:0.0");
+	}
+
+	public void testMapValues() throws Exception {
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			new StringTemplate(group,
+				"<aMap.values; separator=\", \">");
+		HashMap map = new LinkedHashMap();
+		map.put("int","0");
+		map.put("float","0.0");
+		t.setAttribute("aMap", map);
+		assertEqual(t.toString(), "0, 0.0");
 	}
 
 	/** Use when super.attr name is implemented

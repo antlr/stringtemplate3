@@ -415,7 +415,13 @@ public class ASTExpr extends Expr {
         // key not the property method.
         if ( o instanceof Map ) {
             Map map = (Map)o;
-			if ( map.containsKey(propertyName) ) {
+			if ( propertyName.equals("keys") ) {
+				value = map.keySet();
+			}
+			else if ( propertyName.equals("values") ) {
+				value = map.values();
+			}
+			else if ( map.containsKey(propertyName) ) {
 				value = map.get(propertyName);
 			}
 			else {
@@ -666,20 +672,25 @@ public class ASTExpr extends Expr {
 			if ( o instanceof Iterator ) {
 				Iterator iter = (Iterator)o;
 				Object prevIterValue = null;
+				boolean seenPrevValue = false;
 				while ( iter.hasNext() ) {
                     Object iterValue = iter.next();
 					if ( iterValue==null ) {
 						iterValue = nullValue;
 					}
-					if ( iterValue!=null && prevIterValue!=null && separatorString!=null ) {
-						n += out.writeSeparator(separatorString);
+					if ( iterValue!=null ) {
+						if ( seenPrevValue /*prevIterValue!=null*/
+							&& separatorString!=null ) {
+							n += out.writeSeparator(separatorString);
+						}
+						seenPrevValue = true;
+						int nw = write(self, iterValue, out);
+						n += nw;
 					}
-					int nw = write(self, iterValue, out);
-					n += nw;
 					prevIterValue = iterValue;
 				}
-            }
-            else {
+			}
+			else {
 				AttributeRenderer renderer =
 					self.getAttributeRenderer(o.getClass());
 				String v = null;
