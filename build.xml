@@ -96,11 +96,11 @@
 
    <target name="generator">
         <antlr target="${action.g}" />
+        <antlr target="${template.g}" />
         <antlr target="${angle.bracket.template.g}" />
         <antlr target="${eval.g}" />
         <antlr target="${group.g}" />
         <antlr target="${interface.g}" />
-        <antlr target="${template.g}" />
    </target>
 
   <!-- =================================================================== -->
@@ -130,7 +130,7 @@
   <target name="jar" depends="init,compile" description="Builds the library (.jar).">
     <jar jarfile="${build.jar}"
       basedir="${build.classes}"
-      includes="${library.includes}">
+      includes="**/*.class">
     </jar>
   </target>
 
