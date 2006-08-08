@@ -33,6 +33,9 @@ public class CommonGroupLoader extends PathGroupLoader {
 			String fileName = dir+"/"+name;
 			//System.out.println("trying "+fileName);
 			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			if ( cl==null ) {
+				cl = this.getClass().getClassLoader();
+			}
 			InputStream is = cl.getResourceAsStream(fileName);
 			if ( is!=null ) {
 				return new BufferedReader(getInputStreamReader(is));
