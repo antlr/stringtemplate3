@@ -543,10 +543,11 @@ public class StringTemplateGroup {
 		// if no rootDir, try to load as a resource in CLASSPATH
 		if ( rootDir==null ) {
 			ClassLoader cl = Thread.currentThread().getContextClassLoader();
-			if ( cl==null ) {
-				cl = this.getClass().getClassLoader();
-			}
 			InputStream is = cl.getResourceAsStream(fileName);
+			if ( is==null ) {
+				cl = this.getClass().getClassLoader();
+				is = cl.getResourceAsStream(fileName);
+			}
 			if ( is==null ) {
 				return null;
 			}
