@@ -183,6 +183,9 @@ public class StringTemplate {
 		public Object get(String propName) {
 			return properties.get(propName);
 		}
+		public String toString() {
+			return properties.toString();
+		}
 	}
 
 	/** Just an alias for ArrayList, but this way I can track whether a
