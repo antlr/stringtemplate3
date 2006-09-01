@@ -4162,6 +4162,26 @@ public class TestStringTemplate extends TestSuite {
 	public void testLineWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
+				"array(values) ::= <<int[] a = { <values; wrap=\"\\n\", separator=\",\"> };>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("array");
+		a.setAttribute("values",
+					   new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
+						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
+					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
+		String expecting =
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
+			"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1,\n" +
+			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
+			"32,5,6,77,888,1,6,32,5 };";
+		assertEqual(a.toString(40), expecting);
+	}
+
+	public void testLineWrapAnchored() throws Exception {
+		String templates =
+				"group test;" +newline+
 				"array(values) ::= <<int[] a = { <values; anchor, wrap=\"\\n\", separator=\",\"> };>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
@@ -4183,7 +4203,7 @@ public class TestStringTemplate extends TestSuite {
 	public void testFortranLineWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"func(args) ::= <<       FUNCTION line( <args; wrap=\"\\n      c\", separator=\",\"> )\\>>>"+newline;
+				"func(args) ::= <<       FUNCTION line( <args; wrap=\"\\n      c\", separator=\",\"> )>>"+newline;
 		StringTemplateGroup group =
 				new StringTemplateGroup(new StringReader(templates));
 
@@ -4192,7 +4212,7 @@ public class TestStringTemplate extends TestSuite {
 					   new String[] {"a","b","c","d","e","f"});
 		String expecting =
 			"       FUNCTION line( a,b,c,d,\n" +
-			"      ce,f )>";
+			"      ce,f )";
 		assertEqual(a.toString(30), expecting);
 	}
 
