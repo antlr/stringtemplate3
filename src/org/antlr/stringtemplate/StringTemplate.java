@@ -39,91 +39,13 @@ import antlr.collections.ASTEnumeration;
 
 /** A <TT>StringTemplate</TT> is a "document" with holes in it where you can stick
  *  values.  <TT>StringTemplate</TT> breaks up your template into chunks of text and
- *  attribute expressions, which are by default enclosed in angle brackets:
- * <TT>&lt;</TT><em>attribute-expression</em><TT>&gt;</TT>.  <TT>StringTemplate</TT>
- * ignores everything outside of attribute expressions, treating it as just text to spit
- * out when you call <TT>StringTemplate.toString()</TT>.
+ *  attribute expressions.  <TT>StringTemplate</TT> ignores everything outside
+ *  of attribute expressions, treating it as just text to spit
+ *  out when you call <TT>StringTemplate.toString()</TT>.
  *
- *  <P><TT>StringTemplate</TT> is not a "system" or "engine" or "server"; it's a lib
-rary with two classes of interest: <TT>StringTemplate</TT> and <TT>StringTemplat
-eGroup</TT>.  You can directly create a <TT>StringTemplate</TT> in Java code or
-you can load a template from a file.
-<P>
-A StringTemplate describes an output pattern/language like an exemplar.
- *  <p>
- *  StringTemplate and associated code is released under the BSD licence.  See
- *  source.  <br><br>
- *  Copyright (c) 2003-2005 Terence Parr<br><br>
-
- *  A particular instance of a template may have a set of attributes that
- *  you set programmatically.  A template refers to these single or multi-
- *  valued attributes when writing itself out.  References within a
- *  template conform to a simple language with attribute references and
- *  references to other, embedded, templates.  The references are surrounded
- *  by user-defined start/stop strings (default of <...>, but $...$ works
- *  well when referencing attributes in HTML to distinguish from tags).
- *
- *  <p>StringTemplateGroup is a self-referential group of StringTemplate
- *  objects kind of like a grammar.  It is very useful for keeping a
- *  group of templates together.  For example, jGuru.com's premium and
- *  guest sites are completely separate sets of template files organized
- *  with a StringTemplateGroup.  Changing "skins" is a simple matter of
- *  switching groups.  Groups know where to load templates by either
- *  looking under a rootDir you can specify for the group or by simply
- *  looking for a resource file in the current class path.  If no rootDir
- *  is specified, template files are assumed to be resources.  So, if
- *  you reference template foo() and you have a rootDir, it looks for
- *  file rootDir/foo.st.  If you don't have a rootDir, it looks for
- *  file foo.st in the CLASSPATH.  note that you can use org/antlr/misc/foo()
- *  (qualified template names) as a template ref.
- *
- *  <p>StringTemplateErrorListener is an interface you can implement to
- *  specify where StringTemplate reports errors.  Setting the listener
- *  for a group automatically makes all associated StringTemplate
- *  objects use the same listener.  For example,
- *
- *  <font size=2><pre>
- *  StringTemplateGroup group = new StringTemplateGroup("loutSyndiags");
- *  group.setErrorListener(
- *     new StringTemplateErrorListener() {
- *        public void error(String msg, Exception e) {
- *           System.err.println("StringTemplate error: "+
- *               msg+((e!=null)?": "+e.getMessage():""));
- *        }
- *    }
- *  );
- *  </pre></font>
- *
- *  <p>IMPLEMENTATION
- *
- *  <p>A StringTemplate is both class and instance like in Self.  Given
- *  any StringTemplate (even one with attributes filled in), you can
- *  get a new "blank" instance of it.
- *
- *  <p>When you define a template, the string pattern is parsed and
- *  broken up into chunks of either String or attribute/template actions.
- *  These are typically just attribute references.  If a template is
- *  embedded within another template either via setAttribute or by
- *  implicit inclusion by referencing a template within a template, it
- *  inherits the attribute scope of the enclosing StringTemplate instance.
- *  All StringTemplate instances with the same pattern point to the same
- *  list of chunks since they are immutable there is no reason to have
- *  a copy in every instance of that pattern.  The only thing that differs
- *  is that every StringTemplate Java object can have its own set of
- *  attributes.  Each chunk points back at the original StringTemplate
- *  Java object whence they were constructed.  So, there are multiple
- *  pointers to the list of chunks (one for each instance with that
- *  pattern) and only one back ptr from a chunk to the original pattern
- *  object.  This is used primarily to get the grcoup of that original
- *  so new templates can be loaded into that group.
- *
- *  <p>To write out a template, the chunks are walked in order and asked to
- *  write themselves out.  String chunks are obviously just written out,
- *  but the attribute expressions/actions are evaluated in light of the
- *  attributes in that object and possibly in an enclosing instance.
  */
 public class StringTemplate {
-	public static final String VERSION = "2.3b10";
+	public static final String VERSION = "3.0.1";
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;
@@ -405,6 +327,7 @@ public class StringTemplate {
 	 *  template to eval in a context different from the examplar.
 	 */
 	protected void dup(StringTemplate from, StringTemplate to) {
+		to.attributeRenderers = from.attributeRenderers;
 		to.pattern = from.pattern;
 		to.chunks = from.chunks;
 		to.formalArguments = from.formalArguments;
