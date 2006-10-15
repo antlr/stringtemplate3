@@ -4721,6 +4721,28 @@ public class TestStringTemplate extends TestSuite {
 		assertEqual(e.toString(), expecting);
 	}
 
+	public void testStripOpOfListOfListsWithNulls() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$strip(data):{list | $strip(list)$}; separator=\",\"$"
+			);
+		e = e.getInstanceOf();
+		List data = new ArrayList();
+		List dataOne = new ArrayList();
+		dataOne.add("Hi");
+		dataOne.add("mom");
+		data.add(dataOne);
+		data.add(null);
+		List dataTwo = new ArrayList();
+		dataTwo.add("Hi");
+		dataTwo.add(null);
+		dataTwo.add("dad");
+		dataTwo.add(null);
+		data.add(dataTwo);
+		e.setAttribute("data", data);
+		String expecting = "Himom,HiDad"; // nulls are skipped
+		assertEqual(e.toString(), expecting);
+	}
+
 	public void testStripOpOfSingleAlt() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$strip(data)$"
