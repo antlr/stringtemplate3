@@ -67,6 +67,17 @@ public class ASTExpr extends Expr {
 		}
 	};
 
+	/** John Snyders gave me an example implementation for this checking */
+	public static final Set supportedOptions = new HashSet() {
+		{
+			add("anchor");
+			add("format");
+			add("null");
+			add("separator");
+			add("wrap");
+		}
+	};
+
 	// used temporarily for checking obj.prop cache
 	public static int totalObjPropRefs = 0;
 	public static int totalReflectionLookups = 0;
@@ -97,6 +108,9 @@ public class ASTExpr extends Expr {
 	 *  in writeAttribute.
 	 */
 	String separatorString = null;
+
+	/** A cached value of option format=expr */
+	String formatString = null;
 
 	public ASTExpr(StringTemplate enclosingTemplate, AST exprTree, Map options) {
 		super(enclosingTemplate);
@@ -147,6 +161,7 @@ public class ASTExpr extends Expr {
 		return n;
     }
 
+	/** Grab and cache options; verify options are valid */
 	private void handleExprOptions(StringTemplate self) {
 		StringTemplateAST wrapAST = (StringTemplateAST)getOption("wrap");
 		if ( wrapAST!=null ) {
@@ -159,6 +174,23 @@ public class ASTExpr extends Expr {
 		StringTemplateAST separatorAST = (StringTemplateAST)getOption("separator");
 		if ( separatorAST!=null ) {
 			separatorString = evaluateExpression(self, separatorAST);
+		}
+		// following addition inspired by John Snyders
+		StringTemplateAST formatAST =
+			(StringTemplateAST)getOption("format");
+		if ( formatAST!=null ) {
+			formatString = evaluateExpression(self, formatAST);
+		}
+
+		// Check that option is valid
+		if ( options != null ) {
+			Iterator it = options.keySet().iterator();
+			while ( it.hasNext() ) {
+				String option = (String)it.next();
+				if (!supportedOptions.contains(option)) {
+					self.warning("ignoring unsupported option: "+option);
+				}
+			}
 		}
 	}
 
@@ -619,11 +651,16 @@ public class ASTExpr extends Expr {
      *
      *  If self is an embedded template, you might have specified
      *  a separator arg; used when is a vector.
-     */
+	 */
     public int writeAttribute(StringTemplate self, Object o, StringTemplateWriter out) {
         return write(self,o,out);
     }
 
+	/*	Write o relative to self to out.
+	 *
+	 *  John Snyders fixes here for formatString.  Basically, any time
+	 *  you are about to write a value, check formatting.
+	 */
 	protected int write(StringTemplate self,
 						Object o,
 						StringTemplateWriter out)
@@ -663,6 +700,22 @@ public class ASTExpr extends Expr {
 					if ( wrapString!=null ) {
 						n = out.writeWrapSeparator(wrapString);
 					}
+					// check if formatting needs to be applied to the stToWrite
+					if ( formatString != null ) {
+						AttributeRenderer renderer =
+							self.getAttributeRenderer(String.class);
+						if ( renderer != null ) {
+							// you pay a penalty for applying format option to a template
+							// because the template must be written to a temp StringWriter so it can
+							// be formatted before being written to the real output.
+							StringWriter buf = new StringWriter();
+							StringTemplateWriter sw =
+								self.getGroup().getStringTemplateWriter(buf);
+							stToWrite.write(sw);
+							n = out.write(renderer.toString(buf.toString(), formatString));
+							return n;
+						}
+					}
                     n = stToWrite.write(out);
                 }
                 return n;
@@ -671,7 +724,6 @@ public class ASTExpr extends Expr {
 			o = convertAnythingIteratableToIterator(o);
 			if ( o instanceof Iterator ) {
 				Iterator iter = (Iterator)o;
-				Object prevIterValue = null;
 				boolean seenPrevValue = false;
 				while ( iter.hasNext() ) {
                     Object iterValue = iter.next();
@@ -687,7 +739,6 @@ public class ASTExpr extends Expr {
 						int nw = write(self, iterValue, out);
 						n += nw;
 					}
-					prevIterValue = iterValue;
 				}
 			}
 			else {
@@ -695,7 +746,12 @@ public class ASTExpr extends Expr {
 					self.getAttributeRenderer(o.getClass());
 				String v = null;
 				if ( renderer!=null ) {
-					v = renderer.toString(o);
+					if ( formatString != null ) {
+						v = renderer.toString(o, formatString);
+					}
+					else {
+						v = renderer.toString(o);
+					}
 				}
 				else {
 					v = o.toString();
@@ -736,9 +792,8 @@ public class ASTExpr extends Expr {
 			 {
 				ActionEvaluator eval =
 						new ActionEvaluator(self,this,sw);
-				int n = 0;
 				try {
-					n = eval.action(exprAST); // eval tree
+					eval.action(exprAST); // eval tree
 				}
 				catch (RecognitionException re) {
 					self.error("can't evaluate tree: "+exprTree.toStringList(), re);

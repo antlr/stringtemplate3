@@ -3097,11 +3097,28 @@ public class TestStringTemplate extends TestSuite {
 			SimpleDateFormat f = new SimpleDateFormat ("yyyy.MM.dd");
 			return f.format(((Calendar)o).getTime());
 		}
+		public String toString(Object o, String formatString) {
+			return toString(o);
+		}
 	}
 
 	public class DateRenderer2 implements AttributeRenderer {
 		public String toString(Object o) {
 			SimpleDateFormat f = new SimpleDateFormat ("MM/dd/yyyy");
+			return f.format(((Calendar)o).getTime());
+		}
+		public String toString(Object o, String formatString) {
+			return toString(o);
+		}
+	}
+
+	public class DateRenderer3 implements AttributeRenderer {
+		public String toString(Object o) {
+			SimpleDateFormat f = new SimpleDateFormat ("MM/dd/yyyy");
+			return f.format(((Calendar)o).getTime());
+		}
+		public String toString(Object o, String formatString) {
+			SimpleDateFormat f = new SimpleDateFormat (formatString);
 			return f.format(((Calendar)o).getTime());
 		}
 	}
@@ -3113,6 +3130,18 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("created",
 						new GregorianCalendar(2005, 07-1, 05));
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer());
+		String expecting = "date: 2005.07.05";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testRendererWithFormat() throws Exception {
+		StringTemplate st =new StringTemplate(
+				"date: <created; format=\"yyyy.MM.dd\">",
+				AngleBracketTemplateLexer.class);
+		st.setAttribute("created",
+						new GregorianCalendar(2005, 07-1, 05));
+		st.registerRenderer(GregorianCalendar.class, new DateRenderer3());
 		String expecting = "date: 2005.07.05";
 		String result = st.toString();
 		assertEqual(result, expecting);

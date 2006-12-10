@@ -36,7 +36,13 @@ package org.antlr.stringtemplate;
  *  Each template may have a renderer for each object type or can default
  *  to the group's renderer or the super group's renderer if the group doesn't
  *  have one.
+ *
+ *  The toString(Object,String) method is used when the user uses the
+ *  format option: $o; format="f"$.  It checks the formatName and applies the
+ *  appropriate formatting.  If the format string passed to the renderer is
+ *  not recognized then simply call toString().  @since 3.1
  */
 public interface AttributeRenderer {
     public String toString(Object o);
+	public String toString(Object o, String formatName);
 }
