@@ -4739,7 +4739,7 @@ public class TestStringTemplate extends TestSuite {
 		dataTwo.add(null);
 		data.add(dataTwo);
 		e.setAttribute("data", data);
-		String expecting = "Himom,HiDad"; // nulls are skipped
+		String expecting = "Himom,Hidad"; // nulls are skipped
 		assertEqual(e.toString(), expecting);
 	}
 

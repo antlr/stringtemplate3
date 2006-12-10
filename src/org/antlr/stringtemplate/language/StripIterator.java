@@ -2,29 +2,37 @@ package org.antlr.stringtemplate.language;
 
 import java.util.Iterator;
 
-/** Given a list of iterators, return the combined elements one by one. */
+/** Given an iterator, return only the non-null elements via next(). */
 public class StripIterator implements Iterator {
-	/** List of iterators to cat together */
 	protected Iterator it;
-	/** To know if we hasNext() we need to see if it's null or not */
+
+	/** To know if stripped iterator hasNext(), we need to see if there
+	 *  is another non-null element or not.
+	 */
 	protected Object lookahead;
 
 	public StripIterator(Iterator it) {
 		this.it = it;
-		if ( it.hasNext() ) {
-			consume(); // prime lookahead
-		}
+		consume(); // prime lookahead
 	}
 
+	/** Set lookahead to next non-null element or null if nothing left */
 	protected void consume() {
-		do {
-			lookahead = it.next();
+		if ( !it.hasNext() ) {
+			lookahead = null;
+			return;
 		}
-		while ( lookahead==null && it.hasNext() );
+		Object e = null;
+		// scan for next non-null value
+		while ( e==null && it.hasNext() ) {
+			e = it.next();
+		}
+		lookahead = e;
 	}
 
+	/** Either the list has more stuff or our lookahead has last element */
 	public boolean hasNext() {
-		return it.hasNext() && lookahead!=null;
+		return lookahead!=null;
 	}
 
 	public Object next() {
