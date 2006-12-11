@@ -3123,6 +3123,18 @@ public class TestStringTemplate extends TestSuite {
 		}
 	}
 
+	public class StringRenderer implements AttributeRenderer {
+		public String toString(Object o) {
+			return (String)o;
+		}
+		public String toString(Object o, String formatString) {
+			if ( formatString.equals("upper") ) {
+				return ((String)o).toUpperCase();
+			}
+			return toString(o);
+		}
+	}
+
 	public void testRendererForST() throws Exception {
 		StringTemplate st =new StringTemplate(
 				"date: <created>",
@@ -3143,6 +3155,47 @@ public class TestStringTemplate extends TestSuite {
 						new GregorianCalendar(2005, 07-1, 05));
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer3());
 		String expecting = "date: 2005.07.05";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testRendererWithFormatAndList() throws Exception {
+		StringTemplate st =new StringTemplate(
+				"The names: <names; format=\"upper\">",
+				AngleBracketTemplateLexer.class);
+		st.setAttribute("names", "ter");
+		st.setAttribute("names", "tom");
+		st.setAttribute("names", "sriram");
+		st.registerRenderer(String.class, new StringRenderer());
+		String expecting = "The names: TERTOMSRIRAM";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testRendererWithFormatAndSeparator() throws Exception {
+		StringTemplate st =new StringTemplate(
+				"The names: <names; separator=\" and \", format=\"upper\">",
+				AngleBracketTemplateLexer.class);
+		st.setAttribute("names", "ter");
+		st.setAttribute("names", "tom");
+		st.setAttribute("names", "sriram");
+		st.registerRenderer(String.class, new StringRenderer());
+		String expecting = "The names: TER and TOM and SRIRAM";
+		String result = st.toString();
+		assertEqual(result, expecting);
+	}
+
+	public void testRendererWithFormatAndSeparatorAndNull() throws Exception {
+		StringTemplate st =new StringTemplate(
+				"The names: <names; separator=\" and \", null=\"n/a\", format=\"upper\">",
+				AngleBracketTemplateLexer.class);
+		List names = new ArrayList();
+		names.add("ter");
+		names.add(null);
+		names.add("sriram");
+		st.setAttribute("names", names);
+		st.registerRenderer(String.class, new StringRenderer());
+		String expecting = "The names: TER and N/A and SRIRAM";
 		String result = st.toString();
 		assertEqual(result, expecting);
 	}
