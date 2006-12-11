@@ -30,6 +30,7 @@ package org.antlr.stringtemplate.test;
 import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
 import org.antlr.stringtemplate.language.DefaultTemplateLexer;
+import junit.framework.TestCase;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -51,19 +52,8 @@ system property  java.io.tmpdir to get a temp directory."
 
  * I'll fix later.
  */
-public class TestStringTemplate extends TestSuite {
+public class TestStringTemplate extends TestCase {
     final String newline = System.getProperty("line.separator");
-
-	public void runTests() throws Throwable {
-		TestRig.runAllTests(this.getClass(), this);
-		/*
-		System.out.println("num obj.prop refs: "+ ASTExpr.totalObjPropRefs);
-		System.out.println("num obj.prop refs: "+ ASTExpr.totalObjPropComputations);
-		*/
-	}
-
-	public TestStringTemplate() {
-    }
 
 	static class ErrorBuffer implements StringTemplateErrorListener {
 		StringBuffer errorOutput = new StringBuffer(500);
@@ -110,7 +100,7 @@ public class TestStringTemplate extends TestSuite {
 			"t();\n" +
 			"bold(item);\n" +
 			"optional duh(a, b, c);\n";
-		assertEqual(I.toString(), expecting);
+		assertEquals(I.toString(), expecting);
 	}
 
 	public void testNoGroupLoader() throws Exception {
@@ -130,7 +120,7 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
 
 		String expecting = "no group loader registered";
-		assertEqual(errors.toString(), expecting);
+		assertEquals(errors.toString(), expecting);
 	}
 
 	public void testCannotFindInterfaceFile() throws Exception {
@@ -151,7 +141,7 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
 
 		String expecting = "no such interface file blort.sti";
-		assertEqual(errors.toString(), expecting);
+		assertEquals(errors.toString(), expecting);
 	}
 
 	public void testMultiDirGroupLoading() throws Exception {
@@ -182,7 +172,7 @@ public class TestStringTemplate extends TestSuite {
 			"bold(item) ::= <<foo>>\n" +
 			"duh(a,b,c) ::= <<foo>>\n" +
 			"t() ::= <<foo>>\n";
-		assertEqual(group.toString(), expecting);
+		assertEquals(group.toString(), expecting);
 	}
 
 	public void testGroupSatisfiesSingleInterface() throws Exception {
@@ -209,7 +199,7 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
 
 		String expecting = ""; // should be no errors
-		assertEqual(errors.toString(), expecting);
+		assertEquals(errors.toString(), expecting);
 	}
 
 	public void testGroupExtendsSuperGroup() throws Exception {
@@ -238,7 +228,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("x", "foo");
 
 		String expecting = "*foo*";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 	}
 
 	public void testMissingInterfaceTemplate() throws Exception {
@@ -264,7 +254,7 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
 
 		String expecting = "group testG does not satisfy interface testI: missing templates [bold]";
-		assertEqual(errors.toString(), expecting);
+		assertEquals(errors.toString(), expecting);
 	}
 
 	public void testMissingOptionalInterfaceTemplate() throws Exception {
@@ -290,7 +280,7 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
 
 		String expecting = ""; // should be NO errors
-		assertEqual(errors.toString(), expecting);
+		assertEquals(errors.toString(), expecting);
 	}
 
 	public void testMismatchedInterfaceTemplate() throws Exception {
@@ -317,7 +307,7 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"), errors);
 
 		String expecting = "group testG does not satisfy interface testI: mismatched arguments on these templates [optional duh(a, b, c)]";
-		assertEqual(errors.toString(), expecting);
+		assertEquals(errors.toString(), expecting);
 	}
 
 	public void testGroupFileFormat() throws Exception {
@@ -334,16 +324,16 @@ public class TestStringTemplate extends TestSuite {
 				"bold(item) ::= <<<b>$item$</b>>>" +newline+
 				"duh() ::= <<xx>>" +newline+
 				"t() ::= <<literal template>>"+newline;
-		assertEqual(group.toString(), expecting);
+		assertEquals(group.toString(), expecting);
 
 		StringTemplate a = group.getInstanceOf("t");
 		expecting = "literal template";
-		assertEqual(a.toString(), expecting);
+		assertEquals(a.toString(), expecting);
 
 		StringTemplate b = group.getInstanceOf("bold");
 		b.setAttribute("item", "dork");
 		expecting = "<b>dork</b>";
-		assertEqual(b.toString(), expecting);
+		assertEquals(b.toString(), expecting);
 	}
 
 	public void testEscapedTemplateDelimiters() throws Exception {
@@ -360,16 +350,16 @@ public class TestStringTemplate extends TestSuite {
 				"bold(item) ::= <<<b>$item$</b>>>" +newline+
 				"duh() ::= <<xx>>" +newline+
 				"t() ::= <<$\"literal\":{a|$a$\\}}$ template>>"+newline;
-		assertEqual(group.toString(), expecting);
+		assertEquals(group.toString(), expecting);
 
 		StringTemplate b = group.getInstanceOf("bold");
 		b.setAttribute("item", "dork");
 		expecting = "<b>dork</b>";
-		assertEqual(b.toString(), expecting);
+		assertEquals(b.toString(), expecting);
 
 		StringTemplate a = group.getInstanceOf("t");
 		expecting = "literal} template";
-		assertEqual(a.toString(), expecting);
+		assertEquals(a.toString(), expecting);
 	}
 
     /** Check syntax and setAttribute-time errors */
@@ -395,7 +385,7 @@ public class TestStringTemplate extends TestSuite {
             error = e.getMessage();
         }
         String expecting = "no such attribute: foo in template context [t]";
-        assertEqual(error, expecting);
+        assertEquals(error, expecting);
 
         // check setting known arg
         a = group.getInstanceOf("t2");
@@ -416,7 +406,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplateGroup group =
                 new StringTemplateGroup(new StringReader(templates), errors);
         String expecting = "redefinition of template: a";
-        assertEqual(errors.toString(), expecting);
+        assertEquals(errors.toString(), expecting);
     }
 
     public void testMissingInheritedAttribute() throws Exception {
@@ -450,7 +440,7 @@ public class TestStringTemplate extends TestSuite {
 										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         String expecting = "<font face=Times>my body</font>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testUndefinedArgumentAssignment() throws Exception {
@@ -471,7 +461,7 @@ public class TestStringTemplate extends TestSuite {
             error = iae.getMessage();
         }
         String expecting = "template body has no such attribute: font in template context [page <invoke body arg context>]";
-        assertEqual(error, expecting);
+        assertEquals(error, expecting);
     }
 
     public void testFormalArgumentAssignmentInApply() throws Exception {
@@ -485,7 +475,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate t = group.getInstanceOf("page");
         t.setAttribute("name", "Ter");
         String expecting = "<font face=Times><b>Ter</b></font>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testUndefinedArgumentAssignmentInApply() throws Exception {
@@ -507,7 +497,7 @@ public class TestStringTemplate extends TestSuite {
             error = iae.getMessage();
         }
         String expecting = "template bold has no such attribute: font in template context [page <invoke bold arg context>]";
-        assertEqual(error, expecting);
+        assertEquals(error, expecting);
     }
 
     public void testUndefinedAttributeReference() throws Exception {
@@ -527,7 +517,7 @@ public class TestStringTemplate extends TestSuite {
             error = iae.getMessage();
         }
         String expecting = "no such attribute: name in template context [page bold]";
-        assertEqual(error, expecting);
+        assertEquals(error, expecting);
     }
 
     public void testUndefinedDefaultAttributeReference() throws Exception {
@@ -547,7 +537,7 @@ public class TestStringTemplate extends TestSuite {
             error = nse.getMessage();
         }
         String expecting = "no such attribute: it in template context [page bold]";
-        assertEqual(error, expecting);
+        assertEquals(error, expecting);
     }
 
     public void testAngleBracketsWithGroupFile() throws Exception {
@@ -563,7 +553,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate t = group.getInstanceOf("a");
         t.setAttribute("s","Test");
         String expecting = "case 1 : Test break;";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testAngleBracketsNoGroup() throws Exception {
@@ -573,7 +563,7 @@ public class TestStringTemplate extends TestSuite {
         st.setAttribute("rules", "A");
         st.setAttribute("rules", "B");
         String expecting = "Tokens : A|B ;";
-        assertEqual(st.toString(), expecting);
+        assertEquals(st.toString(), expecting);
     }
 
 	public void testRegionRef() throws Exception {
@@ -586,7 +576,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmbeddedRegionRef() throws Exception {
@@ -599,7 +589,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRegionRefAngleBrackets() throws Exception {
@@ -611,7 +601,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmbeddedRegionRefAngleBrackets() throws Exception {
@@ -623,7 +613,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmbeddedRegionRefWithNewlinesAngleBrackets() throws Exception {
@@ -638,7 +628,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRegionRefWithDefAngleBrackets() throws Exception {
@@ -651,7 +641,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XfooY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRegionRefWithDefInConditional() throws Exception {
@@ -665,7 +655,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("v", "true");
 		String result = st.toString();
 		String expecting = "XAfooBY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRegionRefWithImplicitDefInConditional() throws Exception {
@@ -681,11 +671,11 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("v", "true");
 		String result = st.toString();
 		String expecting = "XAyoBY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		String err_result = errors.toString();
 		String err_expecting = "group test line 3: redefinition of template region: @a.r";
-		assertEqual(err_result, err_expecting);
+		assertEquals(err_result, err_expecting);
 	}
 
 	public void testRegionOverride() throws Exception {
@@ -708,7 +698,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XfooY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRegionOverrideRefSuperRegion() throws Exception {
@@ -731,7 +721,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XAfooBY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRegionOverrideRefSuperRegion3Levels() throws Exception {
@@ -776,7 +766,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = subSubGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "Xfoo23Y";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRegionOverrideRefSuperImplicitRegion() throws Exception {
@@ -798,7 +788,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XAfooY";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmbeddedRegionRedefError() throws Exception {
@@ -815,7 +805,7 @@ public class TestStringTemplate extends TestSuite {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "group test line 2: redefinition of template region: @a.r";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testImplicitRegionRedefError() throws Exception {
@@ -833,7 +823,7 @@ public class TestStringTemplate extends TestSuite {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "group test line 4: redefinition of template region: @a.r";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testImplicitOverriddenRegionRedefError() throws Exception {
@@ -858,7 +848,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = errors.toString();
 		String expecting = "group sub line 3: redefinition of template region: @a.r";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testUnknownRegionDefError() throws Exception {
@@ -875,7 +865,7 @@ public class TestStringTemplate extends TestSuite {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "group test line 3: template a has no region called q";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSuperRegionRefError() throws Exception {
@@ -899,7 +889,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = errors.toString();
 		String expecting = "template a has no region called q";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMissingEndRegionError() throws Exception {
@@ -917,7 +907,7 @@ public class TestStringTemplate extends TestSuite {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "missing region r $@end$ tag";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMissingEndRegionErrorAngleBrackets() throws Exception {
@@ -933,7 +923,7 @@ public class TestStringTemplate extends TestSuite {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "missing region r <@end> tag";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
     public void testSimpleInheritance() throws Exception {
@@ -948,7 +938,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate duh = new StringTemplate(subgroup, "$name:bold()$");
 		duh.setAttribute("name", "Terence");
 		String expecting = "<b>Terence</b>";
-		assertEqual(duh.toString(), expecting);
+		assertEquals(duh.toString(), expecting);
 	}
 
 	public void testOverrideInheritance() throws Exception {
@@ -964,7 +954,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate duh = new StringTemplate(subgroup, "$name:bold()$");
 		duh.setAttribute("name", "Terence");
 		String expecting = "<strong>Terence</strong>";
-		assertEqual(duh.toString(), expecting);
+		assertEquals(duh.toString(), expecting);
 	}
 
 	public void testMultiLevelInheritance() throws Exception {
@@ -982,7 +972,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate duh = new StringTemplate(level2, "$name:bold()$");
 		duh.setAttribute("name", "Terence");
 		String expecting = "<b>Terence</b>";
-		assertEqual(duh.toString(), expecting);
+		assertEquals(duh.toString(), expecting);
 	}
 
 	public void testComplicatedInheritance() throws Exception {
@@ -1012,7 +1002,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = sub.getInstanceOf("decls");
 		String expecting = "DSL";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void test3LevelSuperRef() throws Exception {
@@ -1043,7 +1033,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate st = subSubGroup.getInstanceOf("r");
 		String result = st.toString();
 		String expecting = "foo23";
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testExprInParens() throws Exception {
@@ -1058,7 +1048,7 @@ public class TestStringTemplate extends TestSuite {
 		duh.setAttribute("list", "c");
 		// System.out.println(duh);
 		String expecting = "<b>blort: abc</b>";
-		assertEqual(duh.toString(), expecting);
+		assertEquals(duh.toString(), expecting);
 	}
 
     public void testMultipleAdditions() throws Exception {
@@ -1073,7 +1063,7 @@ public class TestStringTemplate extends TestSuite {
         duh.setAttribute("ID", "3321");
         duh.setAttribute("foo", "fubar");
         String expecting = "<a href=\"/member/view?ID=3321&x=yfubar\"><b>the title</b></a>";
-        assertEqual(duh.toString(), expecting);
+        assertEquals(duh.toString(), expecting);
     }
 
     public void testCollectionAttributes() throws Exception {
@@ -1100,7 +1090,7 @@ public class TestStringTemplate extends TestSuite {
         //System.out.println(t);
         String expecting="123, <b>1</b><b>2</b><b>3</b>, "+
             "<b><b>a</b></b><b><b>b</b></b><b><b>c</b></b>, xy, 1020, 1.21.3, 8.79.2";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testParenthesizedExpression() throws Exception {
@@ -1112,7 +1102,7 @@ public class TestStringTemplate extends TestSuite {
         t.setAttribute("l", "Schmoe");
         //System.out.println(t);
         String expecting="<b>JoeSchmoe</b>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
 	public void testApplyTemplateNameExpression() throws Exception {
@@ -1125,7 +1115,7 @@ public class TestStringTemplate extends TestSuite {
         t.setAttribute("name", "foo");
         //System.out.println(t);
         String expecting="fooTerbarfooTombar";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
 	public void testApplyTemplateNameTemplateEval() throws Exception {
@@ -1138,7 +1128,7 @@ public class TestStringTemplate extends TestSuite {
         t.setAttribute("data", "Tom");
         //System.out.println(t);
         String expecting="fooTerbarfooTombar";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testTemplateNameExpression() throws Exception {
@@ -1149,7 +1139,7 @@ public class TestStringTemplate extends TestSuite {
         t.setAttribute("name", "foo");
         //System.out.println(t);
         String expecting="hi there!";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testMissingEndDelimiter() throws Exception {
@@ -1180,7 +1170,7 @@ public class TestStringTemplate extends TestSuite {
         //System.out.println("result error: '"+errors+"'");
         //System.out.println("expecting: '"+expectingError+"'");
         StringTemplate.setLintMode(false);
-        assertEqual(errors.toString(), expectingError);
+        assertEquals(errors.toString(), expectingError);
     }
 
     public void testNullTemplateApplication() throws Exception {
@@ -1200,7 +1190,7 @@ public class TestStringTemplate extends TestSuite {
 		catch (IllegalArgumentException iae) {
 			error = iae.getMessage();
 		}
-		assertEqual(error, "Can't find template bold.st; context is [anonymous]");
+		assertEquals(error, "Can't find template bold.st; context is [anonymous]");
     }
 
     public void testNullTemplateToMultiValuedApplication() throws Exception {
@@ -1221,7 +1211,7 @@ public class TestStringTemplate extends TestSuite {
 		catch (IllegalArgumentException iae) {
 			error = iae.getMessage();
 		}
-		assertEqual(error, "Can't find template bold.st; context is [anonymous]");
+		assertEquals(error, "Can't find template bold.st; context is [anonymous]");
     }
 
     public void testChangingAttrValueTemplateApplicationToVector() throws Exception {
@@ -1233,7 +1223,7 @@ public class TestStringTemplate extends TestSuite {
         t.setAttribute("names", "Tom");
         //System.out.println("'"+t.toString()+"'");
         String expecting="<b>Terence</b><b>Tom</b>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testChangingAttrValueRepeatedTemplateApplicationToVector() throws Exception {
@@ -1248,7 +1238,7 @@ public class TestStringTemplate extends TestSuite {
         members.setAttribute("members", "Ashar");
         //System.out.println("members="+members);
         String expecting = "<i><b>Jim</b></i><i><b>Mike</b></i><i><b>Ashar</b></i>";
-        assertEqual(members.toString(), expecting);
+        assertEquals(members.toString(), expecting);
     }
 
     public void testAlternatingTemplateApplication() throws Exception {
@@ -1264,7 +1254,7 @@ public class TestStringTemplate extends TestSuite {
         item.setAttribute("item", "Ashar");
         //System.out.println("ITEM="+item);
         String expecting = "<li><b>Jim</b></li><li><i>Mike</i></li><li><b>Ashar</b></li>";
-        assertEqual(item.toString(), expecting);
+        assertEquals(item.toString(), expecting);
     }
 
     public void testExpressionAsRHSOfAssignment() throws Exception {
@@ -1274,7 +1264,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
         StringTemplate t = new StringTemplate(group, "$bold(x=hostname(machine=\"www\"))$");
         String expecting="<b>www.jguru.com</b>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testTemplateApplicationAsRHSOfAssignment() throws Exception {
@@ -1285,7 +1275,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate italics = group.defineTemplate("italics", "<i>$it$</i>");
         StringTemplate t = new StringTemplate(group, "$bold(x=hostname(machine=\"www\"):italics())$");
         String expecting="<b><i>www.jguru.com</i></b>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testParameterAndAttributeScoping() throws Exception {
@@ -1297,7 +1287,7 @@ public class TestStringTemplate extends TestSuite {
         t.setAttribute("name", "Terence");
         //System.out.println(t);
         String expecting="<b><i>Terence</i></b>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testComplicatedSeparatorExpr() throws Exception {
@@ -1313,7 +1303,7 @@ public class TestStringTemplate extends TestSuite {
         t.setAttribute("name", "Mel");
         //System.out.println(t);
         String expecting = "<ul>Ter</li> <li>&nbsp;Tom</li> <li>&nbsp;Mel</ul>";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testAttributeRefButtedUpAgainstEndifAndWhitespace() throws Exception {
@@ -1323,7 +1313,7 @@ public class TestStringTemplate extends TestSuite {
                                               "$if (!firstName)$$email$$endif$");
         a.setAttribute("email", "parrt@jguru.com");
         String expecting = "parrt@jguru.com";
-        assertEqual(a.toString(), expecting);
+        assertEquals(a.toString(), expecting);
     }
 
 	public void testStringCatenationOnSingleValuedAttributeViaTemplateLiteral() throws Exception {
@@ -1335,8 +1325,8 @@ public class TestStringTemplate extends TestSuite {
 		//a.setAttribute("name", "Terence");
 		b.setAttribute("name", "Terence");
 		String expecting = "<b>Terence Parr</b>";
-		//assertEqual(a.toString(), expecting);
-		assertEqual(b.toString(), expecting);
+		//assertEquals(a.toString(), expecting);
+		assertEquals(b.toString(), expecting);
 	}
 
 	public void testStringCatenationOpOnArg() throws Exception {
@@ -1347,8 +1337,8 @@ public class TestStringTemplate extends TestSuite {
 		//a.setAttribute("name", "Terence");
 		b.setAttribute("name", "Terence");
 		String expecting = "<b>Terence Parr</b>";
-		//assertEqual(a.toString(), expecting);
-		assertEqual(b.toString(), expecting);
+		//assertEquals(a.toString(), expecting);
+		assertEquals(b.toString(), expecting);
 	}
 
 	public void testStringCatenationOpOnArgWithEqualsInString() throws Exception {
@@ -1359,8 +1349,8 @@ public class TestStringTemplate extends TestSuite {
 		//a.setAttribute("name", "Terence");
 		b.setAttribute("name", "Terence");
 		String expecting = "<b>Terence Parr=</b>";
-		//assertEqual(a.toString(), expecting);
-		assertEqual(b.toString(), expecting);
+		//assertEquals(a.toString(), expecting);
+		assertEquals(b.toString(), expecting);
 	}
 
     public void testApplyingTemplateFromDiskWithPrecompiledIF()
@@ -1396,7 +1386,7 @@ public class TestStringTemplate extends TestSuite {
                 "</body>"+newline+
                 "</head>";
         //System.out.println("'"+a+"'");
-        assertEqual(a.toString(), expecting);
+        assertEquals(a.toString(), expecting);
     }
 
     public void testMultiValuedAttributeWithAnonymousTemplateUsingIndexVariableI()
@@ -1421,7 +1411,7 @@ public class TestStringTemplate extends TestSuite {
                 "<br>1. Terence"+newline+
                 "<br>2. Jim"+newline+
                 "<br>3. Sriram"+newline;
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testFindTemplateInCLASSPATH() throws Exception {
@@ -1445,7 +1435,7 @@ public class TestStringTemplate extends TestSuite {
                 "\t// end of a body"+newline+
                 "}";
 		//System.out.println(m);
-        assertEqual(m.toString(), expecting);
+        assertEquals(m.toString(), expecting);
     }
 
     public void testApplyTemplateToSingleValuedAttribute() throws Exception {
@@ -1454,7 +1444,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
         StringTemplate name = new StringTemplate(group, "$name:bold(x=name)$");
         name.setAttribute("name", "Terence");
-        assertEqual(name.toString(), "<b>Terence</b>");
+        assertEquals(name.toString(), "<b>Terence</b>");
     }
 
     public void testStringLiteralAsAttribute() throws Exception {
@@ -1462,7 +1452,7 @@ public class TestStringTemplate extends TestSuite {
                 new StringTemplateGroup("test");
         StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
         StringTemplate name = new StringTemplate(group, "$\"Terence\":bold()$");
-        assertEqual(name.toString(), "<b>Terence</b>");
+        assertEquals(name.toString(), "<b>Terence</b>");
     }
 
     public void testApplyTemplateToSingleValuedAttributeWithDefaultAttribute() throws Exception {
@@ -1471,7 +1461,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate bold = group.defineTemplate("bold", "<b>$it$</b>");
         StringTemplate name = new StringTemplate(group, "$name:bold()$");
         name.setAttribute("name", "Terence");
-        assertEqual(name.toString(), "<b>Terence</b>");
+        assertEquals(name.toString(), "<b>Terence</b>");
     }
 
     public void testApplyAnonymousTemplateToSingleValuedAttribute() throws Exception {
@@ -1482,7 +1472,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate item =
                 new StringTemplate(group, "$item:{<li>$it$</li>}$");
         item.setAttribute("item", "Terence");
-        assertEqual(item.toString(), "<li>Terence</li>");
+        assertEquals(item.toString(), "<li>Terence</li>");
     }
 
     public void testApplyAnonymousTemplateToMultiValuedAttribute() throws Exception {
@@ -1499,7 +1489,7 @@ public class TestStringTemplate extends TestSuite {
         item.setAttribute("item", "Jim");
         item.setAttribute("item", "John");
         list.setAttribute("items", item); // nested template
-        assertEqual(list.toString(), "<ul><li>Terence</li>,<li>Jim</li>,<li>John</li></ul>");
+        assertEquals(list.toString(), "<ul><li>Terence</li>,<li>Jim</li>,<li>John</li></ul>");
     }
 
     public void testApplyAnonymousTemplateToAggregateAttribute() throws Exception {
@@ -1511,7 +1501,7 @@ public class TestStringTemplate extends TestSuite {
         String expecting =
                 "Parr, Ter"+newline +
                 "Burns, Tom"+newline;
-        assertEqual(st.toString(), expecting);
+        assertEquals(st.toString(), expecting);
     }
 
     public void testRepeatedApplicationOfTemplateToSingleValuedAttribute() throws Exception {
@@ -1521,7 +1511,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate item =
                 new StringTemplate(group, "$item:bold():bold()$");
         item.setAttribute("item", "Jim");
-        assertEqual(item.toString(), "<b><b>Jim</b></b>");
+        assertEquals(item.toString(), "<b><b>Jim</b></b>");
     }
 
     public void testRepeatedApplicationOfTemplateToMultiValuedAttributeWithSeparator() throws Exception {
@@ -1535,7 +1525,7 @@ public class TestStringTemplate extends TestSuite {
         item.setAttribute("item", "Ashar");
         // first application of template must yield another vector!
         //System.out.println("ITEM="+item);
-        assertEqual(item.toString(), "<b><b>Jim</b></b>,<b><b>Mike</b></b>,<b><b>Ashar</b></b>");
+        assertEquals(item.toString(), "<b><b>Jim</b></b>,<b><b>Mike</b></b>,<b><b>Ashar</b></b>");
     }
 
     // ### NEED A TEST OF obj ASSIGNED TO ARG?
@@ -1553,7 +1543,7 @@ public class TestStringTemplate extends TestSuite {
         // uncomment next line to make "DISTINCT" appear in output
         // query.setAttribute("distince", "DISTINCT");
         // System.out.println(query);
-        assertEqual(query.toString(), "SELECT  name, email FROM User;");
+        assertEquals(query.toString(), "SELECT  name, email FROM User;");
     }
 
     public void testSingleValuedAttributes() throws Exception {
@@ -1563,7 +1553,7 @@ public class TestStringTemplate extends TestSuite {
         query.setAttribute("column", "name");
         query.setAttribute("table", "User");
         // System.out.println(query);
-        assertEqual(query.toString(), "SELECT name FROM User;");
+        assertEquals(query.toString(), "SELECT name FROM User;");
     }
 
 	public void testIFTemplate() throws Exception {
@@ -1576,7 +1566,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("column", "name");
 		t.setAttribute("cond", "true");
 		t.setAttribute("id", "231");
-		assertEqual(t.toString(), "SELECT name FROM PERSON WHERE ID=231;");
+		assertEquals(t.toString(), "SELECT name FROM PERSON WHERE ID=231;");
 	}
 
 	public void testIFCondWithParensTemplate() throws Exception {
@@ -1590,7 +1580,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("map", map);
 		t.setAttribute("prop", "x");
 		t.setAttribute("type", "int");
-		assertEqual(t.toString(), "int x=0;");
+		assertEquals(t.toString(), "int x=0;");
 	}
 
 	public void testIFCondWithParensDollarDelimsTemplate() throws Exception {
@@ -1604,7 +1594,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("map", map);
 		t.setAttribute("prop", "x");
 		t.setAttribute("type", "int");
-		assertEqual(t.toString(), "int x=0;");
+		assertEquals(t.toString(), "int x=0;");
 	}
 
 	/** As of 2.0, you can test a boolean value */
@@ -1615,11 +1605,11 @@ public class TestStringTemplate extends TestSuite {
 			new StringTemplate(group,
 					  "$if(b)$x$endif$ $if(!b)$y$endif$");
 		t.setAttribute("b", new Boolean(true));
-		assertEqual(t.toString(), "x ");
+		assertEquals(t.toString(), "x ");
 
 		t = t.getInstanceOf();
 		t.setAttribute("b", new Boolean(false));
-		assertEqual(t.toString(), " y");
+		assertEquals(t.toString(), " y");
 	}
 
     public void testNestedIFTemplate() throws Exception {
@@ -1642,7 +1632,7 @@ public class TestStringTemplate extends TestSuite {
                 "ackfoo"+newline+
                 "stuff"+newline+
                 "junk";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public class Connector {
@@ -1683,7 +1673,7 @@ public class TestStringTemplate extends TestSuite {
                 "<b>Name: Terence Parr</b><br>"+newline+
                 "<b>Email: parrt@jguru.com</b><br>"+newline+
                 "Superhero by night...";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testApplyRepeatedAnonymousTemplateWithForeignTemplateRefToMultiValuedAttribute() throws Exception {
@@ -1703,7 +1693,7 @@ public class TestStringTemplate extends TestSuite {
         String expecting = "start|<a href=\"/member/view?ID=1\"><b>Terence</b></a> <br>"+newline+
             "<a href=\"/member/view?ID=2\"><b>Tom</b></a> canEdit<br>"+newline+
             "|end";
-        assertEqual(duh.toString(), expecting);
+        assertEquals(duh.toString(), expecting);
     }
 
 	public static class Tree {
@@ -1748,7 +1738,7 @@ public class TestStringTemplate extends TestSuite {
 		root.addChild(new Tree("e"));
 		tree.setAttribute("it", root);
 		String expecting = "( a b ( c d ) e )";
-		assertEqual(tree.toString(), expecting);
+		assertEquals(tree.toString(), expecting);
 	}
 
     public void testNestedAnonymousTemplates() throws Exception {
@@ -1769,7 +1759,7 @@ public class TestStringTemplate extends TestSuite {
             "<i>" + newline +
             "<b>parrt</b>" + newline +
             "</i>" + newline;
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testAnonymousTemplateAccessToEnclosingAttributes() throws Exception {
@@ -1791,7 +1781,7 @@ public class TestStringTemplate extends TestSuite {
             "<i>" + newline +
             "<b>parrt, tombu</b>" + newline +
             "</i>" + newline;
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testNestedAnonymousTemplatesAgain() throws Exception {
@@ -1812,7 +1802,7 @@ public class TestStringTemplate extends TestSuite {
                 "<table>" + newline +
                 "<tr><td><b>parrt</b></td></tr><tr><td><b>tombu</b></td></tr>" + newline +
                 "</table>" + newline;
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
 	public void testEscapes() throws Exception {
@@ -1843,11 +1833,11 @@ public class TestStringTemplate extends TestSuite {
 		//System.out.println("u is '"+u.toString()+"'");
 		//System.out.println("v is '"+v.toString()+"'");
 		String expecting = "dog\"\" && ick";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 		expecting = "dog\"g && ick";
-		assertEqual(u.toString(), expecting);
+		assertEquals(u.toString(), expecting);
 		expecting = "{dog}\" && ick is cool";
-		assertEqual(v.toString(), expecting);
+		assertEquals(v.toString(), expecting);
 	}
 
     public void testEscapesOutsideExpressions() throws Exception {
@@ -1855,7 +1845,7 @@ public class TestStringTemplate extends TestSuite {
         b.setAttribute("a", "Ter");
         String expecting ="It\\'s ok...$; \\'hi\\', Ter";
         String result = b.toString();
-        assertEqual(result, expecting);
+        assertEquals(result, expecting);
     }
 
     public void testElseClause() throws Exception {
@@ -1868,11 +1858,11 @@ public class TestStringTemplate extends TestSuite {
             );
         e.setAttribute("title", "sample");
         String expecting = "foo";
-        assertEqual(e.toString(), expecting);
+        assertEquals(e.toString(), expecting);
 
         e = e.getInstanceOf();
         expecting = "bar";
-        assertEqual(e.toString(), expecting);
+        assertEquals(e.toString(), expecting);
     }
 
 	public void testNestedIF() throws Exception {
@@ -1889,16 +1879,16 @@ public class TestStringTemplate extends TestSuite {
 			);
 		e.setAttribute("title", "sample");
 		String expecting = "foo";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 
 		e = e.getInstanceOf();
 		e.setAttribute("header", "more");
 		expecting = "bar";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 
 		e = e.getInstanceOf();
 		expecting = "blort";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testEmbeddedMultiLineIF() throws Exception {
@@ -1918,7 +1908,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"begin"+newline+
 			"stuff";
-		assertEqual(main.toString(), expecting);
+		assertEquals(main.toString(), expecting);
 
 		main = new StringTemplate(group, "$sub$");
 		sub = sub.getInstanceOf();
@@ -1926,7 +1916,7 @@ public class TestStringTemplate extends TestSuite {
 		expecting =
 			"begin"+newline+
 			"blort";
-		assertEqual(main.toString(), expecting);
+		assertEquals(main.toString(), expecting);
 	}
 
     public void testSimpleIndentOfAttributeList()
@@ -1950,7 +1940,7 @@ public class TestStringTemplate extends TestSuite {
                 "  Terence"+newline+
                 "  Jim"+newline+
                 "  Sriram";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testIndentOfMultilineAttributes()
@@ -1979,7 +1969,7 @@ public class TestStringTemplate extends TestSuite {
                 "  Sriram"+newline+
                 "  is"+newline+
                 "  cool";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
 	public void testIndentOfMultipleBlankLines()
@@ -2001,7 +1991,7 @@ public class TestStringTemplate extends TestSuite {
 				"  Terence"+newline+
 				""+newline+ // no indent on blank line
 				"  is a maniac";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
     public void testIndentBetweenLeftJustifiedLiterals()
@@ -2029,7 +2019,7 @@ public class TestStringTemplate extends TestSuite {
                 "  Jim"+newline+
                 "  Sriram"+newline+
                 "after";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
     public void testNestedIndent()
@@ -2079,7 +2069,7 @@ public class TestStringTemplate extends TestSuite {
                 "\t  z=4;"+newline+
                 "\t}"+newline+
                 "}";
-        assertEqual(t.toString(), expecting);
+        assertEquals(t.toString(), expecting);
     }
 
 	public void testAlternativeWriter() throws Exception {
@@ -2115,7 +2105,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate name = new StringTemplate(group, "$name:bold(x=name)$");
 		name.setAttribute("name", "Terence");
 		name.write(w);
-		assertEqual(buf.toString(), "<b>Terence</b>");
+		assertEquals(buf.toString(), "<b>Terence</b>");
 	}
 
 	public void testApplyAnonymousTemplateToMapAndSet() throws Exception {
@@ -2127,7 +2117,7 @@ public class TestStringTemplate extends TestSuite {
 		m.put("c", "3");
 		st.setAttribute("items", m);
 		String expecting = "<li>1</li><li>3</li><li>2</li>";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 
 		st = st.getInstanceOf();
 		Set s = new HashSet();
@@ -2136,7 +2126,7 @@ public class TestStringTemplate extends TestSuite {
 		s.add("3");
 		st.setAttribute("items", s);
 		expecting = "<li>3</li><li>2</li><li>1</li>";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 	}
 
 	public void testDumpMapAndSet() throws Exception {
@@ -2148,7 +2138,7 @@ public class TestStringTemplate extends TestSuite {
 		m.put("c", "3");
 		st.setAttribute("items", m);
 		String expecting = "1,3,2";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 
 		st = st.getInstanceOf();
 		Set s = new HashSet();
@@ -2157,7 +2147,7 @@ public class TestStringTemplate extends TestSuite {
 		s.add("3");
 		st.setAttribute("items", s);
 		expecting = "3,2,1";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 	}
 
 	public class Connector3 {
@@ -2172,12 +2162,12 @@ public class TestStringTemplate extends TestSuite {
 				new StringTemplate("$x.values:{<li>$it$</li>}$");
 		st.setAttribute("x", new Connector3());
 		String expecting = "<li>1</li><li>2</li><li>3</li>";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 
 		st = new StringTemplate("$x.stuff:{<li>$it$</li>}$");
 		st.setAttribute("x", new Connector3());
 		expecting = "<li>1</li><li>2</li>";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 	}
 
     public void testSuperTemplateRef()
@@ -2193,7 +2183,7 @@ public class TestStringTemplate extends TestSuite {
         StringTemplate st = subGroup.getInstanceOf("page");
         String expecting =
                 "Helvetica and Times:text";
-        assertEqual(st.toString(), expecting);
+        assertEquals(st.toString(), expecting);
     }
 
     public void testApplySuperTemplateRef()
@@ -2209,7 +2199,7 @@ public class TestStringTemplate extends TestSuite {
         st.setAttribute("name", "Ter");
         String expecting =
                 "<b>Ter</b>";
-        assertEqual(st.toString(), expecting);
+        assertEquals(st.toString(), expecting);
     }
 
     public void testLazyEvalOfSuperInApplySuperTemplateRef()
@@ -2239,7 +2229,7 @@ public class TestStringTemplate extends TestSuite {
 			error = iae.getMessage();
 		}
 		String expectingError = "base has no super group; invalid template: super.bold";
-		assertEqual(error, expectingError);
+		assertEquals(error, expectingError);
     }
 
     public void testTemplatePolymorphism()
@@ -2259,7 +2249,7 @@ public class TestStringTemplate extends TestSuite {
         st.setAttribute("name", "Ter");
         String expecting =
                 "<strong>Ter</strong>";
-        assertEqual(st.toString(), expecting);
+        assertEquals(st.toString(), expecting);
     }
 
     public void testListOfEmbeddedTemplateSeesEnclosingAttributes() throws Exception {
@@ -2282,7 +2272,7 @@ public class TestStringTemplate extends TestSuite {
         outputST.setAttribute("items", bodyST2);
         outputST.setAttribute("items", bodyST3);
         String expecting = "page: thatstuffthatstuffthatstuff";
-        assertEqual(outputST.toString(), expecting);
+        assertEquals(outputST.toString(), expecting);
     }
 
     public void testInheritArgumentFromRecursiveTemplateApplication() throws Exception {
@@ -2300,7 +2290,7 @@ public class TestStringTemplate extends TestSuite {
         String expecting = "IF true then IF true then ";
         String result = b.toString();
         //System.err.println("result='"+result+"'");
-        assertEqual(result, expecting);
+        assertEquals(result, expecting);
     }
 
 
@@ -2340,7 +2330,7 @@ public class TestStringTemplate extends TestSuite {
         //System.err.println("errors="+errors+"'");
         //System.err.println("expecting="+expectingError+"'");
         StringTemplate.setLintMode(false);
-        assertEqual(errors, expectingError);
+        assertEquals(errors, expectingError);
     }
 
 
@@ -2359,7 +2349,7 @@ public class TestStringTemplate extends TestSuite {
         String expecting ="{{}}";
         String result = b.toString();
         //System.err.println(result);
-        assertEqual(result, expecting);
+        assertEquals(result, expecting);
     }
 
 
@@ -2375,7 +2365,7 @@ public class TestStringTemplate extends TestSuite {
         b.setAttribute("name", "Ter");
         String expecting ="name is Ter";
         String result = b.toString();
-        assertEqual(result, expecting);
+        assertEquals(result, expecting);
     }
 
     public void testTemplateGetPropertyGetsAttribute() throws Exception {
@@ -2410,7 +2400,7 @@ public class TestStringTemplate extends TestSuite {
 				"public void g(int arg);" +newline+
                 "public void f() {i=1;}"+newline+
                 "public void g(int arg) {y=1;}";
-        assertEqual(b.toString(), expecting);
+        assertEquals(b.toString(), expecting);
     }
 
     public static class Decl {
@@ -2439,7 +2429,7 @@ public class TestStringTemplate extends TestSuite {
 		//System.out.println("f='"+f+"'");
 		String expecting = "int i = 0;" +newline+
 				"int[] a = null;";
-		assertEqual(f.toString(), expecting);
+		assertEquals(f.toString(), expecting);
 	}
 
 	public void testIndirectTemplateApplication() throws Exception {
@@ -2457,7 +2447,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate f = group.getInstanceOf("test");
 		f.setAttribute("name", "first");
 		String expecting = "the first";
-		assertEqual(f.toString(), expecting);
+		assertEquals(f.toString(), expecting);
 	}
 
 	public void testIndirectTemplateWithArgsApplication() throws Exception {
@@ -2475,7 +2465,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate f = group.getInstanceOf("test");
 		f.setAttribute("name", "first");
 		String expecting = "the first: foo";
-		assertEqual(f.toString(), expecting);
+		assertEquals(f.toString(), expecting);
 	}
 
 	public void testNullIndirectTemplateApplication() throws Exception {
@@ -2493,7 +2483,7 @@ public class TestStringTemplate extends TestSuite {
 		f.setAttribute("names", "me");
 		f.setAttribute("names", "you");
 		String expecting = "";
-		assertEqual(f.toString(), expecting);
+		assertEquals(f.toString(), expecting);
 	}
 
 	public void testNullIndirectTemplate() throws Exception {
@@ -2511,7 +2501,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate f = group.getInstanceOf("test");
 		//f.setAttribute("name", "first");
 		String expecting = "";
-		assertEqual(f.toString(), expecting);
+		assertEquals(f.toString(), expecting);
 	}
 
 	public void testHashMapPropertyFetch() throws Exception {
@@ -2522,7 +2512,7 @@ public class TestStringTemplate extends TestSuite {
 		String results = a.toString();
 		//System.out.println(results);
 		String expecting = "Terence";
-		assertEqual(results, expecting);
+		assertEquals(results, expecting);
 	}
 
 	public void testHashMapPropertyFetchEmbeddedStringTemplate() throws Exception {
@@ -2534,7 +2524,7 @@ public class TestStringTemplate extends TestSuite {
 		String results = a.toString();
 		//System.out.println(results);
 		String expecting = "embedded refers to ST rocks";
-		assertEqual(results, expecting);
+		assertEquals(results, expecting);
 	}
 
 	public void testEmbeddedComments() throws Exception {
@@ -2543,7 +2533,7 @@ public class TestStringTemplate extends TestSuite {
 				);
 		String expecting ="Foo bar"+newline;
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 				"Foo $! ignore" +newline+
@@ -2552,7 +2542,7 @@ public class TestStringTemplate extends TestSuite {
 				);
 		expecting ="Foo "+newline+"bar"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 				"$! start of line $ and $! ick" +newline+
@@ -2560,7 +2550,7 @@ public class TestStringTemplate extends TestSuite {
 				);
 		expecting ="boo"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 			"$! start of line !$" +newline+
@@ -2570,7 +2560,7 @@ public class TestStringTemplate extends TestSuite {
 		);
 		expecting ="boo"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 			"$! back !$$! to back !$" +newline+ // can't detect; leaves \n
@@ -2579,7 +2569,7 @@ public class TestStringTemplate extends TestSuite {
 		);
 		expecting =newline+"boo"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmbeddedCommentsAngleBracketed() throws Exception {
@@ -2589,7 +2579,7 @@ public class TestStringTemplate extends TestSuite {
 				);
 		String expecting ="Foo bar"+newline;
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 				"Foo <! ignore" +newline+
@@ -2599,7 +2589,7 @@ public class TestStringTemplate extends TestSuite {
 				);
 		expecting ="Foo "+newline+"bar"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 				"<! start of line $ and <! ick" +newline+
@@ -2608,7 +2598,7 @@ public class TestStringTemplate extends TestSuite {
 				);
 		expecting ="boo"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 			"<! start of line !>" +
@@ -2620,7 +2610,7 @@ public class TestStringTemplate extends TestSuite {
 		expecting ="boo"+newline;
 		result = st.toString();
 		//System.out.println(result);
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 			"<! back !><! to back !>" +newline+ // can't detect; leaves \n
@@ -2630,7 +2620,7 @@ public class TestStringTemplate extends TestSuite {
 		);
 		expecting =newline+"boo"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testCharLiterals() throws Exception {
@@ -2640,19 +2630,19 @@ public class TestStringTemplate extends TestSuite {
 				);
 		String expecting ="Foo "+newline+"\t bar"+newline;
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 				"Foo $\\n$$\\t$ bar" +newline);
 		expecting ="Foo "+newline+"\t bar"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 
 		st = new StringTemplate(
 				"Foo$\\ $bar$\\n$");
 		expecting ="Foo bar"+newline;
 		result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyIteratedValueGetsSeparator() throws Exception {
@@ -2670,7 +2660,7 @@ public class TestStringTemplate extends TestSuite {
 		// empty values get separator still
 		String expecting="Terence,,,Tom,Frank,";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyIteratedConditionalValueGetsSeparator() throws Exception {
@@ -2687,7 +2677,7 @@ public class TestStringTemplate extends TestSuite {
 		// empty conditional values get no separator
 		String expecting="Terence,,Frank,";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyIteratedConditionalWithElseValueGetsSeparator() throws Exception {
@@ -2704,7 +2694,7 @@ public class TestStringTemplate extends TestSuite {
 		// empty conditional values get no separator
 		String expecting="Terence,,Frank,";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testWhiteSpaceAtEndOfTemplate() throws Exception {
@@ -2722,7 +2712,7 @@ public class TestStringTemplate extends TestSuite {
 			"Terence parrt@jguru.comTom tombu@jguru.com";
 		String result = pageST.toString();
 		//System.out.println("'"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	static class Duh {
@@ -2741,7 +2731,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("duh", new Duh());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testNullListGetsNoOutput() throws Exception {
@@ -2756,7 +2746,7 @@ public class TestStringTemplate extends TestSuite {
 		//t.setAttribute("users", new Duh());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyListGetsNoOutput() throws Exception {
@@ -2771,7 +2761,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("users", new ArrayList());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyListNoIteratorGetsNoOutput() throws Exception {
@@ -2786,7 +2776,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("users", new ArrayList());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyExprAsFirstLineGetsNoOutput() throws Exception {
@@ -2800,7 +2790,7 @@ public class TestStringTemplate extends TestSuite {
 			"end\n");
 		String expecting="end\n";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSizeZeroOnLineByItselfGetsNoOutput() throws Exception {
@@ -2816,7 +2806,7 @@ public class TestStringTemplate extends TestSuite {
 			"end\n");
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSizeZeroOnLineWithIndentGetsNoOutput() throws Exception {
@@ -2832,7 +2822,7 @@ public class TestStringTemplate extends TestSuite {
 			"end\n");
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSimpleAutoIndent() throws Exception {
@@ -2850,7 +2840,7 @@ public class TestStringTemplate extends TestSuite {
 			"	Terence\n" +
 			"	Frank\n" +
 			"}";
-		assertEqual(results, expecting);
+		assertEquals(results, expecting);
 	}
 
 	public void testComputedPropertyName() throws Exception {
@@ -2864,8 +2854,8 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("propName", "type");
 		String expecting="variable property type=int";
 		String result = t.toString();
-		assertEqual(errors.toString(), "");
-		assertEqual(result, expecting);
+		assertEquals(errors.toString(), "");
+		assertEquals(result, expecting);
 	}
 
 	public void testNonNullButEmptyIteratorTestsFalse() throws Exception {
@@ -2878,7 +2868,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("users", new LinkedList());
 		String expecting="";
 		String result = t.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testDoNotInheritAttributesThroughFormalArgs() throws Exception {
@@ -2896,7 +2886,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x=y; // ";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testArgEvaluationContext() throws Exception {
@@ -2917,7 +2907,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x=y; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testPassThroughAttributes() throws Exception {
@@ -2933,7 +2923,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x=y; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testPassThroughAttributes2() throws Exception {
@@ -2951,7 +2941,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x=34; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testDefaultArgument() throws Exception {
@@ -2969,7 +2959,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x=99; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testDefaultArgument2() throws Exception {
@@ -2984,7 +2974,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x=99; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testDefaultArgumentAsTemplate() throws Exception {
@@ -3003,7 +2993,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x=foo; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testDefaultArgumentAsTemplate2() throws Exception {
@@ -3022,7 +3012,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting = "x= [foo] ; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testDoNotUseDefaultArgument() throws Exception {
@@ -3039,7 +3029,7 @@ public class TestStringTemplate extends TestSuite {
 		b.setAttribute("name", "foo");
 		String expecting = "x=34; // foo";
 		String result = b.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testArgumentsAsTemplates() throws Exception {
@@ -3057,7 +3047,7 @@ public class TestStringTemplate extends TestSuite {
 		b.setAttribute("size", "34");
 		String expecting = "x=34;";
 		String result = b.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testArgumentsAsTemplatesDefaultDelimiters() throws Exception {
@@ -3076,7 +3066,7 @@ public class TestStringTemplate extends TestSuite {
 		b.setAttribute("size", "34");
 		String expecting = "x=34;";
 		String result = b.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testDefaultArgsWhenNotInvoked() throws Exception {
@@ -3089,7 +3079,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate b = group.getInstanceOf("b");
 		String expecting = ".foo.";
 		String result = b.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public class DateRenderer implements AttributeRenderer {
@@ -3144,7 +3134,7 @@ public class TestStringTemplate extends TestSuite {
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer());
 		String expecting = "date: 2005.07.05";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRendererWithFormat() throws Exception {
@@ -3156,7 +3146,7 @@ public class TestStringTemplate extends TestSuite {
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer3());
 		String expecting = "date: 2005.07.05";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRendererWithFormatAndList() throws Exception {
@@ -3169,7 +3159,7 @@ public class TestStringTemplate extends TestSuite {
 		st.registerRenderer(String.class, new StringRenderer());
 		String expecting = "The names: TERTOMSRIRAM";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRendererWithFormatAndSeparator() throws Exception {
@@ -3182,7 +3172,7 @@ public class TestStringTemplate extends TestSuite {
 		st.registerRenderer(String.class, new StringRenderer());
 		String expecting = "The names: TER and TOM and SRIRAM";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRendererWithFormatAndSeparatorAndNull() throws Exception {
@@ -3197,7 +3187,7 @@ public class TestStringTemplate extends TestSuite {
 		st.registerRenderer(String.class, new StringRenderer());
 		String expecting = "The names: TER and N/A and SRIRAM";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmbeddedRendererSeesEnclosing() throws Exception {
@@ -3215,7 +3205,7 @@ public class TestStringTemplate extends TestSuite {
 		outer.registerRenderer(GregorianCalendar.class, new DateRenderer());
 		String expecting = "X: date: 2005.07.05";
 		String result = outer.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testRendererForGroup() throws Exception {
@@ -3231,7 +3221,7 @@ public class TestStringTemplate extends TestSuite {
 		group.registerRenderer(GregorianCalendar.class, new DateRenderer());
 		String expecting = "date: 2005.07.05";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testOverriddenRenderer() throws Exception {
@@ -3248,7 +3238,7 @@ public class TestStringTemplate extends TestSuite {
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer2());
 		String expecting = "date: 07/05/2005";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMap() throws Exception {
@@ -3264,7 +3254,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "int x = 0;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapValuesAreTemplates() throws Exception {
@@ -3281,7 +3271,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "int x = 0L;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapMissingDefaultValueIsEmpty() throws Exception {
@@ -3298,7 +3288,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "double x = ;"; // weird, but tests default value is key
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapHiddenByFormalArg() throws Exception {
@@ -3314,7 +3304,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "int x = ;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapEmptyValueAndAngleBracketStrings() throws Exception {
@@ -3330,7 +3320,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "float x = ;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapDefaultValue() throws Exception {
@@ -3346,7 +3336,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "UserRecord x = null;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapEmptyDefaultValue() throws Exception {
@@ -3362,7 +3352,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "UserRecord x = ;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapEmptyDefaultValueIsKey() throws Exception {
@@ -3378,7 +3368,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "UserRecord x = UserRecord;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapViaEnclosingTemplates() throws Exception {
@@ -3395,7 +3385,7 @@ public class TestStringTemplate extends TestSuite {
 		st.setAttribute("name", "x");
 		String expecting = "int x = 0;";
 		String result = st.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testMapViaEnclosingTemplates2() throws Exception {
@@ -3414,7 +3404,7 @@ public class TestStringTemplate extends TestSuite {
 		interm.setAttribute("stuff", var);
 		String expecting = "int x = 0;";
 		String result = interm.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyGroupTemplate() throws Exception {
@@ -3427,7 +3417,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate a = group.getInstanceOf("foo");
 		String expecting = "";
 		String result = a.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingAngleBracketLexer() throws Exception {
@@ -3441,7 +3431,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate a = group.getInstanceOf("top");
 		String expecting = "a=, b=";
 		String result = a.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingDollarLexer() throws Exception {
@@ -3456,7 +3446,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate a = group.getInstanceOf("top");
 		String expecting = "a=, b=";
 		String result = a.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void test8BitEuroChars() throws Exception {
@@ -3465,7 +3455,7 @@ public class TestStringTemplate extends TestSuite {
 			);
 		e = e.getInstanceOf();
 		String expecting = "Danish: Å char";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testFirstOp() throws Exception {
@@ -3477,7 +3467,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Ter";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testRestOp() throws Exception {
@@ -3489,7 +3479,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Tom, Sriram";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLastOp() throws Exception {
@@ -3501,7 +3491,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Sriram";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testCombinedOp() throws Exception {
@@ -3516,7 +3506,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("yours", "a");
 		e.setAttribute("yours", "b");
 		String expecting = "1, b";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testCatListAndSingleAttribute() throws Exception {
@@ -3530,7 +3520,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("mine", "3");
 		e.setAttribute("yours", "a");
 		String expecting = "1, 2, 3, a";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testCatListAndEmptyAttributes() throws Exception {
@@ -3547,7 +3537,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("mine", "3");
 		e.setAttribute("yours", "a");
 		String expecting = "1, 2, 3, a";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testNestedOp() throws Exception {
@@ -3559,7 +3549,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Tom";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testFirstWithOneAttributeOp() throws Exception {
@@ -3569,7 +3559,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "Ter";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLastWithOneAttributeOp() throws Exception {
@@ -3579,7 +3569,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "Ter";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLastWithLengthOneListAttributeOp() throws Exception {
@@ -3589,7 +3579,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("names", new ArrayList() {{add("Ter");}});
 		String expecting = "Ter";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testRestWithOneAttributeOp() throws Exception {
@@ -3599,7 +3589,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testRestWithLengthOneListAttributeOp() throws Exception {
@@ -3609,7 +3599,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("names", new ArrayList() {{add("Ter");}});
 		String expecting = "";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testRepeatedRestOp() throws Exception {
@@ -3620,7 +3610,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Tom, Tom";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	/** If an iterator is sent into ST, it must be cannot be reset after each
@@ -3643,7 +3633,7 @@ public class TestStringTemplate extends TestSuite {
 		names.add("Tom");
 		e.setAttribute("names", names.iterator());
 		String expecting = "TerTom, ";  // This does not give TerTom twice!!
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	/** BUG!  Fix this.  Iterator is not reset from first to second $x$
@@ -3666,7 +3656,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Tom, Tom";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testIncomingLists() throws Exception {
@@ -3677,7 +3667,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Tom, Tom";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testIncomingListsAreNotModified() throws Exception {
@@ -3691,9 +3681,9 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", names);
 		e.setAttribute("names", "Sriram");
 		String expecting = "Ter, Tom, Sriram";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 
-		assertEqual(names.size(), 2);
+		assertEquals(names.size(), 2);
 	}
 
 	public void testIncomingListsAreNotModified2() throws Exception {
@@ -3707,9 +3697,9 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Sriram"); // single element first now
 		e.setAttribute("names", names);
 		String expecting = "Sriram, Ter, Tom";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 
-		assertEqual(names.size(), 2);
+		assertEquals(names.size(), 2);
 	}
 
 	public void testIncomingArraysAreOk() throws Exception {
@@ -3720,7 +3710,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", new String[] {"Ter","Tom"});
 		e.setAttribute("names", "Sriram");
 		String expecting = "Ter, Tom, Sriram";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testApplyTemplateWithSingleFormalArgs() throws Exception {
@@ -3736,7 +3726,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		String expecting = "*Ter*, *Tom* ";
 		String result = e.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testApplyTemplateWithNoFormalArgs() throws Exception {
@@ -3753,7 +3743,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		String expecting = "*Ter*, *Tom* ";
 		String result = e.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testAnonTemplateArgs() throws Exception {
@@ -3764,7 +3754,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Ter, Tom";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testAnonTemplateWithArgHasNoITArg() throws Exception {
@@ -3782,7 +3772,7 @@ public class TestStringTemplate extends TestSuite {
 			error = nse.getMessage();
 		}
 		String expecting = "no such attribute: it in template context [anonymous anonymous]";
-		assertEqual(error, expecting);
+		assertEquals(error, expecting);
 	}
 
 	public void testAnonTemplateArgs2() throws Exception {
@@ -3793,7 +3783,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "_.Ter._, _.Tom._";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testFirstWithCatAttribute() throws Exception {
@@ -3806,7 +3796,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "Ter";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testJustCat() throws Exception {
@@ -3819,7 +3809,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "TerTom12";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testCat2Attributes() throws Exception {
@@ -3832,7 +3822,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "Ter, Tom, 1, 2";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testCat2AttributesWithApply() throws Exception {
@@ -3845,7 +3835,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "Ter.Tom.1.2.";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testCat3Attributes() throws Exception {
@@ -3860,7 +3850,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "Ter, Tom, 1, 2, big, huge";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testListAsTemplateArgument() throws Exception {
@@ -3879,7 +3869,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "2");
 		String expecting = "*Ter**Tom**1**2*";
 		String result = e.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSingleExprTemplateArgument() throws Exception {
@@ -3895,7 +3885,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("name", "Ter");
 		String expecting = "*Ter*";
 		String result = e.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSingleExprTemplateArgumentInApply() throws Exception {
@@ -3916,7 +3906,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("x", "ick");
 		String expecting = "*ick**ick*";
 		String result = e.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSoleFormalTemplateArgumentInMultiApply() throws Exception {
@@ -3934,7 +3924,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		String expecting = "*Ter*_Tom_";
 		String result = e.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testSingleExprTemplateArgumentError() throws Exception {
@@ -3951,7 +3941,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("name", "Ter");
 		String result = e.toString();
 		String expecting = "template bold must have exactly one formal arg in template context [test <invoke bold arg context>]";
-		assertEqual(errors.toString(), expecting);
+		assertEquals(errors.toString(), expecting);
 	}
 
 	public void testInvokeIndirectTemplateWithSingleFormalArgs() throws Exception {
@@ -3968,7 +3958,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("arg", "Ter");
 		String expecting = "_Ter_";
 		String result = e.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public void testParallelAttributeIteration() throws Exception {
@@ -3983,7 +3973,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "Ter@1: big"+newline+"Tom@2: huge"+newline;
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testParallelAttributeIterationHasI() throws Exception {
@@ -3998,7 +3988,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "0. Ter@1: big"+newline+"1. Tom@2: huge"+newline;
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testParallelAttributeIterationWithDifferentSizes() throws Exception {
@@ -4013,7 +4003,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "2");
 		e.setAttribute("salaries", "big");
 		String expecting = "Ter@1: big, Tom@2: , Sriram@: ";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testParallelAttributeIterationWithSingletons() throws Exception {
@@ -4025,7 +4015,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "1");
 		e.setAttribute("salaries", "big");
 		String expecting = "Ter@1: big";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testParallelAttributeIterationWithMismatchArgListSizes() throws Exception {
@@ -4041,9 +4031,9 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("phones", "2");
 		e.setAttribute("salaries", "big");
 		String expecting = "Ter@1, Tom@2";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 		String errorExpecting = "number of arguments [n, p] mismatch between attribute list and anonymous template in context [anonymous]";
-		assertEqual(errors.toString(), errorExpecting);
+		assertEquals(errors.toString(), errorExpecting);
 	}
 
 	public void testParallelAttributeIterationWithMissingArgs() throws Exception {
@@ -4058,7 +4048,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("salaries", "big");
 		e.toString(); // generate the error
 		String errorExpecting = "missing arguments in anonymous template in context [anonymous]";
-		assertEqual(errors.toString(), errorExpecting);
+		assertEquals(errors.toString(), errorExpecting);
 	}
 
 	public void testParallelAttributeIterationWithDifferentSizesTemplateRefInsideToo() throws Exception {
@@ -4078,7 +4068,7 @@ public class TestStringTemplate extends TestSuite {
 		p.setAttribute("phones", "2");
 		p.setAttribute("salaries", "big");
 		String expecting = "Ter@1: big, Tom@2: n/a, Sriram@n/a: n/a";
-		assertEqual(p.toString(), expecting);
+		assertEquals(p.toString(), expecting);
 	}
 
 	public void testAnonTemplateOnLeftOfApply() throws Exception {
@@ -4086,7 +4076,7 @@ public class TestStringTemplate extends TestSuite {
 				"${foo}:{($it$)}$"
 			);
 		String expecting = "(foo)";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testOverrideThroughConditional() throws Exception {
@@ -4110,7 +4100,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate b = subgroup.getInstanceOf("body");
 		String expecting ="bar";
 		String result = b.toString();
-		assertEqual(result, expecting);
+		assertEquals(result, expecting);
 	}
 
 	public static class NonPublicProperty {
@@ -4127,7 +4117,7 @@ public class TestStringTemplate extends TestSuite {
 
 		st.setAttribute("x", o);
 		String expecting = "9:34";
-		assertEqual(st.toString(), expecting);
+		assertEquals(st.toString(), expecting);
 	}
 
 	public void testIndexVar() throws Exception {
@@ -4144,7 +4134,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"1. parrt" +newline+
 			"2. tombu";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testIndex0Var() throws Exception {
@@ -4161,7 +4151,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"0. parrt" +newline+
 			"1. tombu";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testIndexVarWithMultipleExprs() throws Exception {
@@ -4180,7 +4170,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"1. parrt@x5707" +newline+
 			"2. tombu@x5000";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testIndex0VarWithMultipleExprs() throws Exception {
@@ -4199,7 +4189,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"0. parrt@x5707" +newline+
 			"1. tombu@x5000";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testArgumentContext() throws Exception {
@@ -4210,7 +4200,7 @@ public class TestStringTemplate extends TestSuite {
 		StringTemplate main = group.defineTemplate("main", "$foo(t={Hi, $name$}, name=\"parrt\")$");
 		StringTemplate foo = group.defineTemplate("foo", "$t$");
 		String expecting="Hi, parrt";
-		assertEqual(main.toString(), expecting);
+		assertEquals(main.toString(), expecting);
 	}
 
 	public void testNoDotsInAttributeNames() throws Exception {
@@ -4224,7 +4214,7 @@ public class TestStringTemplate extends TestSuite {
 			error = e.getMessage();
 		}
 		String expecting = "cannot have '.' in attribute names";
-		assertEqual(error, expecting);
+		assertEquals(error, expecting);
 	}
 
 	public void testNoDotsInTemplateNames() throws Exception {
@@ -4258,7 +4248,7 @@ public class TestStringTemplate extends TestSuite {
 			"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1,\n" +
 			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
 			"32,5,6,77,888,1,6,32,5 };";
-		assertEqual(a.toString(40), expecting);
+		assertEquals(a.toString(40), expecting);
 	}
 
 	public void testLineWrapAnchored() throws Exception {
@@ -4279,7 +4269,7 @@ public class TestStringTemplate extends TestSuite {
 			"            63,9,20,2,1,4,6,32,5,6,77,6,\n" +
 			"            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
 			"            5,6,77,888,1,6,32,5 };";
-		assertEqual(a.toString(40), expecting);
+		assertEquals(a.toString(40), expecting);
 	}
 
 	public void testFortranLineWrap() throws Exception {
@@ -4295,7 +4285,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"       FUNCTION line( a,b,c,d,\n" +
 			"      ce,f )";
-		assertEqual(a.toString(30), expecting);
+		assertEquals(a.toString(30), expecting);
 	}
 
 	public void testLineWrapWithDiffAnchor() throws Exception {
@@ -4315,7 +4305,7 @@ public class TestStringTemplate extends TestSuite {
 			"            1,6,32,5,6,77,4,9,\n" +
 			"            20,2,1,4,63,9,20,2,\n" +
 			"            1,4,6 };";
-		assertEqual(a.toString(30), expecting);
+		assertEquals(a.toString(30), expecting);
 	}
 
 	public void testLineWrapEdgeCase() throws Exception {
@@ -4331,7 +4321,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"abc\n"+
 			"de";
-		assertEqual(a.toString(3), expecting);
+		assertEquals(a.toString(3), expecting);
 	}
 
 	public void testLineWrapLastCharIsNewline() throws Exception {
@@ -4347,7 +4337,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"ab\n"+
 			"de";
-		assertEqual(a.toString(3), expecting);
+		assertEquals(a.toString(3), expecting);
 	}
 
 	public void testLineWrapCharAfterWrapIsNewline() throws Exception {
@@ -4366,7 +4356,7 @@ public class TestStringTemplate extends TestSuite {
 			"abc\n" +
 			"\n" +
 			"de";
-		assertEqual(a.toString(3), expecting);
+		assertEquals(a.toString(3), expecting);
 	}
 
 	public void testLineWrapForAnonTemplate() throws Exception {
@@ -4382,7 +4372,7 @@ public class TestStringTemplate extends TestSuite {
 			"![1][2][3]\n" + // width=9 is the 3 char; don't break til after ]
 			"[4][5][6]\n" +
 			"[7][8][9]!";
-		assertEqual(a.toString(9), expecting);
+		assertEquals(a.toString(9), expecting);
 	}
 
 	public void testLineWrapForAnonTemplateAnchored() throws Exception {
@@ -4398,7 +4388,7 @@ public class TestStringTemplate extends TestSuite {
 			"![1][2][3]\n" +
 			" [4][5][6]\n" +
 			" [7][8][9]!";
-		assertEqual(a.toString(9), expecting);
+		assertEquals(a.toString(9), expecting);
 	}
 
 	public void testLineWrapForAnonTemplateComplicatedWrap() throws Exception {
@@ -4419,7 +4409,7 @@ public class TestStringTemplate extends TestSuite {
 			"  ![5][6]!+\n" +
 			"  ![7][8]!+\n" +
 			"  ![9]!.";
-		assertEqual(t.toString(9), expecting);
+		assertEquals(t.toString(9), expecting);
 	}
 
 	public void testIndentBeyondLineWidth() throws Exception {
@@ -4438,7 +4428,7 @@ public class TestStringTemplate extends TestSuite {
 			"    c\n" +
 			"    d\n" +
 			"    e";
-		assertEqual(a.toString(2), expecting);
+		assertEquals(a.toString(2), expecting);
 	}
 
 	public void testIndentedExpr() throws Exception {
@@ -4456,7 +4446,7 @@ public class TestStringTemplate extends TestSuite {
 			"    cd\n" +
 			"    e";
 		// width=4 spaces + 2 char.
-		assertEqual(a.toString(6), expecting);
+		assertEquals(a.toString(6), expecting);
 	}
 
 	public void testNestedIndentedExpr() throws Exception {
@@ -4476,7 +4466,7 @@ public class TestStringTemplate extends TestSuite {
 			"    cd\n" +
 			"    e!";
 		// width=4 spaces + 2 char.
-		assertEqual(top.toString(6), expecting);
+		assertEquals(top.toString(6), expecting);
 	}
 
 	public void testNestedWithIndentAndTrackStartOfExpr() throws Exception {
@@ -4496,7 +4486,7 @@ public class TestStringTemplate extends TestSuite {
 			"  x: ab\n" +
 			"     cd\n" +
 			"     e!";
-		assertEqual(top.toString(7), expecting);
+		assertEquals(top.toString(7), expecting);
 	}
 
 	public void testLineDoesNotWrapDueToLiteral() throws Exception {
@@ -4514,7 +4504,7 @@ public class TestStringTemplate extends TestSuite {
 		int n = "public void foo(a, b, c".length();
 		String expecting =
 			"public void foo(a, b, c) throws Ick { i=3; }";
-		assertEqual(a.toString(n), expecting);
+		assertEquals(a.toString(n), expecting);
 	}
 
 	public void testSingleValueWrap() throws Exception {
@@ -4530,7 +4520,7 @@ public class TestStringTemplate extends TestSuite {
 		String expecting =
 			"{ \n"+
 			"  i=3; }";
-		assertEqual(m.toString(2), expecting);
+		assertEquals(m.toString(2), expecting);
 	}
 
 	public void testLineWrapInNestedExpr() throws Exception {
@@ -4563,7 +4553,7 @@ public class TestStringTemplate extends TestSuite {
 			"            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
 			"            5,6,77,888,1,6,32,5 };\n" +
 			"done";
-		assertEqual(top.toString(40), expecting);
+		assertEquals(top.toString(40), expecting);
 	}
 
 	public void testEscapeEscape() throws Exception {
@@ -4573,7 +4563,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("v", "Joe");
 		//System.out.println(t);
 		String expecting="\\Joe";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testEscapeEscapeNestedAngle() throws Exception {
@@ -4583,7 +4573,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("v", "Joe");
 		//System.out.println(t);
 		String expecting="\\Joe";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testListOfIntArrays() throws Exception {
@@ -4599,7 +4589,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="[1,2,3][10,20,30]";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	// Test null option
@@ -4611,7 +4601,7 @@ public class TestStringTemplate extends TestSuite {
 			group.defineTemplate("t", "<data; null=\"0\">");
 		//System.out.println(t);
 		String expecting="0";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullOptionHasEmptyNullValue() throws Exception {
@@ -4624,7 +4614,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(new Integer(1));
 		t.setAttribute("data", data);
 		String expecting=", 1";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullOptionSingleNullValueInList() throws Exception {
@@ -4637,7 +4627,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="0";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullValueInList() throws Exception {
@@ -4655,7 +4645,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="-1, 1, -1, 3, 4, -1";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullValueInListNoNullOption() throws Exception {
@@ -4673,7 +4663,7 @@ public class TestStringTemplate extends TestSuite {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="1, 3, 4";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullValueInListWithTemplateApply() throws Exception {
@@ -4689,7 +4679,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(null);
 		t.setAttribute("data", data);
 		String expecting="0, -1, 2, -1";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullValueInListWithTemplateApplyNullFirstValue() throws Exception {
@@ -4705,7 +4695,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(new Integer(2));
 		t.setAttribute("data", data);
 		String expecting="-1, 0, -1, 2";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullSingleValueInListWithTemplateApply() throws Exception {
@@ -4718,7 +4708,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(null);
 		t.setAttribute("data", data);
 		String expecting="-1";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testNullSingleValueWithTemplateApply() throws Exception {
@@ -4728,7 +4718,7 @@ public class TestStringTemplate extends TestSuite {
 			group.defineTemplate("t", "<data:array(); null=\"-1\", separator=\", \">");
 		group.defineTemplate("array", "<it>");
 		String expecting="-1";
-		assertEqual(t.toString(), expecting);
+		assertEquals(t.toString(), expecting);
 	}
 
 	public void testLengthOp() throws Exception {
@@ -4740,7 +4730,7 @@ public class TestStringTemplate extends TestSuite {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "3";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLengthOpNull() throws Exception {
@@ -4750,7 +4740,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("names", null);
 		String expecting = "0";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLengthOpSingleValue() throws Exception {
@@ -4760,7 +4750,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "1";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLengthOpPrimitive() throws Exception {
@@ -4770,7 +4760,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("ints", new int[] {1,2,3,4} );
 		String expecting = "4";
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLengthOpOfListWithNulls() throws Exception {
@@ -4785,7 +4775,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "4"; // nulls are counted
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testStripOpOfListWithNulls() throws Exception {
@@ -4800,7 +4790,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "Himom"; // nulls are skipped
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testStripOpOfListOfListsWithNulls() throws Exception {
@@ -4822,7 +4812,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(dataTwo);
 		e.setAttribute("data", data);
 		String expecting = "Himom,Hidad"; // nulls are skipped
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testStripOpOfSingleAlt() throws Exception {
@@ -4832,7 +4822,7 @@ public class TestStringTemplate extends TestSuite {
 		e = e.getInstanceOf();
 		e.setAttribute("data", "hi");
 		String expecting = "hi"; // nulls are skipped
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testStripOpOfNull() throws Exception {
@@ -4841,7 +4831,7 @@ public class TestStringTemplate extends TestSuite {
 			);
 		e = e.getInstanceOf();
 		String expecting = ""; // nulls are skipped
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLengthOpOfStrippedListWithNulls() throws Exception {
@@ -4856,7 +4846,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "2"; // nulls are counted
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testLengthOpOfStrippedListWithNullsFrontAndBack() throws Exception {
@@ -4878,7 +4868,7 @@ public class TestStringTemplate extends TestSuite {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "2"; // nulls are counted
-		assertEqual(e.toString(), expecting);
+		assertEquals(e.toString(), expecting);
 	}
 
 	public void testMapKeys() throws Exception {
@@ -4891,7 +4881,7 @@ public class TestStringTemplate extends TestSuite {
 		map.put("int","0");
 		map.put("float","0.0");
 		t.setAttribute("aMap", map);
-		assertEqual(t.toString(), "int:0, float:0.0");
+		assertEquals(t.toString(), "int:0, float:0.0");
 	}
 
 	public void testMapValues() throws Exception {
@@ -4904,7 +4894,7 @@ public class TestStringTemplate extends TestSuite {
 		map.put("int","0");
 		map.put("float","0.0");
 		t.setAttribute("aMap", map);
-		assertEqual(t.toString(), "0, 0.0");
+		assertEquals(t.toString(), "0, 0.0");
 	}
 
 	/** Use when super.attr name is implemented
@@ -4917,7 +4907,7 @@ public class TestStringTemplate extends TestSuite {
 		main.setAttribute("name", "tombu");
 		StringTemplate foo = group.defineTemplate("foo", "$t$");
 		String expecting="Hi, parrt";
-		assertEqual(main.toString(), expecting);
+		assertEquals(main.toString(), expecting);
 	}
 	 */
 
