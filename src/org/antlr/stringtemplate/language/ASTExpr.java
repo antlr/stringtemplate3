@@ -1064,24 +1064,31 @@ public class ASTExpr extends Expr {
 		int i = 1;		// we have at least one of something. Iterator and arrays might be empty.
 		if (attribute instanceof Map) {
 			i = ((Map)attribute).size();
-		} else if (attribute instanceof List) {
-			i = ((List)attribute).size();
-		} else if ( attribute instanceof Object[] ) {
+		}
+		else if (attribute instanceof Collection) {
+			i = ((Collection)attribute).size();
+		}
+		else if ( attribute instanceof Object[] ) {
 			Object[] list = (Object[])attribute;
 			i = list.length;
-		} else if ( attribute instanceof int[] ) {
+		}
+		else if ( attribute instanceof int[] ) {
 			int[] list = (int[])attribute;
 			i = list.length;
-		} else if ( attribute instanceof long[] ) {
+		}
+		else if ( attribute instanceof long[] ) {
 			long[] list = (long[])attribute;
 			i = list.length;
-		} else if ( attribute instanceof float[] ) {
+		}
+		else if ( attribute instanceof float[] ) {
 			float[] list = (float[])attribute;
 			i = list.length;
-		} else if ( attribute instanceof double[] ) {
+		}
+		else if ( attribute instanceof double[] ) {
 			double[] list = (double[])attribute;
 			i = list.length;
-		} else if ( attribute instanceof Iterator) {
+		}
+		else if ( attribute instanceof Iterator) {
 			Iterator it = (Iterator)attribute;
 			i = 0;
 			while ( it.hasNext() ) {

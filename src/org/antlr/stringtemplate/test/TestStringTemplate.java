@@ -4563,7 +4563,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("v", "Joe");
 		//System.out.println(t);
 		String expecting="\\Joe";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testEscapeEscapeNestedAngle() throws Exception {
@@ -4573,7 +4573,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("v", "Joe");
 		//System.out.println(t);
 		String expecting="\\Joe";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testListOfIntArrays() throws Exception {
@@ -4589,7 +4589,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="[1,2,3][10,20,30]";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	// Test null option
@@ -4601,7 +4601,7 @@ public class TestStringTemplate extends TestCase {
 			group.defineTemplate("t", "<data; null=\"0\">");
 		//System.out.println(t);
 		String expecting="0";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullOptionHasEmptyNullValue() throws Exception {
@@ -4614,7 +4614,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(new Integer(1));
 		t.setAttribute("data", data);
 		String expecting=", 1";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullOptionSingleNullValueInList() throws Exception {
@@ -4627,7 +4627,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="0";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullValueInList() throws Exception {
@@ -4645,7 +4645,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="-1, 1, -1, 3, 4, -1";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullValueInListNoNullOption() throws Exception {
@@ -4663,7 +4663,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("data", data);
 		//System.out.println(t);
 		String expecting="1, 3, 4";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullValueInListWithTemplateApply() throws Exception {
@@ -4679,7 +4679,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(null);
 		t.setAttribute("data", data);
 		String expecting="0, -1, 2, -1";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullValueInListWithTemplateApplyNullFirstValue() throws Exception {
@@ -4695,7 +4695,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(new Integer(2));
 		t.setAttribute("data", data);
 		String expecting="-1, 0, -1, 2";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullSingleValueInListWithTemplateApply() throws Exception {
@@ -4708,7 +4708,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(null);
 		t.setAttribute("data", data);
 		String expecting="-1";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testNullSingleValueWithTemplateApply() throws Exception {
@@ -4718,7 +4718,7 @@ public class TestStringTemplate extends TestCase {
 			group.defineTemplate("t", "<data:array(); null=\"-1\", separator=\", \">");
 		group.defineTemplate("array", "<it>");
 		String expecting="-1";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testLengthOp() throws Exception {
@@ -4730,7 +4730,35 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "3";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testLengthOpWithMap() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(names)$"
+			);
+		e = e.getInstanceOf();
+		Map m = new HashMap();
+		m.put("Tom", "foo");
+		m.put("Sriram", "foo");
+		m.put("Doug", "foo");
+		e.setAttribute("names", m);
+		String expecting = "3";
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testLengthOpWithSet() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$length(names)$"
+			);
+		e = e.getInstanceOf();
+		Set m = new HashSet();
+		m.add("Tom");
+		m.add("Sriram");
+		m.add("Doug");
+		e.setAttribute("names", m);
+		String expecting = "3";
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLengthOpNull() throws Exception {
@@ -4740,7 +4768,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("names", null);
 		String expecting = "0";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLengthOpSingleValue() throws Exception {
@@ -4750,7 +4778,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "1";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLengthOpPrimitive() throws Exception {
@@ -4760,7 +4788,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("ints", new int[] {1,2,3,4} );
 		String expecting = "4";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLengthOpOfListWithNulls() throws Exception {
@@ -4775,7 +4803,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "4"; // nulls are counted
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testStripOpOfListWithNulls() throws Exception {
@@ -4790,7 +4818,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "Himom"; // nulls are skipped
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testStripOpOfListOfListsWithNulls() throws Exception {
@@ -4812,7 +4840,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(dataTwo);
 		e.setAttribute("data", data);
 		String expecting = "Himom,Hidad"; // nulls are skipped
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testStripOpOfSingleAlt() throws Exception {
@@ -4822,7 +4850,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("data", "hi");
 		String expecting = "hi"; // nulls are skipped
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testStripOpOfNull() throws Exception {
@@ -4831,7 +4859,7 @@ public class TestStringTemplate extends TestCase {
 			);
 		e = e.getInstanceOf();
 		String expecting = ""; // nulls are skipped
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLengthOpOfStrippedListWithNulls() throws Exception {
@@ -4846,7 +4874,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "2"; // nulls are counted
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLengthOpOfStrippedListWithNullsFrontAndBack() throws Exception {
@@ -4868,7 +4896,7 @@ public class TestStringTemplate extends TestCase {
 		data.add(null);
 		e.setAttribute("data", data);
 		String expecting = "2"; // nulls are counted
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testMapKeys() throws Exception {
