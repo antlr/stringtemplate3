@@ -162,7 +162,10 @@ public class ASTExpr extends Expr {
     }
 
 	/** Grab and cache options; verify options are valid */
-	private void handleExprOptions(StringTemplate self) {
+	protected void handleExprOptions(StringTemplate self) {
+		// make sure options don't use format / renderer.  They are usually
+		// strings which might invoke a string renderer etc...
+		formatString = null;
 		StringTemplateAST wrapAST = (StringTemplateAST)getOption("wrap");
 		if ( wrapAST!=null ) {
 			wrapString = evaluateExpression(self,wrapAST);
