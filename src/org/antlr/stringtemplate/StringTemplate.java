@@ -494,8 +494,7 @@ public class StringTemplate {
 	 *  attribute, they all get flattened into one List of values.
 	 *  This will be a new list object so that incoming objects are
 	 *  not altered.
-	 *  If you send in an array, it is converted to a List.  Works
-	 *  with arrays of objects and arrays of {int,float,double}.
+	 *  If you send in an array, it is converted to an ArrayIterator.
 	 */
 	public void setAttribute(String name, Object value) {
 		if ( value==null || name==null ) {

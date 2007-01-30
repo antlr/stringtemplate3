@@ -864,14 +864,18 @@ public class ASTExpr extends Expr {
 	};
 	*/
 
-	/** Do a standard conversion of array attributes to Lists.  Create
-	 *  StringTemplate.STAttributeList objects so we know they are ST
-	 *  controlled not user lists.
+	/** Do a standard conversion of array attributes to a List.  Wrap the
+	 *  array instead of copying like old version.  Make an
+	 *  ArrayWrappedInList that knows to create an ArrayIterator.
 	 */
 	public static Object convertArrayToList(Object value) {
 		if ( value==null ) {
 			return null;
 		}
+		if ( value.getClass().isArray() ) {
+			return new ArrayWrappedInList(value);
+		}
+		return value;
 		/*
 		if ( !(value instanceof StringTemplate) ) {
 			System.out.println("convert "+value+" to array?");
@@ -884,6 +888,7 @@ public class ASTExpr extends Expr {
 			return value;
 		}
 		*/
+		/*
 		if ( value instanceof Object[] ) {
 			Object[] list = (Object[])value;
 			List v = new StringTemplate.STAttributeList(list.length);
@@ -930,6 +935,7 @@ public class ASTExpr extends Expr {
 			value = v;
 		}
 		return value;
+		*/
 	}
 
 	private static Object convertAnythingIteratableToIterator(Object o) {

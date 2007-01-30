@@ -228,7 +228,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("x", "foo");
 
 		String expecting = "*foo*";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 	}
 
 	public void testMissingInterfaceTemplate() throws Exception {
@@ -440,7 +440,7 @@ public class TestStringTemplate extends TestCase {
 										DefaultTemplateLexer.class);
         StringTemplate t = group.getInstanceOf("page");
         String expecting = "<font face=Times>my body</font>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testUndefinedArgumentAssignment() throws Exception {
@@ -475,7 +475,7 @@ public class TestStringTemplate extends TestCase {
         StringTemplate t = group.getInstanceOf("page");
         t.setAttribute("name", "Ter");
         String expecting = "<font face=Times><b>Ter</b></font>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testUndefinedArgumentAssignmentInApply() throws Exception {
@@ -553,7 +553,7 @@ public class TestStringTemplate extends TestCase {
         StringTemplate t = group.getInstanceOf("a");
         t.setAttribute("s","Test");
         String expecting = "case 1 : Test break;";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testAngleBracketsNoGroup() throws Exception {
@@ -563,7 +563,7 @@ public class TestStringTemplate extends TestCase {
         st.setAttribute("rules", "A");
         st.setAttribute("rules", "B");
         String expecting = "Tokens : A|B ;";
-        assertEquals(st.toString(), expecting);
+        assertEquals(expecting, st.toString());
     }
 
 	public void testRegionRef() throws Exception {
@@ -576,7 +576,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmbeddedRegionRef() throws Exception {
@@ -589,7 +589,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRegionRefAngleBrackets() throws Exception {
@@ -601,7 +601,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmbeddedRegionRefAngleBrackets() throws Exception {
@@ -613,7 +613,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmbeddedRegionRefWithNewlinesAngleBrackets() throws Exception {
@@ -628,7 +628,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XblortY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRegionRefWithDefAngleBrackets() throws Exception {
@@ -641,7 +641,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = group.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XfooY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRegionRefWithDefInConditional() throws Exception {
@@ -655,7 +655,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("v", "true");
 		String result = st.toString();
 		String expecting = "XAfooBY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRegionRefWithImplicitDefInConditional() throws Exception {
@@ -671,7 +671,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("v", "true");
 		String result = st.toString();
 		String expecting = "XAyoBY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		String err_result = errors.toString();
 		String err_expecting = "group test line 3: redefinition of template region: @a.r";
@@ -698,7 +698,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XfooY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRegionOverrideRefSuperRegion() throws Exception {
@@ -721,7 +721,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XAfooBY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRegionOverrideRefSuperRegion3Levels() throws Exception {
@@ -766,7 +766,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = subSubGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "Xfoo23Y";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRegionOverrideRefSuperImplicitRegion() throws Exception {
@@ -788,7 +788,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = st.toString();
 		String expecting = "XAfooY";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmbeddedRegionRedefError() throws Exception {
@@ -805,7 +805,7 @@ public class TestStringTemplate extends TestCase {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "group test line 2: redefinition of template region: @a.r";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testImplicitRegionRedefError() throws Exception {
@@ -823,7 +823,7 @@ public class TestStringTemplate extends TestCase {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "group test line 4: redefinition of template region: @a.r";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testImplicitOverriddenRegionRedefError() throws Exception {
@@ -848,7 +848,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = errors.toString();
 		String expecting = "group sub line 3: redefinition of template region: @a.r";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testUnknownRegionDefError() throws Exception {
@@ -865,7 +865,7 @@ public class TestStringTemplate extends TestCase {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "group test line 3: template a has no region called q";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSuperRegionRefError() throws Exception {
@@ -889,7 +889,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = subGroup.getInstanceOf("a");
 		String result = errors.toString();
 		String expecting = "template a has no region called q";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMissingEndRegionError() throws Exception {
@@ -907,7 +907,7 @@ public class TestStringTemplate extends TestCase {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "missing region r $@end$ tag";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMissingEndRegionErrorAngleBrackets() throws Exception {
@@ -923,7 +923,7 @@ public class TestStringTemplate extends TestCase {
 		st.toString();
 		String result = errors.toString();
 		String expecting = "missing region r <@end> tag";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
     public void testSimpleInheritance() throws Exception {
@@ -1002,7 +1002,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = sub.getInstanceOf("decls");
 		String expecting = "DSL";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void test3LevelSuperRef() throws Exception {
@@ -1033,7 +1033,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate st = subSubGroup.getInstanceOf("r");
 		String result = st.toString();
 		String expecting = "foo23";
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testExprInParens() throws Exception {
@@ -1090,7 +1090,7 @@ public class TestStringTemplate extends TestCase {
         //System.out.println(t);
         String expecting="123, <b>1</b><b>2</b><b>3</b>, "+
             "<b><b>a</b></b><b><b>b</b></b><b><b>c</b></b>, xy, 1020, 1.21.3, 8.79.2";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testParenthesizedExpression() throws Exception {
@@ -1102,7 +1102,7 @@ public class TestStringTemplate extends TestCase {
         t.setAttribute("l", "Schmoe");
         //System.out.println(t);
         String expecting="<b>JoeSchmoe</b>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
 	public void testApplyTemplateNameExpression() throws Exception {
@@ -1115,7 +1115,7 @@ public class TestStringTemplate extends TestCase {
         t.setAttribute("name", "foo");
         //System.out.println(t);
         String expecting="fooTerbarfooTombar";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
 	public void testApplyTemplateNameTemplateEval() throws Exception {
@@ -1128,7 +1128,7 @@ public class TestStringTemplate extends TestCase {
         t.setAttribute("data", "Tom");
         //System.out.println(t);
         String expecting="fooTerbarfooTombar";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testTemplateNameExpression() throws Exception {
@@ -1139,7 +1139,7 @@ public class TestStringTemplate extends TestCase {
         t.setAttribute("name", "foo");
         //System.out.println(t);
         String expecting="hi there!";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testMissingEndDelimiter() throws Exception {
@@ -1223,7 +1223,7 @@ public class TestStringTemplate extends TestCase {
         t.setAttribute("names", "Tom");
         //System.out.println("'"+t.toString()+"'");
         String expecting="<b>Terence</b><b>Tom</b>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testChangingAttrValueRepeatedTemplateApplicationToVector() throws Exception {
@@ -1264,7 +1264,7 @@ public class TestStringTemplate extends TestCase {
         StringTemplate bold = group.defineTemplate("bold", "<b>$x$</b>");
         StringTemplate t = new StringTemplate(group, "$bold(x=hostname(machine=\"www\"))$");
         String expecting="<b>www.jguru.com</b>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testTemplateApplicationAsRHSOfAssignment() throws Exception {
@@ -1275,7 +1275,7 @@ public class TestStringTemplate extends TestCase {
         StringTemplate italics = group.defineTemplate("italics", "<i>$it$</i>");
         StringTemplate t = new StringTemplate(group, "$bold(x=hostname(machine=\"www\"):italics())$");
         String expecting="<b><i>www.jguru.com</i></b>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testParameterAndAttributeScoping() throws Exception {
@@ -1287,7 +1287,7 @@ public class TestStringTemplate extends TestCase {
         t.setAttribute("name", "Terence");
         //System.out.println(t);
         String expecting="<b><i>Terence</i></b>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testComplicatedSeparatorExpr() throws Exception {
@@ -1303,7 +1303,7 @@ public class TestStringTemplate extends TestCase {
         t.setAttribute("name", "Mel");
         //System.out.println(t);
         String expecting = "<ul>Ter</li> <li>&nbsp;Tom</li> <li>&nbsp;Mel</ul>";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testAttributeRefButtedUpAgainstEndifAndWhitespace() throws Exception {
@@ -1411,7 +1411,7 @@ public class TestStringTemplate extends TestCase {
                 "<br>1. Terence"+newline+
                 "<br>2. Jim"+newline+
                 "<br>3. Sriram"+newline;
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testFindTemplateInCLASSPATH() throws Exception {
@@ -1501,7 +1501,7 @@ public class TestStringTemplate extends TestCase {
         String expecting =
                 "Parr, Ter"+newline +
                 "Burns, Tom"+newline;
-        assertEquals(st.toString(), expecting);
+        assertEquals(expecting, st.toString());
     }
 
     public void testRepeatedApplicationOfTemplateToSingleValuedAttribute() throws Exception {
@@ -1632,7 +1632,7 @@ public class TestStringTemplate extends TestCase {
                 "ackfoo"+newline+
                 "stuff"+newline+
                 "junk";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public class Connector {
@@ -1673,7 +1673,7 @@ public class TestStringTemplate extends TestCase {
                 "<b>Name: Terence Parr</b><br>"+newline+
                 "<b>Email: parrt@jguru.com</b><br>"+newline+
                 "Superhero by night...";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testApplyRepeatedAnonymousTemplateWithForeignTemplateRefToMultiValuedAttribute() throws Exception {
@@ -1759,7 +1759,7 @@ public class TestStringTemplate extends TestCase {
             "<i>" + newline +
             "<b>parrt</b>" + newline +
             "</i>" + newline;
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testAnonymousTemplateAccessToEnclosingAttributes() throws Exception {
@@ -1781,7 +1781,7 @@ public class TestStringTemplate extends TestCase {
             "<i>" + newline +
             "<b>parrt, tombu</b>" + newline +
             "</i>" + newline;
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testNestedAnonymousTemplatesAgain() throws Exception {
@@ -1802,7 +1802,7 @@ public class TestStringTemplate extends TestCase {
                 "<table>" + newline +
                 "<tr><td><b>parrt</b></td></tr><tr><td><b>tombu</b></td></tr>" + newline +
                 "</table>" + newline;
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
 	public void testEscapes() throws Exception {
@@ -1833,7 +1833,7 @@ public class TestStringTemplate extends TestCase {
 		//System.out.println("u is '"+u.toString()+"'");
 		//System.out.println("v is '"+v.toString()+"'");
 		String expecting = "dog\"\" && ick";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 		expecting = "dog\"g && ick";
 		assertEquals(u.toString(), expecting);
 		expecting = "{dog}\" && ick is cool";
@@ -1845,7 +1845,7 @@ public class TestStringTemplate extends TestCase {
         b.setAttribute("a", "Ter");
         String expecting ="It\\'s ok...$; \\'hi\\', Ter";
         String result = b.toString();
-        assertEquals(result, expecting);
+        assertEquals(expecting, result);
     }
 
     public void testElseClause() throws Exception {
@@ -1858,11 +1858,11 @@ public class TestStringTemplate extends TestCase {
             );
         e.setAttribute("title", "sample");
         String expecting = "foo";
-        assertEquals(e.toString(), expecting);
+        assertEquals(expecting, e.toString());
 
         e = e.getInstanceOf();
         expecting = "bar";
-        assertEquals(e.toString(), expecting);
+        assertEquals(expecting, e.toString());
     }
 
 	public void testNestedIF() throws Exception {
@@ -1879,16 +1879,16 @@ public class TestStringTemplate extends TestCase {
 			);
 		e.setAttribute("title", "sample");
 		String expecting = "foo";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 
 		e = e.getInstanceOf();
 		e.setAttribute("header", "more");
 		expecting = "bar";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 
 		e = e.getInstanceOf();
 		expecting = "blort";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testEmbeddedMultiLineIF() throws Exception {
@@ -1940,7 +1940,7 @@ public class TestStringTemplate extends TestCase {
                 "  Terence"+newline+
                 "  Jim"+newline+
                 "  Sriram";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testIndentOfMultilineAttributes()
@@ -1969,7 +1969,7 @@ public class TestStringTemplate extends TestCase {
                 "  Sriram"+newline+
                 "  is"+newline+
                 "  cool";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
 	public void testIndentOfMultipleBlankLines()
@@ -1991,7 +1991,7 @@ public class TestStringTemplate extends TestCase {
 				"  Terence"+newline+
 				""+newline+ // no indent on blank line
 				"  is a maniac";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
     public void testIndentBetweenLeftJustifiedLiterals()
@@ -2019,7 +2019,7 @@ public class TestStringTemplate extends TestCase {
                 "  Jim"+newline+
                 "  Sriram"+newline+
                 "after";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
     public void testNestedIndent()
@@ -2069,7 +2069,7 @@ public class TestStringTemplate extends TestCase {
                 "\t  z=4;"+newline+
                 "\t}"+newline+
                 "}";
-        assertEquals(t.toString(), expecting);
+        assertEquals(expecting, t.toString());
     }
 
 	public void testAlternativeWriter() throws Exception {
@@ -2117,7 +2117,7 @@ public class TestStringTemplate extends TestCase {
 		m.put("c", "3");
 		st.setAttribute("items", m);
 		String expecting = "<li>1</li><li>3</li><li>2</li>";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 
 		st = st.getInstanceOf();
 		Set s = new HashSet();
@@ -2126,7 +2126,7 @@ public class TestStringTemplate extends TestCase {
 		s.add("3");
 		st.setAttribute("items", s);
 		expecting = "<li>3</li><li>2</li><li>1</li>";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 	}
 
 	public void testDumpMapAndSet() throws Exception {
@@ -2138,7 +2138,7 @@ public class TestStringTemplate extends TestCase {
 		m.put("c", "3");
 		st.setAttribute("items", m);
 		String expecting = "1,3,2";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 
 		st = st.getInstanceOf();
 		Set s = new HashSet();
@@ -2147,7 +2147,7 @@ public class TestStringTemplate extends TestCase {
 		s.add("3");
 		st.setAttribute("items", s);
 		expecting = "3,2,1";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 	}
 
 	public class Connector3 {
@@ -2162,12 +2162,12 @@ public class TestStringTemplate extends TestCase {
 				new StringTemplate("$x.values:{<li>$it$</li>}$");
 		st.setAttribute("x", new Connector3());
 		String expecting = "<li>1</li><li>2</li><li>3</li>";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 
 		st = new StringTemplate("$x.stuff:{<li>$it$</li>}$");
 		st.setAttribute("x", new Connector3());
 		expecting = "<li>1</li><li>2</li>";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 	}
 
     public void testSuperTemplateRef()
@@ -2183,7 +2183,7 @@ public class TestStringTemplate extends TestCase {
         StringTemplate st = subGroup.getInstanceOf("page");
         String expecting =
                 "Helvetica and Times:text";
-        assertEquals(st.toString(), expecting);
+        assertEquals(expecting, st.toString());
     }
 
     public void testApplySuperTemplateRef()
@@ -2199,7 +2199,7 @@ public class TestStringTemplate extends TestCase {
         st.setAttribute("name", "Ter");
         String expecting =
                 "<b>Ter</b>";
-        assertEquals(st.toString(), expecting);
+        assertEquals(expecting, st.toString());
     }
 
     public void testLazyEvalOfSuperInApplySuperTemplateRef()
@@ -2249,7 +2249,7 @@ public class TestStringTemplate extends TestCase {
         st.setAttribute("name", "Ter");
         String expecting =
                 "<strong>Ter</strong>";
-        assertEquals(st.toString(), expecting);
+        assertEquals(expecting, st.toString());
     }
 
     public void testListOfEmbeddedTemplateSeesEnclosingAttributes() throws Exception {
@@ -2290,7 +2290,7 @@ public class TestStringTemplate extends TestCase {
         String expecting = "IF true then IF true then ";
         String result = b.toString();
         //System.err.println("result='"+result+"'");
-        assertEquals(result, expecting);
+        assertEquals(expecting, result);
     }
 
 
@@ -2349,7 +2349,7 @@ public class TestStringTemplate extends TestCase {
         String expecting ="{{}}";
         String result = b.toString();
         //System.err.println(result);
-        assertEquals(result, expecting);
+        assertEquals(expecting, result);
     }
 
 
@@ -2365,7 +2365,7 @@ public class TestStringTemplate extends TestCase {
         b.setAttribute("name", "Ter");
         String expecting ="name is Ter";
         String result = b.toString();
-        assertEquals(result, expecting);
+        assertEquals(expecting, result);
     }
 
     public void testTemplateGetPropertyGetsAttribute() throws Exception {
@@ -2533,7 +2533,7 @@ public class TestStringTemplate extends TestCase {
 				);
 		String expecting ="Foo bar"+newline;
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo $! ignore" +newline+
@@ -2542,7 +2542,7 @@ public class TestStringTemplate extends TestCase {
 				);
 		expecting ="Foo "+newline+"bar"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"$! start of line $ and $! ick" +newline+
@@ -2550,7 +2550,7 @@ public class TestStringTemplate extends TestCase {
 				);
 		expecting ="boo"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 			"$! start of line !$" +newline+
@@ -2560,7 +2560,7 @@ public class TestStringTemplate extends TestCase {
 		);
 		expecting ="boo"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 			"$! back !$$! to back !$" +newline+ // can't detect; leaves \n
@@ -2569,7 +2569,7 @@ public class TestStringTemplate extends TestCase {
 		);
 		expecting =newline+"boo"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmbeddedCommentsAngleBracketed() throws Exception {
@@ -2579,7 +2579,7 @@ public class TestStringTemplate extends TestCase {
 				);
 		String expecting ="Foo bar"+newline;
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo <! ignore" +newline+
@@ -2589,7 +2589,7 @@ public class TestStringTemplate extends TestCase {
 				);
 		expecting ="Foo "+newline+"bar"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"<! start of line $ and <! ick" +newline+
@@ -2598,7 +2598,7 @@ public class TestStringTemplate extends TestCase {
 				);
 		expecting ="boo"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 			"<! start of line !>" +
@@ -2610,7 +2610,7 @@ public class TestStringTemplate extends TestCase {
 		expecting ="boo"+newline;
 		result = st.toString();
 		//System.out.println(result);
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 			"<! back !><! to back !>" +newline+ // can't detect; leaves \n
@@ -2620,7 +2620,7 @@ public class TestStringTemplate extends TestCase {
 		);
 		expecting =newline+"boo"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testCharLiterals() throws Exception {
@@ -2630,19 +2630,19 @@ public class TestStringTemplate extends TestCase {
 				);
 		String expecting ="Foo "+newline+"\t bar"+newline;
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo $\\n$$\\t$ bar" +newline);
 		expecting ="Foo "+newline+"\t bar"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo$\\ $bar$\\n$");
 		expecting ="Foo bar"+newline;
 		result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyIteratedValueGetsSeparator() throws Exception {
@@ -2660,7 +2660,7 @@ public class TestStringTemplate extends TestCase {
 		// empty values get separator still
 		String expecting="Terence,,,Tom,Frank,";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyIteratedConditionalValueGetsSeparator() throws Exception {
@@ -2677,7 +2677,7 @@ public class TestStringTemplate extends TestCase {
 		// empty conditional values get no separator
 		String expecting="Terence,,Frank,";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyIteratedConditionalWithElseValueGetsSeparator() throws Exception {
@@ -2694,7 +2694,7 @@ public class TestStringTemplate extends TestCase {
 		// empty conditional values get no separator
 		String expecting="Terence,,Frank,";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testWhiteSpaceAtEndOfTemplate() throws Exception {
@@ -2712,7 +2712,7 @@ public class TestStringTemplate extends TestCase {
 			"Terence parrt@jguru.comTom tombu@jguru.com";
 		String result = pageST.toString();
 		//System.out.println("'"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	static class Duh {
@@ -2731,7 +2731,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("duh", new Duh());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testNullListGetsNoOutput() throws Exception {
@@ -2746,7 +2746,7 @@ public class TestStringTemplate extends TestCase {
 		//t.setAttribute("users", new Duh());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyListGetsNoOutput() throws Exception {
@@ -2761,7 +2761,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("users", new ArrayList());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyListNoIteratorGetsNoOutput() throws Exception {
@@ -2776,7 +2776,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("users", new ArrayList());
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyExprAsFirstLineGetsNoOutput() throws Exception {
@@ -2790,7 +2790,7 @@ public class TestStringTemplate extends TestCase {
 			"end\n");
 		String expecting="end\n";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSizeZeroOnLineByItselfGetsNoOutput() throws Exception {
@@ -2806,7 +2806,7 @@ public class TestStringTemplate extends TestCase {
 			"end\n");
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSizeZeroOnLineWithIndentGetsNoOutput() throws Exception {
@@ -2822,7 +2822,7 @@ public class TestStringTemplate extends TestCase {
 			"end\n");
 		String expecting="begin\nend\n";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSimpleAutoIndent() throws Exception {
@@ -2855,7 +2855,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting="variable property type=int";
 		String result = t.toString();
 		assertEquals(errors.toString(), "");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testNonNullButEmptyIteratorTestsFalse() throws Exception {
@@ -2868,7 +2868,7 @@ public class TestStringTemplate extends TestCase {
 		t.setAttribute("users", new LinkedList());
 		String expecting="";
 		String result = t.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testDoNotInheritAttributesThroughFormalArgs() throws Exception {
@@ -2886,7 +2886,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x=y; // ";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testArgEvaluationContext() throws Exception {
@@ -2907,7 +2907,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x=y; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testPassThroughAttributes() throws Exception {
@@ -2923,7 +2923,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x=y; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testPassThroughAttributes2() throws Exception {
@@ -2941,7 +2941,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x=34; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testDefaultArgument() throws Exception {
@@ -2959,7 +2959,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x=99; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testDefaultArgument2() throws Exception {
@@ -2974,7 +2974,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x=99; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testDefaultArgumentAsTemplate() throws Exception {
@@ -2993,7 +2993,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x=foo; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testDefaultArgumentAsTemplate2() throws Exception {
@@ -3012,7 +3012,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting = "x= [foo] ; // foo";
 		String result = b.toString();
 		//System.err.println("result='"+result+"'");
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testDoNotUseDefaultArgument() throws Exception {
@@ -3029,7 +3029,7 @@ public class TestStringTemplate extends TestCase {
 		b.setAttribute("name", "foo");
 		String expecting = "x=34; // foo";
 		String result = b.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testArgumentsAsTemplates() throws Exception {
@@ -3047,7 +3047,7 @@ public class TestStringTemplate extends TestCase {
 		b.setAttribute("size", "34");
 		String expecting = "x=34;";
 		String result = b.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testArgumentsAsTemplatesDefaultDelimiters() throws Exception {
@@ -3066,7 +3066,7 @@ public class TestStringTemplate extends TestCase {
 		b.setAttribute("size", "34");
 		String expecting = "x=34;";
 		String result = b.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testDefaultArgsWhenNotInvoked() throws Exception {
@@ -3079,7 +3079,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate b = group.getInstanceOf("b");
 		String expecting = ".foo.";
 		String result = b.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public class DateRenderer implements AttributeRenderer {
@@ -3134,7 +3134,7 @@ public class TestStringTemplate extends TestCase {
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer());
 		String expecting = "date: 2005.07.05";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRendererWithFormat() throws Exception {
@@ -3146,7 +3146,7 @@ public class TestStringTemplate extends TestCase {
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer3());
 		String expecting = "date: 2005.07.05";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRendererWithFormatAndList() throws Exception {
@@ -3159,7 +3159,7 @@ public class TestStringTemplate extends TestCase {
 		st.registerRenderer(String.class, new StringRenderer());
 		String expecting = "The names: TERTOMSRIRAM";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRendererWithFormatAndSeparator() throws Exception {
@@ -3172,7 +3172,7 @@ public class TestStringTemplate extends TestCase {
 		st.registerRenderer(String.class, new StringRenderer());
 		String expecting = "The names: TER and TOM and SRIRAM";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRendererWithFormatAndSeparatorAndNull() throws Exception {
@@ -3187,7 +3187,7 @@ public class TestStringTemplate extends TestCase {
 		st.registerRenderer(String.class, new StringRenderer());
 		String expecting = "The names: TER and N/A and SRIRAM";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmbeddedRendererSeesEnclosing() throws Exception {
@@ -3205,7 +3205,7 @@ public class TestStringTemplate extends TestCase {
 		outer.registerRenderer(GregorianCalendar.class, new DateRenderer());
 		String expecting = "X: date: 2005.07.05";
 		String result = outer.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testRendererForGroup() throws Exception {
@@ -3221,7 +3221,7 @@ public class TestStringTemplate extends TestCase {
 		group.registerRenderer(GregorianCalendar.class, new DateRenderer());
 		String expecting = "date: 2005.07.05";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testOverriddenRenderer() throws Exception {
@@ -3238,7 +3238,7 @@ public class TestStringTemplate extends TestCase {
 		st.registerRenderer(GregorianCalendar.class, new DateRenderer2());
 		String expecting = "date: 07/05/2005";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMap() throws Exception {
@@ -3254,7 +3254,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "int x = 0;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapValuesAreTemplates() throws Exception {
@@ -3271,7 +3271,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "int x = 0L;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapMissingDefaultValueIsEmpty() throws Exception {
@@ -3288,7 +3288,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "double x = ;"; // weird, but tests default value is key
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapHiddenByFormalArg() throws Exception {
@@ -3304,7 +3304,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "int x = ;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapEmptyValueAndAngleBracketStrings() throws Exception {
@@ -3320,7 +3320,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "float x = ;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapDefaultValue() throws Exception {
@@ -3336,7 +3336,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "UserRecord x = null;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapEmptyDefaultValue() throws Exception {
@@ -3352,7 +3352,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "UserRecord x = ;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapEmptyDefaultValueIsKey() throws Exception {
@@ -3368,7 +3368,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "UserRecord x = UserRecord;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapViaEnclosingTemplates() throws Exception {
@@ -3385,7 +3385,7 @@ public class TestStringTemplate extends TestCase {
 		st.setAttribute("name", "x");
 		String expecting = "int x = 0;";
 		String result = st.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testMapViaEnclosingTemplates2() throws Exception {
@@ -3404,7 +3404,7 @@ public class TestStringTemplate extends TestCase {
 		interm.setAttribute("stuff", var);
 		String expecting = "int x = 0;";
 		String result = interm.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyGroupTemplate() throws Exception {
@@ -3417,7 +3417,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate a = group.getInstanceOf("foo");
 		String expecting = "";
 		String result = a.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingAngleBracketLexer() throws Exception {
@@ -3431,7 +3431,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate a = group.getInstanceOf("top");
 		String expecting = "a=, b=";
 		String result = a.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingDollarLexer() throws Exception {
@@ -3446,7 +3446,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate a = group.getInstanceOf("top");
 		String expecting = "a=, b=";
 		String result = a.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void test8BitEuroChars() throws Exception {
@@ -3455,7 +3455,7 @@ public class TestStringTemplate extends TestCase {
 			);
 		e = e.getInstanceOf();
 		String expecting = "Danish: Å char";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testFirstOp() throws Exception {
@@ -3467,7 +3467,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Ter";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testRestOp() throws Exception {
@@ -3479,7 +3479,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Tom, Sriram";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLastOp() throws Exception {
@@ -3491,7 +3491,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Sriram";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testCombinedOp() throws Exception {
@@ -3506,7 +3506,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("yours", "a");
 		e.setAttribute("yours", "b");
 		String expecting = "1, b";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testCatListAndSingleAttribute() throws Exception {
@@ -3520,7 +3520,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("mine", "3");
 		e.setAttribute("yours", "a");
 		String expecting = "1, 2, 3, a";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testCatListAndEmptyAttributes() throws Exception {
@@ -3537,7 +3537,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("mine", "3");
 		e.setAttribute("yours", "a");
 		String expecting = "1, 2, 3, a";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testNestedOp() throws Exception {
@@ -3549,7 +3549,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Tom";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testFirstWithOneAttributeOp() throws Exception {
@@ -3559,7 +3559,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "Ter";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLastWithOneAttributeOp() throws Exception {
@@ -3569,7 +3569,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "Ter";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testLastWithLengthOneListAttributeOp() throws Exception {
@@ -3579,7 +3579,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("names", new ArrayList() {{add("Ter");}});
 		String expecting = "Ter";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testRestWithOneAttributeOp() throws Exception {
@@ -3589,7 +3589,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("names", "Ter");
 		String expecting = "";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testRestWithLengthOneListAttributeOp() throws Exception {
@@ -3599,7 +3599,7 @@ public class TestStringTemplate extends TestCase {
 		e = e.getInstanceOf();
 		e.setAttribute("names", new ArrayList() {{add("Ter");}});
 		String expecting = "";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testRepeatedRestOp() throws Exception {
@@ -3610,7 +3610,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Tom, Tom";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	/** If an iterator is sent into ST, it must be cannot be reset after each
@@ -3633,7 +3633,7 @@ public class TestStringTemplate extends TestCase {
 		names.add("Tom");
 		e.setAttribute("names", names.iterator());
 		String expecting = "TerTom, ";  // This does not give TerTom twice!!
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	/** BUG!  Fix this.  Iterator is not reset from first to second $x$
@@ -3656,7 +3656,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Tom, Tom";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testIncomingLists() throws Exception {
@@ -3667,7 +3667,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Tom, Tom";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testIncomingListsAreNotModified() throws Exception {
@@ -3681,7 +3681,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", names);
 		e.setAttribute("names", "Sriram");
 		String expecting = "Ter, Tom, Sriram";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 
 		assertEquals(names.size(), 2);
 	}
@@ -3697,7 +3697,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Sriram"); // single element first now
 		e.setAttribute("names", names);
 		String expecting = "Sriram, Ter, Tom";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 
 		assertEquals(names.size(), 2);
 	}
@@ -3710,7 +3710,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", new String[] {"Ter","Tom"});
 		e.setAttribute("names", "Sriram");
 		String expecting = "Ter, Tom, Sriram";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testApplyTemplateWithSingleFormalArgs() throws Exception {
@@ -3726,7 +3726,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		String expecting = "*Ter*, *Tom* ";
 		String result = e.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testApplyTemplateWithNoFormalArgs() throws Exception {
@@ -3743,7 +3743,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		String expecting = "*Ter*, *Tom* ";
 		String result = e.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testAnonTemplateArgs() throws Exception {
@@ -3754,7 +3754,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "Ter, Tom";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testAnonTemplateWithArgHasNoITArg() throws Exception {
@@ -3783,7 +3783,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Ter");
 		e.setAttribute("names", "Tom");
 		String expecting = "_.Ter._, _.Tom._";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testFirstWithCatAttribute() throws Exception {
@@ -3796,7 +3796,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "Ter";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testJustCat() throws Exception {
@@ -3809,7 +3809,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "TerTom12";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testCat2Attributes() throws Exception {
@@ -3822,7 +3822,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "Ter, Tom, 1, 2";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testCat2AttributesWithApply() throws Exception {
@@ -3835,7 +3835,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "Ter.Tom.1.2.";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testCat3Attributes() throws Exception {
@@ -3850,7 +3850,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "Ter, Tom, 1, 2, big, huge";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testListAsTemplateArgument() throws Exception {
@@ -3869,7 +3869,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "2");
 		String expecting = "*Ter**Tom**1**2*";
 		String result = e.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSingleExprTemplateArgument() throws Exception {
@@ -3885,7 +3885,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("name", "Ter");
 		String expecting = "*Ter*";
 		String result = e.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSingleExprTemplateArgumentInApply() throws Exception {
@@ -3906,7 +3906,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("x", "ick");
 		String expecting = "*ick**ick*";
 		String result = e.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSoleFormalTemplateArgumentInMultiApply() throws Exception {
@@ -3924,7 +3924,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		String expecting = "*Ter*_Tom_";
 		String result = e.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testSingleExprTemplateArgumentError() throws Exception {
@@ -3958,7 +3958,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("arg", "Ter");
 		String expecting = "_Ter_";
 		String result = e.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public void testParallelAttributeIteration() throws Exception {
@@ -3973,7 +3973,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "Ter@1: big"+newline+"Tom@2: huge"+newline;
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testParallelAttributeIterationHasI() throws Exception {
@@ -3988,7 +3988,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "0. Ter@1: big"+newline+"1. Tom@2: huge"+newline;
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testParallelAttributeIterationWithDifferentSizes() throws Exception {
@@ -4003,7 +4003,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "2");
 		e.setAttribute("salaries", "big");
 		String expecting = "Ter@1: big, Tom@2: , Sriram@: ";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testParallelAttributeIterationWithSingletons() throws Exception {
@@ -4015,7 +4015,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "1");
 		e.setAttribute("salaries", "big");
 		String expecting = "Ter@1: big";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testParallelAttributeIterationWithMismatchArgListSizes() throws Exception {
@@ -4031,7 +4031,7 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "2");
 		e.setAttribute("salaries", "big");
 		String expecting = "Ter@1, Tom@2";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 		String errorExpecting = "number of arguments [n, p] mismatch between attribute list and anonymous template in context [anonymous]";
 		assertEquals(errors.toString(), errorExpecting);
 	}
@@ -4076,7 +4076,7 @@ public class TestStringTemplate extends TestCase {
 				"${foo}:{($it$)}$"
 			);
 		String expecting = "(foo)";
-		assertEquals(e.toString(), expecting);
+		assertEquals(expecting, e.toString());
 	}
 
 	public void testOverrideThroughConditional() throws Exception {
@@ -4100,7 +4100,7 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate b = subgroup.getInstanceOf("body");
 		String expecting ="bar";
 		String result = b.toString();
-		assertEquals(result, expecting);
+		assertEquals(expecting, result);
 	}
 
 	public static class NonPublicProperty {
@@ -4117,7 +4117,7 @@ public class TestStringTemplate extends TestCase {
 
 		st.setAttribute("x", o);
 		String expecting = "9:34";
-		assertEquals(st.toString(), expecting);
+		assertEquals(expecting, st.toString());
 	}
 
 	public void testIndexVar() throws Exception {
@@ -4134,7 +4134,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting =
 			"1. parrt" +newline+
 			"2. tombu";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testIndex0Var() throws Exception {
@@ -4151,7 +4151,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting =
 			"0. parrt" +newline+
 			"1. tombu";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testIndexVarWithMultipleExprs() throws Exception {
@@ -4170,7 +4170,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting =
 			"1. parrt@x5707" +newline+
 			"2. tombu@x5000";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testIndex0VarWithMultipleExprs() throws Exception {
@@ -4189,7 +4189,7 @@ public class TestStringTemplate extends TestCase {
 		String expecting =
 			"0. parrt@x5707" +newline+
 			"1. tombu@x5000";
-		assertEquals(t.toString(), expecting);
+		assertEquals(expecting, t.toString());
 	}
 
 	public void testArgumentContext() throws Exception {
@@ -4553,7 +4553,7 @@ public class TestStringTemplate extends TestCase {
 			"            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
 			"            5,6,77,888,1,6,32,5 };\n" +
 			"done";
-		assertEquals(top.toString(40), expecting);
+		assertEquals(expecting, top.toString(40));
 	}
 
 	public void testEscapeEscape() throws Exception {
