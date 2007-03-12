@@ -873,7 +873,11 @@ public class ASTExpr extends Expr {
 			return null;
 		}
 		if ( value.getClass().isArray() ) {
-			return new ArrayWrappedInList(value);
+			//return new ArrayWrappedInList(value);
+			if ( !value.getClass().getComponentType().isPrimitive() ) {
+				return Arrays.asList((Object[])value);
+			}
+			// use ArrayWrappedInList for primitives...
 		}
 		return value;
 		/*
