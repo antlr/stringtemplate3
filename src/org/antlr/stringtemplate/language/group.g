@@ -204,15 +204,21 @@ Map m=null;
 	;
 
 map returns [Map mapping=new HashMap()]
+	:   LBRACK mapPairs[mapping] RBRACK
+	;
+	
+mapPairs [Map mapping]
+    : keyValuePair[mapping] (COMMA keyValuePair[mapping])*
+      (COMMA defaultValuePair[mapping])?
+    | defaultValuePair[mapping] 
+    ;	
+	
+defaultValuePair[Map mapping]
 {
 StringTemplate v = null;
-}
-	:   LBRACK
-			keyValuePair[mapping] (COMMA keyValuePair[mapping])*
-			(	COMMA "default" COLON v=keyValue
-	   	 		{mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME,v);}
-			)?
-		RBRACK
+}	
+	:	"default" COLON v=keyValue
+        {mapping.put(ASTExpr.DEFAULT_MAP_VALUE_NAME, v);}
 	;
 
 keyValuePair[Map mapping]

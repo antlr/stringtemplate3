@@ -873,73 +873,12 @@ public class ASTExpr extends Expr {
 			return null;
 		}
 		if ( value.getClass().isArray() ) {
-			//return new ArrayWrappedInList(value);
-			if ( !value.getClass().getComponentType().isPrimitive() ) {
-				return Arrays.asList((Object[])value);
+			if ( value.getClass().getComponentType().isPrimitive() ) {
+				return new ArrayWrappedInList(value);
 			}
-			// use ArrayWrappedInList for primitives...
+			return Arrays.asList((Object[])value);
 		}
 		return value;
-		/*
-		if ( !(value instanceof StringTemplate) ) {
-			System.out.println("convert "+value+" to array?");
-		}
-		*/
-		/*
-		if ( !arraysConvertibleToList.contains(value.getClass()) &&
-			 !(value instanceof Object[]) )
-		{
-			return value;
-		}
-		*/
-		/*
-		if ( value instanceof Object[] ) {
-			Object[] list = (Object[])value;
-			List v = new StringTemplate.STAttributeList(list.length);
-			for (int i = 0; i < list.length; i++) {
-				Object elem = list[i];
-				v.add(elem);
-			}
-			value = v;
-		}
-		else if ( value instanceof int[] ) {
-			int[] list = (int[])value;
-			List v = new StringTemplate.STAttributeList(list.length);
-			for (int i = 0; i < list.length; i++) {
-				int elem = list[i];
-				v.add(new Integer(elem));
-			}
-			value = v;
-		}
-		else if ( value instanceof long[] ) {
-			long[] list = (long[])value;
-			List v = new StringTemplate.STAttributeList(list.length);
-			for (int i = 0; i < list.length; i++) {
-				long elem = list[i];
-				v.add(new Long(elem));
-			}
-			value = v;
-		}
-		else if ( value instanceof float[] ) {
-			float[] list = (float[])value;
-			List v = new StringTemplate.STAttributeList(list.length);
-			for (int i = 0; i < list.length; i++) {
-				float elem = list[i];
-				v.add(new Float(elem));
-			}
-			value = v;
-		}
-		else if ( value instanceof double[] ) {
-			double[] list = (double[])value;
-			List v = new StringTemplate.STAttributeList(list.length);
-			for (int i = 0; i < list.length; i++) {
-				double elem = list[i];
-				v.add(new Double(elem));
-			}
-			value = v;
-		}
-		return value;
-		*/
 	}
 
 	private static Object convertAnythingIteratableToIterator(Object o) {
