@@ -1,0 +1,818 @@
+Changes to ST (StringTemplate).
+
+#### Releases
+
+3.0: September 6, 2006
+
+2.2: August 5, 2005
+
+2.1: January 22, 2005
+
+2.0: July 16, 2004
+
+1.0.3: Feb 5, 2004
+
+1.0.2: Oct 14, 2003
+
+#### Fixed bugs and changes
+
+August 6, 2007: 3.1b1 (starting towards a 3.1)
+
+05-19-2007
+
+o changed to 3.1b1 in anticipation of diong a 3.1 release using ANTLR v3.
+
+05-03-2007
+
+o Updated group.g to allow default clause by itself in map (from Caleb Lyness)
+
+o Caleb also revamped entire TestStringTemplate to run under windows.
+
+o Added 16 bit char unit test also.
+
+01-30-2007
+
+o Made convertArrayToList create an ArrayWrappedInList so it doesn't
+  copy arrays any more.
+
+01-27-2007
+
+o John Snyders found bug in format stuff.  Renderer was being called
+  for string expr options.
+
+o Another bug fix by John. Length problem.
+
+??
+
+o added format option
+
+10-30-2006
+
+o \_ was not allowed in group/interface.g but in group.g.  Now \_ is
+allowed as first char.
+
+09-25-2006
+
+o ST.dup() was not copying renderers field.
+
+September 6 -- 3.0 release
+
+08-14-2006
+
+o added toString to Aggregate so that setAttribute("foo.{x,y}", ...) and
+  then referencing foo in isolation prints something useful.
+
+08-09-2006
+
+o had to fix that:
+
+<<
+		InputStream is = cl.getResourceAsStream(fileName);
+		if ( is==null ) {
+			cl = ErrorManager.class.getClassLoader();
+			is = cl.getResourceAsStream(fileName);
+		}
+>>
+
+08-07-2006
+
+o allow different source of classloader:
+ClassLoader cl = Thread.currentThread().getContextClassLoader();
+if ( cl==null ) {
+    cl = this.getClass().getClassLoader();
+}
+
+07-26-2006
+
+o fixed bug where separator did not appear in lists of stuff with lots
+of null entries.
+
+o map still iterates over values if you say <aMap> but it is now
+shorthand for <aMap.values>.  Similarly <aMap.keys> walks over the keys.  You can do stuff like: <aMap.keys:{k| <k> maps to <aMap.k>}>.
+
+07-24-2006
+
+o added length(attribute) thanks to Kay Roepke.  For now it does not
+work on strings; it works on attributes so length("foo") is 1 meaning
+1 attribute.  Nulls are counted in lists so a list of 300 nulls is
+length 300.  If you don't want to count nulls, use
+length(strip(list)).
+
+o added strip(attribute) that returns an iterator that
+skips any null values.  strip(x)=x when x is a single-valued
+attribute.  Added StripIterator to handle this.
+
+07-20-2006
+
+o BACKWARD INCOMPATIBLE: I had to make a more clear distinction
+between empty and null.  Null means there is nothing there whereas
+empty means the value is there but renders to an empty string.  IF
+conditionals now evaluate to empty if condition is false.
+
+o BACKWARD INCOMPATIBLE: Changed how separators are generated.  Now I
+generate a separator for any non-null value in the list even if that
+value is a conditional that evaluates to false.  Iterated empty values
+always get a separator.  Note that empty is not the same thing as
+missing.  "" is not missing and hence will get a separator.
+
+This made the ASTExpr.write separator computation much simpler and
+allowed me to properly handle the new "null" option.
+
+o Added null=expr option on expressions.
+
+For null values in iterated attributes and single attributes that are
+null, use this value instead of skipping.  For single valued
+attributes like <name; null="n/a">
+
+It's a shorthand for
+
+<if(name)><name><else>n/a<endif>
+
+For iterated values
+
+<values; null="0", separator=",">
+
+you get 0 for or null list values.  Works for template application
+like this also:
+
+<values:{v| <v>}; null="0">
+
+This does not replace empty strings like "" as they are not null.
+
+07-11-2006
+
+o made static maps in STG synchronized, also synchronized the look
+up/def methods for templates in STG.
+
+o removed reflection property lookup; too complex for value. profiling
+  indicates it's a small cost.  No thread synch issues either now.
+
+06-24-2006
+
+o template evaluation for anonymous templates did not properly look up
+overridden templates.  The group for anonymous templates was not reset
+to be the current enclosing template's group (remember we can dynamically
+set the superGroup).
+
+06-20-2006
+
+o Signature changed to use AttributeRenderer: 
+public void registerRenderer(Class attributeClassType,
+                             AttributeRenderer renderer)
+
+06-19-2006
+
+o If expr in <(expr):template()> evaluated to nothing, the template was
+  still invoked.
+
+06-12-2006
+
+o added ability to show start/stop of template with <name>...</name>.
+clean up!  emitTemplateStartDebugString/emitTemplateStopDebugString
+and doNotEmitDebugStringsForTemplate(tempaltename) and
+gate:emitDebugStartStopStrings(boolean)
+
+06-03-2006
+
+o Improved error when property ref causes the error internally.  Now shows
+that exception rather than invocation target exception.
+
+o Couldn't handle List<int[]>.  Nested int[] was not iteratable.
+
+06-02-2006
+
+o Couldn't gen \ in a template.  \<value> in a template escaped the <.
+  \\<value> printed both slashes.  Fixed.
+
+o added line wrap facility.  st.toString(72).  Wraps in between
+  expressions or elements of a multiple value attribute if you use
+  new expression option "wrap".  It will not break line between
+  element and separator. toString(72) followed by toString() does not
+  wrap on the second invocation.  Wrap is a soft width; does not break
+  elements to enforce a hard right edge.  WARNING: separators and wrap
+  values are templates and are evaluated once *before* multi-valued
+  expressions are evaluated.  You cannot change the wrap based on, for
+  example, <i>.  Default values for wrap="\n", anchor="true" (any
+  non-null value means anchor).
+
+o Updated StringTemplateWriter:
+
+<<
+	void pushAnchorPoint();
+	void popAnchorPoint();
+	void setLineWidth(int lineWidth);
+	/** Same as write, but wrap lines using the indicated string as the
+	 *  wrap character (such as "\n").
+	 */
+	int write(String str, String wrap) throws IOException;
+	/** Write a separator.  Same as write() except that a \n cannot
+	 *  be inserted before emitting a separator.
+	 */
+	int writeSeparator(String str) throws IOException;
+>>
+
+o Examples of wrapping:
+
+<<
+data(a) ::= <<int[] a = { 1,9,2,<values; wrap, separator=","> };\>>
+
+int[] a = { 1,9,2,3,9,20,2,1,4,
+6,32,5,6,77,888,2,1,6,32,5,6,77,
+4,9,20,2,1,4,63,9,20,2,1,4,6 };
+
+data(a) ::= <<int[] a = { 1,9,2,<values; wrap, anchor, separator=","> };\>>
+int[] a = { 1,9,2,3,9,20,2,1,4,
+                  6,32,5,6,77,
+                  888,2,1,6,32,
+                  5,6,77,4,9,20,
+                  2,1,4,63,9,20,
+                  2,1,4,6 };
+
+data(a) ::= <<int[] a = { <{1,9,2,<values; wrap, separator=",">}; anchor> };\>>
+int[] a = { 1,9,2,3,9,20,2,1,4,
+            6,32,5,6,77,888,2,
+            1,6,32,5,6,77,4,9,
+            20,2,1,4,63,9,20,2,
+            1,4,6 };
+>>
+
+05-27-2006
+
+o Couldn't use \\\{ inside of a {...} anonymous template.
+
+05-18-2006
+
+o Fixed: you could not have template expressions, just simple
+expressions in indirect template expressions like
+$data:("foo":a())()$.  I decided not to allow IF expressions inside.
+
+o now throws exception when dots are in template names or attribute names
+
+o don't set "it" nor "attr" default attributes if there is a parameter
+to an anonymous block like <names:{n | ...}>
+
+o Bug fix.  If you passed in a list and then another element, it added
+it to the list you passed in!  Now, I make a (shallow) copy of the list.
+
+o Bug fix.  If you passed an element then a list to an attr and I
+think it didn't flatten out properly!
+
+o added build.xml ANT file (ick)
+
+o {} and "" work as arguments now to templates
+
+05-17-2006
+
+o Couldn't escape in template group.  \>> failed as did {...\}} for
+anonymous templates.
+
+o When creating an aggregate list, couldn't have spaces in {...}  such
+as "folders.{a, b}".
+
+o Embedded templates such as {...} anonymous templates couldn't see
+the renderers for enclosing templates.  Easy to set one renderer in
+root template for, say, Date and forget about it.  If none found for
+that class in containment hierarchy, then group hierarchy is checked.
+
+05-12-2006
+
+o using nativegroup to create instances now in ST.getInstanceOf.  Needed
+so that super.foo works properly.  THe new instance's group will point at
+creating group so polymorphism works properly.
+
+04-07-2006
+
+o BACKWARD INCOMPATIBLE: <...> is now default delimiter for group files.
+
+04-01-2006
+
+o note in doc that map strings are now templates and that <<...>> works too.
+  default or others can have empty values (implying no value) or use "key"
+  but not in template; it's a keyword.
+  Also, default must be at end now (and only 1).  Default value is empty
+  as before.
+  To return null, use "default :" at end.  Can use empty values too:
+  {"float":}, {"int":"0"}, ...
+
+03-4-2006
+
+o added cache for all obj.prop lookups
+
+o added PathGroupLoader/CommonGroupLoader (which uses CLASSPATH)
+
+03-1-2006
+
+o added i0 which is like i except indexed from 0 not 1.
+
+o auto defined attribute i was not defined for <a,b: {...}> case. ooops.
+
+02-11-2006
+
+o You couldn't have '=' in a string if preceded by '+' like foo+"ick=".
+
+01-27-2006
+
+o Added default lexer mechanism for groups so you can set once
+public static void registerDefaultLexer(Class lexerClass) 
+
+01-02-2005
+
+o Added STG.getInstanceOf(name,attributes)
+
+12-28-2005
+
+o Fixed bug where an expr on the first line that yields no output left
+a blank line.
+
+12-27-2005
+
+o Added group inheritance notation; added unit tests.  setSuperGroup(name)
+  now does something useful.  Notation:
+
+group subG : superG;
+
+12-24-2005
+
+o Added interfaces.  See unit tests.
+
+group Java implements ANTLRCoreTarget;
+rule(...) ::= "..."
+...
+
+You can say "optional template(args);" also.  Uses group loader to
+find interfaces.
+
+o Added CommonGroupLoader so you can reference groups/interfaces now
+in group files etc...
+String tmpdir = System.getProperty("java.io.tmpdir");
+StringTemplateGroup.registerGroupLoader(new CommonGroupLoader(tmpdir,errors));
+
+The tmpdir can be "dir1:dir2:dir3" etc...
+
+o There was a bug in StringTemplateGroup.isDefined that it always
+returned true.
+
+o Added StringTemplate.getDependencyGraph() to get a list of n->m edges
+where template n contains template m.  Also made convenient
+getDOTForDependencyGraph().  You get a template back that lets you reset
+node shape, fontsize, width, height attributes.  Use removeAttribute
+before setting so you are sure you only get one value.
+
+o Added StringTemplate.toStructureString() to help discover nested structure.
+
+11-25-2005
+
+If you iterated multiple empty attributes, it iterated once with null values.  Bizarre. Fixed.
+
+11-12-2005
+
+Bug in polymorphism when an overridden template called its super which called
+another template which was also overridden; didn't call the overridden method.
+Fixed getInstanceOf() so that it always sets the proper group so polymorphic
+template lookup also starts at the right group.
+
+Test testLazyEvalOfSuperInApplySuperTemplateRef was wrong...The
+"super."  prefix is (like in Java, ...) a scope override and is always
+evaluated relative to the template in which it was defined not the
+template in which it is evaluate!
+
+Ugh.  I *think* I have this polymorphism nailed down now.
+
+11-11-2005
+
+Improving error messages to be more specific when you get a parser error.
+I'm including more context info and hopefully the file within a group file
+the error occurs.
+
+The defaultGroup is now public so you can know StringTemplate's default group
+when you see it:
+<<
+	public static StringTemplateGroup defaultGroup =
+		new StringTemplateGroup("defaultGroup", ".");
+>>
+
+10-27-2005
+
+Template polymorphism bug: wouldn't work for references in IF clauses!
+
+10-26-2005
+
+Added regions.
+
+10-23-2005
+
+Any Map instance is now allowed as a "map" attribute not just Hashtable, HashMap.
+
+10-14-2005
+
+NullPtrExc if you registered a renderer and sent an object as an attribute
+of another type!
+
+10-09-2005
+
+The tree viewer didn't work; class cast problem with Hashtable vs HashMap.
+
+07-31-2005
+
+Thanks to Joe Soroka, he showed me how to fix some weird thing in Java
+where public members of an anonymous class weren't visible to
+StringTemplate.  You have to setAccessible on the field or method
+object.  Bizarre.
+
+07-23-2005
+
+o removed debug code as it's useless/broken
+
+07-14-2005
+
+o decided that {+} should not be the list creation operator. {[a,b,c]}
+should be the thing as it mirrors the maps in group files.  I want {+}
+to mean add still.
+
+o also decided that default arg values are templates only if "\{...}"
+is used and strings in arg lists are just strings.  I added \{...}
+instead: $bold(it=\{$name$ Parr})$ instead.  Default values can be
+string and {...} as can args.  You can have {...} on left side of
+apply now: $\{foo}:\{($it$)}$
+
+07-12-2005
+
+o Decided that {+} should always return a multi-valued attribute;
+_this is backward incompatible for anyone using + to mean string
+cat_.  Instead of
+<<
+$link(url="/home/"+user)$
+>>
+now do this:
+<<
+$link(url="/home/$user$")$
+>>
+
+07-09-2005
+
+o added multiple attributes to left of the apply operator; works for
+anonymous templates only! $names,phones:{n,p | $n$: $p$}$.  An error
+is generated if you have too many args for the number of parallel
+lists.  Iteration proceeds while at least one of the attributes
+({names} or {phones}, in this case) has values.
+
+o added '+' cat operator for multi-valued attributes, yielding single,
+longer multi-valued attribute.  $mine+yours$ is a new list with both
+elements; all of "mine" first then all of yours.
+
+o allows any template invocation to assume sole argument name if
+just one formal argument.  If you do {$bold(name)$} and {bold} has one
+formal argument, then it gets the value of name.  This works also for
+template application:
+
+<<
+test(names) ::= << <names:bold(),italics(); separator=", "> >>
+bold(x) ::= "*<x>*"
+italics(y) ::= "_<y>_"
+>>
+
+Note: The binding of a value to the name of a sole formal argument is
+done dynamically so that indirect template invocation and lazy
+evaluation stuff works properly.  For example {(templateName)(value)}
+should work for different templates with differently-name (but sole)
+args.  See unit test testInvokeIndirectTemplateWithSingleFormalArgs().
+
+o I changed the first, rest, tail operators from yesterday.  It was
+weird doing {users:first()}...seems like {first(users)} is better.
+This introduces a function-like syntax, which necessitated the "assign
+to sole formal arg" functionality above that supports things like
+{bold(name)}.  Makes it possible to say {first(rest(names))} to get
+second element now.  Previous syntax made it impossible.
+
+07-08-2005
+
+o Added attribute functions: first (get first element), last (get last
+element) and tail (get everything but first element).  [backward
+incompatible if you used first,last,tail as an attribute or template
+name]
+
+o if you are applying a template to a list and that template only has
+one formal argument, that arg gets the same value as the iterated
+value, "it".  I.e., previously this didn't work: $list:bold()$ where
+bold was
+<<
+bold(item) ::= "<b>$item$</b>"
+>>
+
+A template define as 
+
+<<
+bold() ::= "<b>$it</b>"
+>>
+
+would still work though.
+
+o You can define arguments for anonymous templates now, which is much
+nicer that using <it> all the time:
+<<
+$names:{n| $n$}; separator=","$
+>>
+
+o To define an empty template, you had to write <<>>; "" didn't work.
+
+07-06-2005
+
+o Added maps to the group:
+
+<<
+typeInitMap ::= ["int"="0", "float"="0.0", default="null"]
+>>
+
+then within a template you can refer to them {<typeInitMap.int>},
+which returns "0".  Those strings are actually templates, but I can't
+really think of a use for that just yet. ;) If your type name is an
+attribute not a constant like int, then use
+{<typeInitMap.(typeName)>}.  The maps are defined in the group's scope
+and are visible if no attribute hides them.  For example, if you
+define a formal argument called {typeInitMap} in template {foo} then
+{foo} cannot see the map defined in the group (though you could pass
+it in, which would be the point).  If a name is not an attribute and
+it's not in the group's maps table, then the super group is consulted
+etc...  You may not redefine a map and it may not have the same name
+as a template in that group.  The {default} value is used if you use a
+key as a property that doesn't exist.  For example {<typeInitMap.foo>}
+returns "{null}".
+
+07-05-2005
+
+o Added renderers per template and group.  Templates are inherited
+from super group.  Thanks to Anton Keks for his suggestion and sample
+implementation.
+
+06-26-2005
+
+o literal arguments are now templates not just strings. :)
+  You can even use <<...>> literals as argument now.
+  In bug list:
+	Template inclusion expressions won't accept a nested template
+	as an argument.  I'd like to be able to write <foo(bar={...})>, which
+	would mean the same thing as <foo(bar="":{...})>.
+
+o added default argument templates like bold(x="empty") ::= ...
+  Note: because of lazy evaluation semantics, default value templates may refer
+  to argument values.  Everything is evaluated after arg values are set.
+  This works for invoked templates and templates you create with code.
+
+o all strings are now templates; does that mean "\n" is not newline anymore?  Did I break compatibility?
+
+o when calling another template, y, from within a template, x, none of the
+  x parameters are visible to y because the formal parameters force you to
+  define values.  This prevents surprises and makes it easy to ensure a
+  a value is empty unless you specifically set it for that template.  The
+  problem is that I need to factor templates sometimes and I want to refine
+  behavior with a subclass or just invoke another shared template but
+  <y()> erases all of x's parameters.  Perhaps <y(\*)> or <y(...)> as a
+  syntax to indicate y should inherit all values.  <y(name="foo", ...)>
+  would mean that I set one, but the others are inherited whereas 
+  <y(name="foo")> only has name set; others are empty.  Ok, I made it
+  work today.  Was a 10 minute tweak.  Easy.  You can set manually with
+  StringTemplate.setPassThroughAttributes().  This is awesome.
+
+06-25-2005
+
+o When you invoke foo(x=y), x must be an attribute of foo (well if you
+have formal args defined that is) and y is evaluated within the
+context of the surrounding template; more precisely, it's evaluated in
+the context of the actual template invocation (which can have
+predefined attributes like attr, it, and i).  It's weird, but foo(x=x)
+also makes sense.  See new unit test testArgEvaluationContext().  This
+was not working before, though I thought it was!
+
+o error messages are better for setting an undefined argument.
+
+05-02-2005
+
+o When a property is not found, you get a better error.  I show the
+template context (nested tree of templates).
+
+05-01-2005
+
+o Collections, Maps, and Iterators that are non-null but have no elements
+  return false in conditionals; e.g., $if(users)$ is false if users is
+  an empty list.
+
+03-30-2005
+
+o added template context upon no such element.  It says stuff like:
+<<
+no such attribute: decisionNumber in template context
+  [outputFile lexer cyclicDFA cyclicDFAState cyclicDFAEdge lookaheadTest]
+>>
+
+03-28-2005
+
+o added ability to use indirect property names.  $user.(propName)$
+evaluates (propName) to find the name of the property and then looks
+it up in user object.
+
+01-22-2005
+
+o Empty output for a single attribute expression one a line by itself gets no newline (i.e., you don't get a blank line).
+
+01-02-2005
+
+o You can access public fields now instead of via just accessors
+
+o empty (i.e., no char output) values in an iteration do not get a separator if specified.  This will be 99% of the time what you want.  Only if pure IF (no else).
+
+12-25-2004
+
+o Made convertArrayToList() handle long[] also and made "a.{f1,f2}" type aggregate attributes properly convert incoming arrays to lists for normalization.
+
+12-24-2004
+
+o Made a template lookup that is not defined throw an IllegalArgumentException rather than generate an error directly.
+
+12-19-2004
+
+o Made null indirect template generate nothing; used to generate null-ptr exception.
+
+11-20-2004
+
+o trap all antlr generated errors now and send to listener.
+
+11-07-2004
+
+o Added 
+<<
+	/** Specify a StringTemplateWriter implementing class to use for
+	 *  filtering output
+	 */
+	public void setStringTemplateWriter(Class c) {
+		userSpecifiedWriter = c;
+	}
+>>
+and made StringTemplate.toString() sensitive to it.
+
+11-04-2004
+
+o added support for nonlocal file encodings; added property fileCharEncoding.  The template loading routines are now sensitive to this property. Defaults to the file.encoding system property.
+
+11-03-2004
+
+o STG.templateIsDefinedInThisGroup -> isDefinedInThisGroup
+o added isDefined(name) that checks whole hierarchy
+
+10-31-2004
+
+o addressed whitespace at begin/end of template .st file issue.  Decided to let it continue to strip all front/back whitespace and then make you add it directly.  This is a simple rule and can be made to do what you want.  It is consistent with the strip  newline before \>\> rule too.
+
+o added <\ > for space char
+
+o updated testing harness to be same as ANTLR 3.0's which is more sophisticated.
+
+o the newline immediately preceding >> in a template group file is tossed out just like the newline right after the \<<
+
+10-30-2004
+
+o newlines ignored before <else> and <endif>.  Rule is: kill a single newline 
+after <if>, <<, <else>, and <endif> (but for <endif> only if it's on a line by itself) . Kill newlines before <else> and <endif> and >>.
+
+o added <\n>, <\r>, <\t>
+
+o fixed \n refs in TestStringTemplate unit tests to be portable newline reference.
+
+10-29-2004
+
+o added $!...!$ and <!...!> comments (version 2.1b3)
+
+10-10-2004
+
+o allow HashMap, Hashtable precisely but not Map in attribute.property lookup
+
+o $attributes$ is a text string when lint mode on that recursively dumps
+  out types, properties, etc... (no values)
+
+09-25-2004
+
+o Templates track their embedded instances; can ask for embedded
+
+o added isXXX accessor properties so x.special invokes x.getSpecial then x.isSpecial if not successful.
+
+o bug in st.attribute...if no attributes table, got null ptr exception
+
+07-07-2004
+
+o given the big changes to ST, I'm going to deprecate attr and use "it" as the default iterator attribute.  Says "iterator" and is sort of like "this".  I looked at "this", "that", "iter", and even "the".  "ith"  even [i].
+
+07-01-2004
+
+o a.b yields a's b attribute if a is stringtemplate, which lets you treat a list of templates or nested set of templates as a data structure.  For example, given a list of templates representing output rules from antlr, i can generate both the C function definitions for those rules and the list of C function declarations:
+
+<rules:{public void <attr.name>(<attr.args);}>
+<rules:{public void <attr.name>(<attr.args) {<attr.body>\}}>
+
+o applying a template to a list of attributes reused the same template, but you need a new one to get a new attribute set etc...
+
+o apply a template to a list of attributes did a toString() rather than build up a list of templates to apply later.
+
+o to prevent recursion, formally defined parameters hide any (dynamically) enclosing scope.  The attributes can be null or have values still, but you cannot inherit an attribute from an enclosing scope, bypassing an empty local attribute formally defined in that template.  See test case that used to cause infinite recursion. Hmm...can i limit to the case where same template is up the call stack somewhere?  Any other inheritance should be ok, right?  This
+is not always what you want.  If you set the font for a table, then nested
+tables cannot inherit the font.  However it prevents you from forgetting to
+set the rows attr in the nested, which would cause an infinite recursive loop.  Actually figured out precisely what it should be.  Can't avoid infinite recursion without expensive tests so make part of lintMode:
+
+StringTemplate: error: possible recursive self-reference to stats in template ifstat
+
+If you get a value in getAttribute that refers to the current template or an enclosing template, must be in an infinite loop.  Can't stop it, but error to errorListener.  Ok, now I really have it.  In ASTExpr.write, if the object to write out is a ST, then it walks up enclosing chain and makes sure it is unique.  Otherwise, it's infinite recursion.  Same template, different instance is fine.  Only in lintMode! throws IllegalStateException.
+
+Back to formal arg always hides enclosing value, though if you stick in a looped attribute set then I catch it in lint mode.
+
+
+06-26-2004
+
+o added helper method setAttribute(String,int)
+
+o removed ability to pass hashtable in as initial args...security hole.
+
+06-24-2004
+
+o included templates like <font()> computed the text right away rather
+  than lazily evaluating when the outer template evaluated.  Missed some
+  parameters that way.
+
+o when embedding a template inside another via setAttribute, it must set the
+  enclosingInstance so that it can inherit attributes.  This was not working
+  when you setAttribute("foo"...) multiple times for attribute foo.  It was
+  just adding stuff to the internal array without checking to see if it was
+  a ST.
+
+05-08-2004
+
+o Improved test harness so we can time tests; added some eval speed tests.
+
+05-07-2004
+
+o nested IF works
+
+o $else$ clause added
+
+o antlr lexer used to chunk now two predefined $..$ and <..>
+
+o added group file format
+
+o changed boolean so that you are testing its value not presence/absence
+
+o added formal parameter checking.  Can only set attributes that exist at
+a template or enclosing template.  Can only ref attributes that exist at
+that template or above.  Throws NoSuchElement exceptions.
+
+o added general notion of StringTemplateWriter so you can do output filters.
+
+o predefined auto indentation filter (default used).
+
+o properties that return arrays are converted to iterators.  Factored out
+this normalization code into static ASTExpr methods. Did not handle properties that return collections as multi-valued values.
+
+05-03-2004
+
+o Added Collection and Iterator stuff in ASTExpr writeAttribute.  Can dump or apply template to either Map, Collection, or Iterator now.
+
+o anything iteratable can be used for "APPLY" template
+
+
+01-23-2004
+
+o Fixed some errors in the escape char when in anonymous templates {...}
+
+o Fixed so nested anonymous templates works now.
+
+o Changed some protections and so on so that can override behavior more
+  easily.
+
+5-16-2003
+
+o Make StringTemplate to List interface or collection.
+  [Fixed 5-17-2003]
+
+o Need $(foo)()$.  What about $names:(boldtemplate)():italics()$?
+  What about $(foo)()+(bar)()$?  $(foo+".template")()$
+  [Fixed 5-17-2003]
+
+4-11-2003
+
+o if a template name is not found, it will still try to apply it to an
+  attribute
+  [Fixed 5-15-2003]
+
+o fix missing end $.  now it consumes the rest of the file.
+  [Fixed 5-15-2003. Well, it still consumes, but now the listener gets
+   the error actually.]
+
+o add more messages that go to the error listener
+  [Fixed 5-15-2003]:
+	 added warning(msg) to listener
+	 added setLintMode(true), makes setting of unknown attr a warning
+
+4-01-2003 [Fixed 5-15-2003]
+
+o attr is not re-evaluated in template application to a vector--args
+  are evaluated a priori!
+  $members:link(url=attr.homepage, title=attr.name)$
+  does not work!
+
+
