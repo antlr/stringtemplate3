@@ -5066,6 +5066,33 @@ public class TestStringTemplate extends TestCase {
         //}
     }
 
+	public void testSuperReferenceInIfClause() throws Exception {
+		String superGroupString =
+			"group super;" + newline +
+			"a(x) ::= \"super.a\"" + newline +
+			"b(x) ::= \"<c()>super.b\"" + newline +
+			"c() ::= \"super.c\""
+			;
+		StringTemplateGroup superGroup = new StringTemplateGroup(
+			new StringReader(superGroupString), AngleBracketTemplateLexer.class);
+		String subGroupString =
+			"group sub;\n" +
+			"a(x) ::= \"<if(x)><super.a()><endif>\"" + newline +
+			"b(x) ::= \"<if(x)><else><super.b()><endif>\"" + newline +
+			"c() ::= \"sub.c\""
+			;
+		StringTemplateGroup subGroup = new StringTemplateGroup(
+			new StringReader(subGroupString), AngleBracketTemplateLexer.class);
+		subGroup.setSuperGroup(superGroup);
+		StringTemplate a = subGroup.getInstanceOf("a");
+		a.setAttribute("x", "foo");
+		assertEquals("super.a", a.toString());
+		StringTemplate b = subGroup.getInstanceOf("b");
+		assertEquals("sub.csuper.b", b.toString());
+		StringTemplate c = subGroup.getInstanceOf("c");
+		assertEquals("sub.c", c.toString());
+	}	
+
 	public static void writeFile(String dir, String fileName, String content) {
 		try {
 			File f = new File(dir, fileName);

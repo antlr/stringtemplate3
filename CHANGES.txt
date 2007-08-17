@@ -16,6 +16,11 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+08-17-2007
+
+o Thomas Brandon pointed out that we have a bug in our if/else computation.
+  You could not reference super.attr inside the if/else sub templates.
+
 August 6, 2007: 3.1b1 (starting towards a 3.1)
 
 05-19-2007
