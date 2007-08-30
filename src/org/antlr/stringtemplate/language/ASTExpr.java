@@ -363,6 +363,7 @@ public class ASTExpr extends Expr {
 				argumentContext.put(DEFAULT_ATTRIBUTE_NAME_DEPRECATED, attributeValue);
 			}
 			argumentContext.put(DEFAULT_INDEX_VARIABLE_NAME, new Integer(1));
+			argumentContext.put(DEFAULT_INDEX0_VARIABLE_NAME, new Integer(0));
             embedded.setArgumentContext(argumentContext);
             evaluateArguments(embedded);
             return embedded;

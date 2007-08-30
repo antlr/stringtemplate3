@@ -16,6 +16,10 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+08-30-2007
+
+o i0 was not set when you applied a template to a single value.
+
 08-17-2007
 
 o Thomas Brandon pointed out that we have a bug in our if/else computation.
