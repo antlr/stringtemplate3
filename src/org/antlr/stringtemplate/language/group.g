@@ -241,9 +241,14 @@ class GroupLexer extends Lexer;
 options {
 	k=2;
 	charVocabulary = '\u0000'..'\uFFFE';
+    testLiterals=false;
 }
 
-ID	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_')*
+ID
+options {
+    testLiterals=true;
+}
+	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_')*
 	;
 
 STRING
