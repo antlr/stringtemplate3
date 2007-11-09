@@ -555,16 +555,17 @@ public class StringTemplateGroup {
 			try {
 				br = new BufferedReader(getInputStreamReader(is));
 				template = loadTemplate(name, br);
-				br.close();
-				br=null;
 			}
 			catch (IOException ioe) {
+				error("Problem reading template file: "+fileName,ioe);
+			}
+			finally {
 				if ( br!=null ) {
 					try {
 						br.close();
 					}
 					catch (IOException ioe2) {
-						error("Cannot close template file: "+fileName);
+						error("Cannot close template file: "+fileName, ioe2);
 					}
 				}
 			}

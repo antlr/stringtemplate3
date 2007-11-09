@@ -16,6 +16,13 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+11-08-2007
+
+o "default" was not a valid value in map.  had testLiterals looking even at strings in lexer for
+  group.g. ST-15
+
+o ST-18 fixed.  put close in a finally block.
+
 08-30-2007
 
 o i0 was not set when you applied a template to a single value.
