@@ -50,6 +50,7 @@ tokens {
     FUNCTION;
     SINGLEVALUEARG;
     LIST; // [a,b,c]
+    NOTHING; // empty list element [a, ,c]
 }
 
 {
@@ -182,8 +183,13 @@ atom:   ID
     ;
 
 list:	lb:LBRACK^ {#lb.setType(LIST); #lb.setText("value");}
-          expr (COMMA! expr)*
+          listElement (COMMA! listElement)*
         RBRACK!
+    ;
+
+listElement
+    :   expr
+    |   {#listElement = #[NOTHING, "NOTHING"];}
     ;
 
 templateInclude

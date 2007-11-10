@@ -28,7 +28,6 @@
 package org.antlr.stringtemplate.test;
 
 import junit.framework.Assert;
-import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
@@ -3374,7 +3373,7 @@ public class TestStringTemplate extends TestCase {
 	public void testMapDefaultValue() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"typeInit ::= [\"int\":\"0\", \"default\":\"null\"] "+newline+
+				"typeInit ::= [\"int\":\"0\", default:\"null\"] "+newline+
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
@@ -3390,7 +3389,7 @@ public class TestStringTemplate extends TestCase {
 	public void testMapEmptyDefaultValue() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"typeInit ::= [\"int\":\"0\", \"default\":] "+newline+
+				"typeInit ::= [\"int\":\"0\", default:] "+newline+
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
@@ -3403,10 +3402,10 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapEmptyDefaultValueIsKey() throws Exception {
+	public void testMapDefaultValueIsKey() throws Exception {
 		String templates =
 				"group test;" +newline+
-				"typeInit ::= [\"int\":\"0\", \"default\":key] "+newline+
+				"typeInit ::= [\"int\":\"0\", default:key] "+newline+
 				"var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
 				;
 		StringTemplateGroup group =
@@ -3422,31 +3421,30 @@ public class TestStringTemplate extends TestCase {
     /**
      * Test that a map can have only the default entry.
      * <p>
-     * Bug ref: JIRA bug ST-15 
+     * Bug ref: JIRA bug ST-15 (Fixed)
      */
-    public void testMapEmptyDefaultOnlyEntry() throws Exception {
+    public void testMapDefaultStringAsKey() throws Exception {
         String templates =
                 "group test;" +newline+
-                "typeInit ::= [\"default\":key] "+newline+
+                "typeInit ::= [\"default\":\"foo\"] "+newline+
                 "var(type,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
                 ;
         StringTemplateGroup group =
                 new StringTemplateGroup(new StringReader(templates));
         StringTemplate st = group.getInstanceOf("var");
-        st.setAttribute("type", "UserRecord");
+        st.setAttribute("type", "default");
         st.setAttribute("name", "x");
-        String expecting = "UserRecord x = UserRecord;";
+        String expecting = "foo x = foo;";
         String result = st.toString();
         assertEquals(expecting, result);
     }
     
     /**
      * Test that a map can return a <b>string</b> with the word: default.
-     * FIXME: This fails.
      * <p>
-     * Bug ref: JIRA bug ST-15
+     * Bug ref: JIRA bug ST-15 (Fixed)
      */
-    public void testMapEmptyDefaultDefaultEntry() throws Exception {
+    public void testMapDefaultIsDefaultString() throws Exception {
         String templates =
                 "group test;" +newline+
                 "map ::= [default: \"default\"] "+newline+
@@ -4076,6 +4074,24 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("salaries", "big");
 		e.setAttribute("salaries", "huge");
 		String expecting = "Ter@1: big"+newline+"Tom@2: huge"+newline;
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testParallelAttributeIterationWithNullValue() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$\n}$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		e.setAttribute("phones", new ArrayList() {{add("1"); add(null); add("3");}});
+		e.setAttribute("salaries", "big");
+		e.setAttribute("salaries", "huge");
+		e.setAttribute("salaries", "enormous");
+		String expecting = "Ter@1: big"+newline+
+						   "Tom@: huge"+newline+
+						   "Sriram@3: enormous"+newline;
 		assertEquals(expecting, e.toString());
 	}
 
@@ -5091,7 +5107,20 @@ public class TestStringTemplate extends TestCase {
 		assertEquals("sub.csuper.b", b.toString());
 		StringTemplate c = subGroup.getInstanceOf("c");
 		assertEquals("sub.c", c.toString());
-	}	
+	}
+
+	/** Added feature for ST-21 */
+	public void testListLiteralWithEmptyElements() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$[\"Ter\",,\"Jesse\"]:{n | $i$:$n$}; separator=\", \", null=\"\"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("phones", "1");
+		e.setAttribute("salaries", "big");
+		String expecting = "1:Ter, 2:, 3:Jesse";
+		assertEquals(expecting, e.toString());
+	}
 
 	public static void writeFile(String dir, String fileName, String content) {
 		try {

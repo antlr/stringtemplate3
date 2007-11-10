@@ -16,6 +16,13 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+11-09-2007
+
+o updated some unit tests (names, guts) to make more sense.
+
+o updated group.g and eval.g so that list literals can have empty
+  atoms like $["a",,"b"]:{n | ...}; null="nullstring"$.
+
 11-08-2007
 
 o "default" was not a valid value in map.  had testLiterals looking even at strings in lexer for

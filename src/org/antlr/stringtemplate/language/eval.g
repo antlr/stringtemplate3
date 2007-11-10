@@ -108,6 +108,11 @@ value = new CatIterator(elements);
 			  		elements.add(e);
 			  	}
 			  	}
+            |   NOTHING
+                {
+                List nullSingleton = new ArrayList() {{add(null);}};
+                elements.add(nullSingleton.iterator()); // add a blank
+                }
 			)+
 		 )
 	;
