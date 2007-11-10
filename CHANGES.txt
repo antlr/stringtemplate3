@@ -18,6 +18,8 @@ Changes to ST (StringTemplate).
 
 11-09-2007
 
+o added elseif. $if(x)$...$elseif(y)$...$else$...$endif$
+
 o updated some unit tests (names, guts) to make more sense.
 
 o updated group.g and eval.g so that list literals can have empty

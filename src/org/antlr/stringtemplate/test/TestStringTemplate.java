@@ -1912,6 +1912,50 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
+	public void testElseIfClause() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$if(x)$"+newline +
+				"foo"+newline +
+				"$elseif(y)$"+newline +
+				"bar"+newline +
+				"$endif$"
+			);
+		e.setAttribute("y", "yep");
+		String expecting = "bar";
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testElseIfClause2() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$if(x)$"+newline +
+				"foo"+newline +
+				"$elseif(y)$"+newline +
+				"bar"+newline +
+				"$elseif(z)$"+newline +
+				"blort"+newline +
+				"$endif$"
+			);
+		e.setAttribute("z", "yep");
+		String expecting = "blort";
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testElseIfClauseAndElse() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$if(x)$"+newline +
+				"foo"+newline +
+				"$elseif(y)$"+newline +
+				"bar"+newline +
+				"$elseif(z)$"+newline +
+				"z"+newline +
+				"$else$"+newline +
+				"blort"+newline +
+				"$endif$"
+			);
+		String expecting = "blort";
+		assertEquals(expecting, e.toString());
+	}
+
 	public void testNestedIF() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$if(title)$"+newline +
@@ -3434,7 +3478,7 @@ public class TestStringTemplate extends TestCase {
         StringTemplate st = group.getInstanceOf("var");
         st.setAttribute("type", "default");
         st.setAttribute("name", "x");
-        String expecting = "foo x = foo;";
+        String expecting = "default x = foo;";
         String result = st.toString();
         assertEquals(expecting, result);
     }

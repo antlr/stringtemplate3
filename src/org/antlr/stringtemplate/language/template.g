@@ -87,6 +87,21 @@ action[StringTemplate self]
 
         template[subtemplate] {if ( c!=null ) c.setSubtemplate(subtemplate);}
 
+        (   ei:ELSEIF
+            {
+             ASTExpr ec = self.parseAction(ei.getText());
+             // create and precompile the subtemplate
+             StringTemplate elseIfSubtemplate =
+                 new StringTemplate(self.getGroup(), null);
+             elseIfSubtemplate.setEnclosingInstance(self);
+             elseIfSubtemplate.setName(ei.getText()+"_subtemplate");
+            }
+
+            template[elseIfSubtemplate]
+
+            {if ( c!=null ) c.addElseIfSubtemplate(ec, elseIfSubtemplate);}
+        )*
+
         (   ELSE
             {
             // create and precompile the subtemplate
@@ -264,6 +279,8 @@ ACTION
     		generateAmbigWarnings=false; // $EXPR$ is ambig with $endif$ etc...
 		}
 	:	'$'! "if" (' '!)* "(" IF_EXPR ")" '$'! {$setType(TemplateParser.IF);}
+        ( ('\r'!)? '\n'! {newline();})? // ignore any newline right after an IF
+	|	'$'! "elseif" (' '!)* "(" IF_EXPR ")" '$'! {$setType(TemplateParser.ELSEIF);}
         ( ('\r'!)? '\n'! {newline();})? // ignore any newline right after an IF
     |   '$'! "else" '$'!         {$setType(TemplateParser.ELSE);}
         ( ('\r'!)? '\n'! {newline();})? // ignore any newline right after an ELSE

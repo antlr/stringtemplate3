@@ -75,6 +75,7 @@ tokens {
 action returns [Map opts=null]
 	:	templatesExpr (SEMI! opts=optionList)?
 	|	"if"^ LPAREN! ifCondition RPAREN!
+	|	"elseif"! LPAREN! ifCondition RPAREN! // return just conditional
 	;
 
 optionList! returns [Map opts=new HashMap()]
