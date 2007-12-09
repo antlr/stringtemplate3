@@ -3858,6 +3858,20 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
+	public void testMultipleRefsToListAttribute() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"f(x) ::= \"<x> <x>\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate e = group.getInstanceOf("f");
+		e.setAttribute("x", "Ter");
+		e.setAttribute("x", "Tom");
+		String expecting = "TerTom TerTom";
+		assertEquals(expecting, e.toString());
+	}
+
 	public void testApplyTemplateWithSingleFormalArgs() throws Exception {
 		String templates =
 				"group test;" +newline+
