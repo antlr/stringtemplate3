@@ -35,7 +35,6 @@ import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
 
 /** Manages a group of named mutually-referential StringTemplate objects.
  *  Currently the templates must all live under a directory so that you
@@ -263,12 +262,17 @@ public class StringTemplateGroup {
 							   StringTemplateGroup superGroup)
 	{
 		this.templatesDefinedInGroupFile = true;
+		// if no lexer specified, then assume <...> when loading from group file
+		if ( lexer==null ) {
+			lexer = AngleBracketTemplateLexer.class;
+		}
 		this.templateLexerClass = lexer;
 		if ( errors!=null ) { // always have to have a listener
 			this.listener = errors;
 		}
 		setSuperGroup(superGroup);
 		parseGroup(r);
+		nameToGroupMap.put(name, this);
 		verifyInterfaceImplementations();
 	}
 
@@ -294,17 +298,22 @@ public class StringTemplateGroup {
 		this.superGroup = superGroup;
 	}
 
-	public void setSuperGroup(String groupName) {
-		StringTemplateGroup group =
-			(StringTemplateGroup)nameToGroupMap.get(groupName);
-		if ( group!=null ) { // we've seen before; just use it
-			setSuperGroup(group);
+	/** Called by group parser when ": supergroupname" is found.
+	 *  This method forces the supergroup's lexer to be same as lexer
+	 *  for this (sub) group.
+	 */
+	public void setSuperGroup(String superGroupName) {
+		StringTemplateGroup superGroup =
+			(StringTemplateGroup)nameToGroupMap.get(superGroupName);
+		if ( superGroup !=null ) { // we've seen before; just use it
+			setSuperGroup(superGroup);
 			return;
 		}
-		group = loadGroup(groupName); // else load it
-		if ( group!=null ) {
-			nameToGroupMap.put(groupName, group);
-			setSuperGroup(group);
+		// else load it using this group's template lexer
+		superGroup = loadGroup(superGroupName, this.templateLexerClass, null);
+		if ( superGroup !=null ) {
+			nameToGroupMap.put(superGroupName, superGroup);
+			setSuperGroup(superGroup);
 		}
 		else {
 			if ( groupLoader==null ) {
@@ -449,7 +458,7 @@ public class StringTemplateGroup {
 				return superScopeST;
 			}
 			throw new IllegalArgumentException(getName()+
-					" has no super group; invalid template: "+name);
+											   " has no super group; invalid template: "+name);
 		}
 		checkRefreshInterval();
 		StringTemplate st = (StringTemplate)templates.get(name);
@@ -480,7 +489,7 @@ public class StringTemplateGroup {
 				String context = "";
 				if ( enclosingInstance!=null ) {
 					context = "; context is "+
-						enclosingInstance.getEnclosingInstanceStackString();
+							  enclosingInstance.getEnclosingInstanceStackString();
 				}
 				throw new IllegalArgumentException("Can't find template "+
 												   getFileNameFromTemplateName(name)+
@@ -503,7 +512,7 @@ public class StringTemplateGroup {
 			return;
 		}
 		boolean timeToFlush=refreshIntervalInSeconds==0 ||
-				(System.currentTimeMillis()-lastCheckedDisk)>=refreshIntervalInSeconds*1000;
+							(System.currentTimeMillis()-lastCheckedDisk)>=refreshIntervalInSeconds*1000;
 		if ( timeToFlush ) {
 			// throw away all pre-compiled references
 			templates.clear();
@@ -930,13 +939,21 @@ public class StringTemplateGroup {
 	}
 
 	public static StringTemplateGroup loadGroup(String name) {
-		return loadGroup(name, null);
+		return loadGroup(name, null, null);
 	}
 
 	public static StringTemplateGroup loadGroup(String name,
-												StringTemplateGroup superGroup) {
+												StringTemplateGroup superGroup)
+	{
+		return loadGroup(name, null, superGroup);
+	}
+
+	public static StringTemplateGroup loadGroup(String name,
+												Class lexer,
+												StringTemplateGroup superGroup)
+	{
 		if ( groupLoader!=null ) {
-			return groupLoader.loadGroup(name, superGroup);
+			return groupLoader.loadGroup(name, lexer, superGroup);
 		}
 		return null;
 	}
@@ -994,7 +1011,7 @@ public class StringTemplateGroup {
 	}
 
 	public void emitTemplateStopDebugString(StringTemplate st,
-										    StringTemplateWriter out)
+											StringTemplateWriter out)
 		throws IOException
 	{
 		if ( noDebugStartStopStrings==null ||

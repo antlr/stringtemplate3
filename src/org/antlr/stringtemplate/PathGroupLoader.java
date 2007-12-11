@@ -1,9 +1,11 @@
 package org.antlr.stringtemplate;
 
+import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
+
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.ArrayList;
 
 /** A brain dead loader that looks only in the directory(ies) you
  *  specify in the ctor.
@@ -38,27 +40,30 @@ public class PathGroupLoader implements StringTemplateGroupLoader {
 				dirs = new ArrayList();
 			}
 			dirs.add(dir);
-			/* don't check; dirs might get created later
-			if ( !(new File(dir).exists()) ) {
-				error("group loader: no such dir "+dir);
-			}
-			else {
-				dirs.add(dir);
-			}
-			*/
 		}
 	}
 
+	/** Load a group with a specified superGroup.  Groups with
+	 *  region definitions must know their supergroup to find templates
+	 *  during parsing.
+	 */
 	public StringTemplateGroup loadGroup(String groupName,
-										 StringTemplateGroup superGroup) {
+										 Class templateLexer,
+										 StringTemplateGroup superGroup)
+	{
 		StringTemplateGroup group = null;
+		// group file format defaults to <...>
+		Class lexer = AngleBracketTemplateLexer.class;
+		if ( templateLexer!=null ) {
+			lexer = templateLexer;
+		}
 		try {
 			BufferedReader br = locate(groupName+".stg");
 			if ( br==null ) {
 				error("no such group file "+groupName+".stg");
 				return null;
 			}
-			group = new StringTemplateGroup(br, null, errors, superGroup);
+			group = new StringTemplateGroup(br, lexer, errors, superGroup);
 		}
 		catch (IOException ioe) {
 			error("can't load group "+groupName, ioe);
@@ -66,10 +71,12 @@ public class PathGroupLoader implements StringTemplateGroupLoader {
 		return group;
 	}
 
-	/** Load a group with a specified superGroup.  Groups with
-	 *  region definitions must know their supergroup to find templates
-	 *  during parsing.
-	 */
+	public StringTemplateGroup loadGroup(String groupName,
+										 StringTemplateGroup superGroup)
+	{
+		return loadGroup(groupName, null, superGroup);
+	}
+
 	public StringTemplateGroup loadGroup(String groupName) {
 		return loadGroup(groupName, null);
 	}

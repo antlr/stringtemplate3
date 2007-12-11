@@ -269,6 +269,34 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, st.toString());
 	}
 
+	public void testGroupExtendsSuperGroupWithAngleBrackets() throws Exception {
+		// this also tests the group loader
+		StringTemplateErrorListener errors = new ErrorBuffer();
+		String tmpdir = System.getProperty("java.io.tmpdir");
+		StringTemplateGroup.registerGroupLoader(
+			new PathGroupLoader(tmpdir,errors)
+		);
+		String superGroup =
+				"group superG;" +newline+
+				"bold(item) ::= <<*<item>*>>;\n"+newline;
+		writeFile(tmpdir, "superG.stg", superGroup);
+
+		String templates =
+			"group testG : superG;" +newline+
+			"main(x) ::= \"<bold(x)>\""+newline;
+
+		writeFile(tmpdir, "testG.stg", templates);
+
+		StringTemplateGroup group =
+				new StringTemplateGroup(new FileReader(tmpdir+"/testG.stg"),
+										errors);
+		StringTemplate st = group.getInstanceOf("main");
+		st.setAttribute("x", "foo");
+
+		String expecting = "*foo*";
+		assertEquals(expecting, st.toString());
+	}
+
 	public void testMissingInterfaceTemplate() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();

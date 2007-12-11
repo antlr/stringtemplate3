@@ -18,6 +18,13 @@ public interface StringTemplateGroupLoader {
 										 StringTemplateGroup superGroup);
 
 
+	/** Specify the template lexer to use for parsing templates.  If null,
+	 *  it assumes angle brackets <...>.
+	 */
+	public StringTemplateGroup loadGroup(String groupName,
+										 Class templateLexer,
+										 StringTemplateGroup superGroup);
+
 	/** Load the interface called interfaceName from somewhere.  Return null
 	 *  if no interface is found.
 	 */
