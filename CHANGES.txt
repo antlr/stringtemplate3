@@ -2,6 +2,8 @@ Changes to ST (StringTemplate).
 
 #### Releases
 
+3.1: December ?, 2007
+
 3.0: September 6, 2006
 
 2.2: August 5, 2005
@@ -15,6 +17,11 @@ Changes to ST (StringTemplate).
 1.0.2: Oct 14, 2003
 
 #### Fixed bugs and changes
+
+12-11-2007
+
+o resolve ST-34.  Super group loading was not using template lexer
+  (<...> or $...$) according to subclass. Updated group loader interface.
 
 11-09-2007
 
