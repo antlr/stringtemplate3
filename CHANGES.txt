@@ -18,6 +18,12 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+12-12-2007
+
+o allows unicode escapes as expression literals but only if it's the whole
+  expression: <\uFEA5\n\u00C2>  Previously could only do one char and just
+  the special ones like <\n>.
+
 12-11-2007
 
 o resolve ST-34.  Super group loading was not using template lexer

@@ -2764,6 +2764,29 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
+	public void testUnicodeLiterals() throws Exception {
+		StringTemplate st = new StringTemplate(
+				"Foo <\\uFEA5\\n\\u00C2> bar" +newline,
+				AngleBracketTemplateLexer.class
+				);
+		String expecting ="Foo \ufea5"+newline+"\u00C2 bar"+newline;
+		String result = st.toString();
+		assertEquals(expecting, result);
+
+		st = new StringTemplate(
+				"Foo $\\uFEA5\\n\\u00C2$ bar" +newline);
+		expecting ="Foo \ufea5"+newline+"\u00C2 bar"+newline;
+		result = st.toString();
+		assertEquals(expecting, result);
+
+		st = new StringTemplate(
+				"Foo$\\ $bar$\\n$");
+		expecting ="Foo bar"+newline;
+		result = st.toString();
+		assertEquals(expecting, result);
+	}
+
+
 	public void testEmptyIteratedValueGetsSeparator() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");

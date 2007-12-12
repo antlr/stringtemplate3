@@ -269,10 +269,10 @@ ACTION
 {
     int startCol = getColumn();
 }
-    :	"$\\n$"! {$setText('\n'); $setType(LITERAL);}
-    |	"$\\r$"! {$setText('\r'); $setType(LITERAL);}
-    |	"$\\t$"! {$setText('\t'); $setType(LITERAL);}
-    |	"$\\ $"! {$setText(' '); $setType(LITERAL);}
+    :	// Match escapes not in a string like <\n\ufea5>
+		{StringBuffer buf = new StringBuffer(); char uc = '\u0000';}
+    	'$'! (uc=ESC_CHAR {buf.append(uc);} )+'$'!
+    	{$setText(buf.toString()); $setType(LITERAL);}
     | 	COMMENT {$setType(Token.SKIP);}
     |   (
     	options {
@@ -355,8 +355,22 @@ IF_EXPR:( ESC
     ;
 
 protected
+ESC_CHAR returns [char uc='\u0000']
+	:	"\\n"! {uc = '\n';}
+	|	"\\r"! {uc = '\r';}
+	|	"\\t"! {uc = '\t';}
+	|	"\\ "! {uc = ' ';}
+	|	"\\u"! a:HEX! b:HEX! c:HEX! d:HEX!
+		{uc = (char)Integer.parseInt(a.getText()+b.getText()+c.getText()+d.getText(), 16);}
+	;
+
+protected
 ESC :   '\\' . // ('$'|'n'|'t'|'"'|'\''|':'|'{'|'}')
     ;
+
+protected
+HEX	:	'0'..'9'|'A'..'F'|'a'..'f'
+	;
 
 protected
 SUBTEMPLATE
