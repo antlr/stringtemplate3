@@ -356,6 +356,17 @@ public class StringTemplateGroup {
 		return superGroup;
 	}
 
+	/** Walk up group hierarchy and show top down to this group */
+	public String getGroupHierarchyStackString() {
+		List groupNames = new LinkedList();
+		StringTemplateGroup p = this;
+		while ( p!=null ) {
+			groupNames.add(0,p.name);
+			p = p.superGroup;
+		}
+		return groupNames.toString().replaceAll(",","");
+	}
+
 	public String getRootDir() {
 		return rootDir;
 	}
@@ -491,6 +502,8 @@ public class StringTemplateGroup {
 					context = "; context is "+
 							  enclosingInstance.getEnclosingInstanceStackString();
 				}
+				String hier = getGroupHierarchyStackString();
+				context += "; group hierarchy is "+hier;
 				throw new IllegalArgumentException("Can't find template "+
 												   getFileNameFromTemplateName(name)+
 												   context);
