@@ -52,21 +52,34 @@ public class PathGroupLoader implements StringTemplateGroupLoader {
 										 StringTemplateGroup superGroup)
 	{
 		StringTemplateGroup group = null;
+		BufferedReader br = null;
 		// group file format defaults to <...>
 		Class lexer = AngleBracketTemplateLexer.class;
 		if ( templateLexer!=null ) {
 			lexer = templateLexer;
 		}
 		try {
-			BufferedReader br = locate(groupName+".stg");
+			br = locate(groupName+".stg");
 			if ( br==null ) {
 				error("no such group file "+groupName+".stg");
 				return null;
 			}
 			group = new StringTemplateGroup(br, lexer, errors, superGroup);
+			br.close();
+			br = null;
 		}
 		catch (IOException ioe) {
 			error("can't load group "+groupName, ioe);
+		}
+		finally {
+			if ( br!=null ) {
+				try {
+					br.close();
+				}
+				catch (IOException ioe2) {
+					error("Cannot close template group file: "+groupName+".stg", ioe2);
+				}
+			}
 		}
 		return group;
 	}

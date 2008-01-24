@@ -78,10 +78,6 @@ public class ASTExpr extends Expr {
 		}
 	};
 
-	// used temporarily for checking obj.prop cache
-	public static int totalObjPropRefs = 0;
-	public static int totalReflectionLookups = 0;
-
 	AST exprTree = null;
 
     /** store separator etc... */
@@ -404,7 +400,6 @@ public class ASTExpr extends Expr {
 		if ( o==null || propertyName==null ) {
 			return null;
 		}
-		totalObjPropRefs++;
 		/*
 		// see if property is cached in group's cache
 		Object cachedValue =
@@ -501,10 +496,8 @@ public class ASTExpr extends Expr {
 		// must look up using reflection
 		String methodSuffix = Character.toUpperCase(propertyName.charAt(0))+
 			propertyName.substring(1,propertyName.length());
-		totalReflectionLookups++;
 		m = getMethod(c,"get"+methodSuffix);
 		if ( m==null ) {
-			totalReflectionLookups++;
 			m = getMethod(c, "is"+methodSuffix);
 		}
 		if ( m != null ) {
@@ -521,7 +514,6 @@ public class ASTExpr extends Expr {
 		else {
 			// try for a visible field
 			try {
-				totalReflectionLookups++;
 				Field f = c.getField(propertyName);
 				//self.getGroup().cacheClassProperty(c,propertyName,f);
 				try {

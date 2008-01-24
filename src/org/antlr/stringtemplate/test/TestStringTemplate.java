@@ -1254,7 +1254,7 @@ public class TestStringTemplate extends TestCase {
 		catch (IllegalArgumentException iae) {
 			error = iae.getMessage();
 		}
-        String expecting = "Can't find template bold.st; context is [anonymous]" ;
+        String expecting = "Can't find template bold.st; context is [anonymous]; group hierarchy is [test]" ;
 		assertEquals(expecting,error);
     }
 
@@ -1274,7 +1274,7 @@ public class TestStringTemplate extends TestCase {
 		catch (IllegalArgumentException iae) {
 			error = iae.getMessage();
 		}
-        String expecting = "Can't find template bold.st; context is [anonymous]"; // bold not found...empty string
+        String expecting = "Can't find template bold.st; context is [anonymous]; group hierarchy is [test]"; // bold not found...empty string
 		assertEquals(expecting,error);
     }
 
@@ -4006,6 +4006,48 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("phones", "1");
 		e.setAttribute("phones", "2");
 		String expecting = "Ter";
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testFirstWithListOfMaps() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$first(maps).Ter$"
+			);
+		e = e.getInstanceOf();
+		final Map m1 = new HashMap();
+		final Map m2 = new HashMap();
+		m1.put("Ter", "x5707");
+		e.setAttribute("maps", m1);
+		m2.put("Tom", "x5332");
+		e.setAttribute("maps", m2);
+		String expecting = "x5707";
+		assertEquals(expecting, e.toString());
+
+		e = e.getInstanceOf();
+		List list = new ArrayList() {{add(m1); add(m2);}};
+		e.setAttribute("maps", list);
+		expecting = "x5707";
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testFirstWithListOfMaps2() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$first(maps):{ $it.Ter$ }$"
+			);
+		e = e.getInstanceOf();
+		final Map m1 = new HashMap();
+		final Map m2 = new HashMap();
+		m1.put("Ter", "x5707");
+		e.setAttribute("maps", m1);
+		m2.put("Tom", "x5332");
+		e.setAttribute("maps", m2);
+		String expecting = "x5707";
+		assertEquals(expecting, e.toString());
+
+		e = e.getInstanceOf();
+		List list = new ArrayList() {{add(m1); add(m2);}};
+		e.setAttribute("maps", list);
+		expecting = "x5707";
 		assertEquals(expecting, e.toString());
 	}
 
