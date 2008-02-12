@@ -18,6 +18,10 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+02-11-2008
+
+o debug tags now emit group name with tags. improves debugging ability.
+
 01-23-2008
 
 o reader was not closed in PathGroupLoader.

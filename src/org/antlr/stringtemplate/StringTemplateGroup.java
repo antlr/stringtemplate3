@@ -1019,7 +1019,16 @@ public class StringTemplateGroup {
 		if ( noDebugStartStopStrings==null ||
 			 !noDebugStartStopStrings.contains(st.getName()) )
 		{
-			out.write("<"+st.getName()+">");
+			String groupPrefix = "";
+			if ( !st.getName().startsWith("if") && !st.getName().startsWith("else") ) {
+				if ( st.getNativeGroup()!=null ) {
+					groupPrefix = st.getNativeGroup().getName()+".";
+				}
+				else {
+					groupPrefix = st.getGroup().getName()+".";
+				}
+			}
+			out.write("<"+groupPrefix +st.getName()+">");
 		}
 	}
 
@@ -1030,7 +1039,16 @@ public class StringTemplateGroup {
 		if ( noDebugStartStopStrings==null ||
 			 !noDebugStartStopStrings.contains(st.getName()) )
 		{
-			out.write("</"+st.getName()+">");
+			String groupPrefix = "";
+			if ( !st.getName().startsWith("if") && !st.getName().startsWith("else") ) {
+				if ( st.getNativeGroup()!=null ) {
+					groupPrefix = st.getNativeGroup().getName()+".";
+				}
+				else {
+					groupPrefix = st.getGroup().getName()+".";
+				}
+			}
+			out.write("</"+groupPrefix+st.getName()+">");
 		}
 	}
 

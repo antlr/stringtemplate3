@@ -45,7 +45,7 @@ import antlr.collections.ASTEnumeration;
  *
  */
 public class StringTemplate {
-	public static final String VERSION = "3.1"; // January 23, 2008
+	public static final String VERSION = "3.2a1";
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;

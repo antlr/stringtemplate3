@@ -3192,6 +3192,27 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
+	public void testTemplateArgumentEvaluatedInSurroundingContext() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"file(m,size) ::= \"<m>\""+newline+
+				"method(name) ::= <<"+newline+
+				"<stat(value={<size>.0})>" +newline+
+				">>"+newline+
+				"stat(value) ::= \"x=<value>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate f = group.getInstanceOf("file");
+		f.setAttribute("size", "34");
+		StringTemplate m = group.getInstanceOf("method");
+		m.setAttribute("name", "foo");
+		f.setAttribute("m", m);
+		String expecting = "x=34.0;";
+		String result = m.toString();
+		assertEquals(expecting, result);
+	}
+
 	public void testArgumentsAsTemplatesDefaultDelimiters() throws Exception {
 		String templates =
 				"group test;" +newline+
