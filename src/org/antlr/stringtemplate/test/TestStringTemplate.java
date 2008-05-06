@@ -5207,12 +5207,26 @@ public class TestStringTemplate extends TestCase {
 			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
 		StringTemplate t =
 			new StringTemplate(group,
-				"<aMap.values; separator=\", \">");
+				"<aMap.values; separator=\", \"> <aMap.(\"i\"+\"nt\")>");
 		HashMap map = new LinkedHashMap();
 		map.put("int","0");
 		map.put("float","0.0");
 		t.setAttribute("aMap", map);
-		assertEquals("0, 0.0", t.toString());
+		assertEquals("0, 0.0 0", t.toString());
+	}
+
+	public void testMapKeysWithIntegerType() throws Exception {
+		// must get back an Integer from keys not a toString()'d version
+		StringTemplateGroup group =
+			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
+		StringTemplate t =
+			new StringTemplate(group,
+				"<aMap.keys:{k|<k>:<aMap.(k)>}; separator=\", \">");
+		Map map = new HashMap();
+		map.put(1,new ArrayList(){{add("ick"); add("foo");}});
+		map.put(2,new ArrayList(){{add("x"); add("y");}});
+		t.setAttribute("aMap", map);
+		assertEquals("2:xy, 1:ickfoo",t.toString());
 	}
 
 	/** Use when super.attr name is implemented

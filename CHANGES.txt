@@ -18,6 +18,12 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+05-06-2008
+
+o <aMap.(k)> no longer calls toString() on k.  
+  <aMap.keys:{k|<k>:<aMap.(k)>} was not working when aMap had Integer
+  keys.  Added unit test.
+
 04-07-2008
 
 o Made unit tests not depend on map order.  commented out tests that fail.

@@ -244,13 +244,16 @@ ifAtom returns [Object value=null]
 attribute returns [Object value=null]
 {
     Object obj = null;
-    String propName = null;
+    Object propName = null;
     Object e = null;
 }
     :   #( DOT obj=expr
            ( prop:ID {propName = prop.getText();}
-           | #(VALUE e=expr)
-             {if (e!=null) {propName=e.toString();}}
+           // don't force early eval here in case it's a map
+           // we need the right type on the key.
+           // E.g., <aMap.keys:{k|<k>:<aMap.(k)>}>
+           // If aMap has Integer keys, can't convert k to string then lookup.
+           | #(VALUE e=expr) {if (e!=null) {propName=e;}}
            )
          )
         {value = chunk.getObjectProperty(self,obj,propName);}

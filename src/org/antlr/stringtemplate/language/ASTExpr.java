@@ -396,7 +396,7 @@ public class ASTExpr extends Expr {
      */
 	public Object getObjectProperty(StringTemplate self,
 									final Object o,
-									final String propertyName) {
+									final Object propertyName) {
 		if ( o==null || propertyName==null ) {
 			return null;
 		}
@@ -420,14 +420,15 @@ public class ASTExpr extends Expr {
 		return value;
 	}
 
-	protected Object rawGetObjectProperty(StringTemplate self, Object o, String propertyName) {
+	protected Object rawGetObjectProperty(StringTemplate self, Object o, Object property) {
 		Class c = o.getClass();
         Object value = null;
 
-        // Special case: our automatically created Aggregates via
+		// Special case: our automatically created Aggregates via
         // attribute name: "{obj.{prop1,prop2}}"
         if ( c==StringTemplate.Aggregate.class ) {
-            value = ((StringTemplate.Aggregate)o).get(propertyName);
+			String propertyName = (String)property;
+            value = ((StringTemplate.Aggregate)o).get((String)propertyName);
 			return value;
         }
 
@@ -437,6 +438,7 @@ public class ASTExpr extends Expr {
         else if ( c==StringTemplate.class ) {
             Map attributes = ((StringTemplate)o).getAttributes();
             if ( attributes!=null ) {
+				String propertyName = (String)property;
                 value = attributes.get(propertyName);
 				return value;
             }
@@ -446,14 +448,14 @@ public class ASTExpr extends Expr {
         // key not the property method.
         if ( o instanceof Map ) {
             Map map = (Map)o;
-			if ( propertyName.equals("keys") ) {
+			if ( property.equals("keys") ) {
 				value = map.keySet();
 			}
-			else if ( propertyName.equals("values") ) {
+			else if ( property.equals("values") ) {
 				value = map.values();
 			}
-			else if ( map.containsKey(propertyName) ) {
-				value = map.get(propertyName);
+			else if ( map.containsKey(property) ) {
+				value = map.get(property);
 			}
 			else {
 				if ( map.containsKey(DEFAULT_MAP_VALUE_NAME) ) {
@@ -461,7 +463,7 @@ public class ASTExpr extends Expr {
 				}
 			}
 			if ( value == MAP_KEY_VALUE ) {
-				value = propertyName;
+				value = property;
 			}
 			return value;
         }
@@ -494,6 +496,7 @@ public class ASTExpr extends Expr {
 		*/
 
 		// must look up using reflection
+		String propertyName = (String)property;
 		String methodSuffix = Character.toUpperCase(propertyName.charAt(0))+
 			propertyName.substring(1,propertyName.length());
 		m = getMethod(c,"get"+methodSuffix);
