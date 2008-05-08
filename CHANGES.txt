@@ -18,6 +18,12 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+05-07-2008
+
+o Had a problem with "int" : "0" in a map but ST as incoming lookup key.
+  Decided that I'd lookup as raw object first so Integer lookup works
+  but I try toString version if not found. Document this!
+
 05-06-2008
 
 o <aMap.(k)> no longer calls toString() on k.  

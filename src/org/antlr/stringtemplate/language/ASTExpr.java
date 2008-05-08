@@ -457,6 +457,10 @@ public class ASTExpr extends Expr {
 			else if ( map.containsKey(property) ) {
 				value = map.get(property);
 			}
+			else if ( map.containsKey(property.toString()) ) {
+				// if we can't find the key, toString it
+				value = map.get(property.toString());				
+			}
 			else {
 				if ( map.containsKey(DEFAULT_MAP_VALUE_NAME) ) {
 					value = map.get(DEFAULT_MAP_VALUE_NAME);

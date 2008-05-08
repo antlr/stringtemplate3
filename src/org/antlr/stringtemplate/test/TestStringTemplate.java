@@ -3437,6 +3437,26 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
+	public void testMapKeyLookupViaTemplate() throws Exception {
+		// ST doesn't do a toString on .(key) values, it just uses the value
+		// of key rather than key itself as the key.  But, if you compute a
+		// key via a template
+		String templates =
+				"group test;" +newline+
+				"typeInit ::= [\"int\":\"0<w>\", \"float\":\"0.0<w>\"] "+newline+
+				"var(type,w,name) ::= \"<type> <name> = <typeInit.(type)>;\""+newline
+				;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+		StringTemplate st = group.getInstanceOf("var");
+		st.setAttribute("w", "L");
+		st.setAttribute("type", new StringTemplate("int"));
+		st.setAttribute("name", "x");
+		String expecting = "int x = 0L;";
+		String result = st.toString();
+		assertEquals(expecting, result);
+	}
+
 	public void testMapMissingDefaultValueIsEmpty() throws Exception {
 		String templates =
 				"group test;" +newline+
