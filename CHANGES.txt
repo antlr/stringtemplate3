@@ -18,7 +18,11 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
-06-08-2008
+06-03-2008
+
+o Fixed ST-39; an obscure memory leak issue with embeddedInstances
+
+06-02-2008
 
 o rest and strip returned iterators.  Made them return show list copies
   so recursion works. iterators have side-effects.  Added 2 unit tests.

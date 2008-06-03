@@ -45,7 +45,7 @@ import antlr.collections.ASTEnumeration;
  *
  */
 public class StringTemplate {
-	public static final String VERSION = "3.2-20080602";
+	public static final String VERSION = "3.2-20080603";
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;
@@ -146,9 +146,6 @@ public class StringTemplate {
 	 *  IF-subtemplates are considered embedded as well.
 	 */
 	protected StringTemplate enclosingInstance = null;
-
-	/** A list of embedded templates */
-	protected List embeddedInstances = null;
 
 	/** If this template is an embedded template such as when you apply
 	 *  a template to an attribute, then the arguments passed to this
@@ -378,17 +375,6 @@ public class StringTemplate {
 		}
 		// set the parent for this template
 		this.enclosingInstance = enclosingInstance;
-		// make the parent track this template as an embedded template
-		if ( enclosingInstance!=null ) {
-			this.enclosingInstance.addEmbeddedInstance(this);
-		}
-	}
-
-	public void addEmbeddedInstance(StringTemplate embeddedInstance) {
-		if ( this.embeddedInstances==null ) {
-			this.embeddedInstances = new LinkedList();
-		}
-		this.embeddedInstances.add(embeddedInstance);
 	}
 
 	public Map getArgumentContext() {
