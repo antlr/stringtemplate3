@@ -25,6 +25,8 @@ o rest and strip returned iterators.  Made them return show list copies
 
 o implemented trunc. returns all but last element.
 
+o Fix ST-33; [a,b] cat function used iterators; side-effect problem.
+
 05-07-2008
 
 o Had a problem with "int" : "0" in a map but ST as incoming lookup key.

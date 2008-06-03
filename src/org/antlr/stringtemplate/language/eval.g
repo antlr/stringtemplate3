@@ -98,13 +98,11 @@ list returns [Object value=null]
 {
 Object e = null;
 List elements = new ArrayList();
-value = new CatIterator(elements);
 }
 	:	#(	LIST
 			(	e=expr
 			  	{
 			  	if ( e!=null ) {
-					e = ASTExpr.convertAnythingToIterator(e);
 			  		elements.add(e);
 			  	}
 			  	}
@@ -115,6 +113,7 @@ value = new CatIterator(elements);
                 }
 			)+
 		 )
+         {value = new Cat(elements);}
 	;
 
 templateInclude returns [Object value=null]

@@ -881,7 +881,7 @@ public class ASTExpr extends Expr {
 		return value;
 	}
 
-	private static Object convertAnythingIteratableToIterator(Object o) {
+	protected static Object convertAnythingIteratableToIterator(Object o) {
 		Iterator iter = null;
 		if ( o instanceof Collection ) {
 			iter = ((Collection)o).iterator();
@@ -898,7 +898,7 @@ public class ASTExpr extends Expr {
 		return iter;
 	}
 
-	static Iterator convertAnythingToIterator(Object o) {
+	protected static Iterator convertAnythingToIterator(Object o) {
 		Iterator iter = null;
 		if ( o instanceof Collection ) {
 			iter = ((Collection)o).iterator();
