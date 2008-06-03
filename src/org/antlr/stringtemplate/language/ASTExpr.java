@@ -946,15 +946,17 @@ public class ASTExpr extends Expr {
 		Object theRest = attribute;
 		attribute = convertAnythingIteratableToIterator(attribute);
 		if ( attribute instanceof Iterator ) {
+			List a = new ArrayList();
 			Iterator it = (Iterator)attribute;
+			it.next(); // ignore first value
 			if ( !it.hasNext() ) {
 				return null; // if not even one value return null
 			}
-			it.next(); // ignore first value
-			if ( !it.hasNext() ) {
-				return null; // if not more than one value, return null
+			while (it.hasNext()) {
+				Object o = (Object) it.next();
+				if ( o!=null ) a.add(o);
 			}
-			theRest = it;    // return suitably altered iterator
+			return a;
 		}
 		else {
 			theRest = null;  // rest of single-valued attribute is null
@@ -984,21 +986,40 @@ public class ASTExpr extends Expr {
 		return last;
 	}
 
-	/** Return an iterator that skips all null values. */
+	/** Return a new list w/o null values. */
 	public Object strip(Object attribute) {
 		if ( attribute==null ) {
 			return null;
 		}
 		attribute = convertAnythingIteratableToIterator(attribute);
 		if ( attribute instanceof Iterator ) {
-			return new StripIterator((Iterator)attribute);
+			List a = new ArrayList();
+			Iterator it = (Iterator)attribute;
+			while (it.hasNext()) {
+				Object o = (Object) it.next();
+				if ( o!=null ) a.add(o);
+			}
+			return a;
 		}
 		return attribute; // strip(x)==x when x single-valued attribute
 	}
 
 	/** Return all but the last element.  trunc(x)=null if x is single-valued. */
 	public Object trunc(Object attribute) {
-		return null; // not impl.
+		if ( attribute==null ) {
+			return null;
+		}
+		attribute = convertAnythingIteratableToIterator(attribute);
+		if ( attribute instanceof Iterator ) {
+			List a = new ArrayList();
+			Iterator it = (Iterator)attribute;
+			while (it.hasNext()) {
+				Object o = (Object) it.next();
+				if ( it.hasNext() ) a.add(o); // only add if not last one
+			}
+			return a;
+		}
+		return null; // trunc(x)==null when x single-valued attribute
 	}
 
 	/** Return the length of a multiple valued attribute or 1 if it is a

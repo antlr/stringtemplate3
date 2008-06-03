@@ -3707,6 +3707,18 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
+	public void testTruncOp() throws Exception {
+		StringTemplate e = new StringTemplate(
+				"$trunc(names); separator=\", \"$"
+			);
+		e = e.getInstanceOf();
+		e.setAttribute("names", "Ter");
+		e.setAttribute("names", "Tom");
+		e.setAttribute("names", "Sriram");
+		String expecting = "Ter, Tom";
+		assertEquals(expecting, e.toString());
+	}
+
 	public void testRestOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$rest(names); separator=\", \"$"
@@ -3716,6 +3728,23 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("names", "Tom");
 		e.setAttribute("names", "Sriram");
 		String expecting = "Tom, Sriram";
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testReUseOfRestResult() throws Exception {
+		String templates =
+			"group test;" +newline+
+			"a(names) ::= \"<b(rest(names))>\""+newline+
+			"b(x) ::= \"<x>, <x>\""+newline
+			;
+		StringTemplateGroup group =
+			new StringTemplateGroup(new StringReader(templates));
+		StringTemplate e = group.getInstanceOf("a");
+		List names = new ArrayList();
+		names.add("Ter");
+		names.add("Tom");
+		e.setAttribute("names", names);
+		String expecting = "Tom, Tom";
 		assertEquals(expecting, e.toString());
 	}
 
@@ -3757,6 +3786,26 @@ public class TestStringTemplate extends TestCase {
 		e.setAttribute("mine", "3");
 		e.setAttribute("yours", "a");
 		String expecting = "1, 2, 3, a";
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testReUseOfCat() throws Exception {
+		String templates =
+			"group test;" +newline+
+			"a(mine,yours) ::= \"<b([mine,yours])>\""+newline+
+			"b(x) ::= \"<x>, <x>\""+newline
+			;
+		StringTemplateGroup group =
+			new StringTemplateGroup(new StringReader(templates));
+		StringTemplate e = group.getInstanceOf("a");
+		List mine = new ArrayList();
+		mine.add("Ter");
+		mine.add("Tom");
+		e.setAttribute("mine", mine);
+		List yours = new ArrayList();
+		yours.add("Foo");
+		e.setAttribute("yours", yours);
+		String expecting = "TerTomFoo, TerTomFoo";
 		assertEquals(expecting, e.toString());
 	}
 
@@ -5169,6 +5218,24 @@ public class TestStringTemplate extends TestCase {
 			);
 		e = e.getInstanceOf();
 		String expecting = ""; // nulls are skipped
+		assertEquals(expecting, e.toString());
+	}
+
+	public void testReUseOfStripResult() throws Exception {
+		String templates =
+			"group test;" +newline+
+			"a(names) ::= \"<b(strip(names))>\""+newline+
+			"b(x) ::= \"<x>, <x>\""+newline
+			;
+		StringTemplateGroup group =
+			new StringTemplateGroup(new StringReader(templates));
+		StringTemplate e = group.getInstanceOf("a");
+		List names = new ArrayList();
+		names.add("Ter");
+		names.add(null);
+		names.add("Tom");
+		e.setAttribute("names", names);
+		String expecting = "TerTom, TerTom";
 		assertEquals(expecting, e.toString());
 	}
 

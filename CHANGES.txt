@@ -18,6 +18,13 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+06-08-2008
+
+o rest and strip returned iterators.  Made them return show list copies
+  so recursion works. iterators have side-effects.  Added 2 unit tests.
+
+o implemented trunc. returns all but last element.
+
 05-07-2008
 
 o Had a problem with "int" : "0" in a map but ST as incoming lookup key.
