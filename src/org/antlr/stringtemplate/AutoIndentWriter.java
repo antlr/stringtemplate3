@@ -45,11 +45,12 @@ import java.util.List;
  *
  *  This is a filter on a Writer.
  *
- *  It may be screwed up for '\r' '\n' on PC's.
+ *  \n is the proper way to say newline for options and templates.
+ *  Templates can mix them but use \n for sure and options like
+ *  wrap="\n". ST will generate the right thing. Override the default (locale)
+ *  newline by passing in a string to the constructor.
  */
 public class AutoIndentWriter implements StringTemplateWriter {
-	public static final String newline = System.getProperty("line.separator");
-
 	/** stack of indents; use List as it's much faster than Stack. Grows
 	 *  from 0..n-1.  List<String>
 	 */
@@ -60,6 +61,9 @@ public class AutoIndentWriter implements StringTemplateWriter {
 	 */
 	protected int[] anchors = new int[10];
 	protected int anchors_sp = -1;
+
+	/** \n or \r\n? */
+	protected String newline;
 
 	protected Writer out = null;
     protected boolean atStartOfLine = true;
@@ -74,10 +78,15 @@ public class AutoIndentWriter implements StringTemplateWriter {
 
 	protected int charPositionOfStartOfExpr = 0;
 
-	public AutoIndentWriter(Writer out) {
+	public AutoIndentWriter(Writer out, String newline) {
 		this.out = out;
-		indents.add(null); // start with no indent
-    }
+		indents.add(null); // s oftart with no indent
+		this.newline = newline;
+	}
+
+	public AutoIndentWriter(Writer out) {
+		this(out, System.getProperty("line.separator"));
+	}
 
 	public void setLineWidth(int lineWidth) {
 		this.lineWidth = lineWidth;
@@ -124,15 +133,24 @@ public class AutoIndentWriter implements StringTemplateWriter {
 		int n = 0;
 		for (int i=0; i<str.length(); i++) {
 			char c = str.charAt(i);
-			if ( c=='\n' ) {
+			// found \n or \r\n newline?
+			if ( c=='\r' || c=='\n' ) {
 				atStartOfLine = true;
 				charPosition = -1; // set so the write below sets to 0
-			}
-			else {
-				if ( atStartOfLine ) {
-					n+=indent();
-					atStartOfLine = false;
+				n += newline.length();
+				out.write(newline);
+				charPosition += n; // wrote n more char 
+				// skip an extra char upon \r\n
+				if ( (c=='\r' && (i+1)<str.length() && str.charAt(i+1)=='\n') ) {
+					i++; // loop iteration i++ takes care of skipping 2nd char
 				}
+				continue;
+			}
+			// normal character
+			// check to see if we are at the start of a line; need indent if so
+			if ( atStartOfLine ) {
+				n+=indent();
+				atStartOfLine = false;
 			}
 			n++;
 			out.write(c);
@@ -166,7 +184,7 @@ public class AutoIndentWriter implements StringTemplateWriter {
 			// ok to wrap
 			// Walk wrap string and look for A\nB.  Spit out A\n
 			// then spit indent or anchor, whichever is larger
-			// then spit out B
+			// then spit out B.
 			for (int i=0; i<wrap.length(); i++) {
 				char c = wrap.charAt(i);
 				if ( c=='\n' ) {

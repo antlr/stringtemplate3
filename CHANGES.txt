@@ -18,6 +18,14 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+06-04-2008
+
+o Added \r\n normalization in AutoIndentWriter. Converts \r\n or \n
+  to whatever the writer's newline instance var is.  wrap="\n" will
+  give the proper newline by locale as will \n and \r\n in the
+  templates or even incoming data attributes (toString()'d of course).
+  Added unit tests. It even works with special literals <\r\n> and <\n>.
+
 06-03-2008
 
 o Fixed ST-39; an obscure memory leak issue with embeddedInstances

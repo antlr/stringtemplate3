@@ -2744,23 +2744,69 @@ public class TestStringTemplate extends TestCase {
 
 	public void testCharLiterals() throws Exception {
 		StringTemplate st = new StringTemplate(
-				"Foo <\\n><\\t> bar" +newline,
+				"Foo <\\r\\n><\\n><\\t> bar" +newline,
 				AngleBracketTemplateLexer.class
 				);
-		String expecting ="Foo "+newline+"\t bar"+newline;
-		String result = st.toString();
+		StringWriter sw = new StringWriter();
+		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+		String result = sw.toString();
+		String expecting ="Foo \n\n\t bar"+newline;     // expect \n in output
 		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo $\\n$$\\t$ bar" +newline);
-		expecting ="Foo "+newline+"\t bar"+newline;
-		result = st.toString();
+		sw = new StringWriter();
+		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+		expecting ="Foo \n\t bar"+newline;     // expect \n in output
+		result = sw.toString();
 		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo$\\ $bar$\\n$");
-		expecting ="Foo bar"+newline;
-		result = st.toString();
+		sw = new StringWriter();
+		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+		result = sw.toString();
+		expecting ="Foo bar\n"; // force \n
+		assertEquals(expecting, result);
+	}
+
+	public void testNewlineNormalizationInTemplateString() throws Exception {
+		StringTemplate st = new StringTemplate(
+				"Foo\r\n"+
+				"Bar\n",
+				AngleBracketTemplateLexer.class
+				);
+		StringWriter sw = new StringWriter();
+		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+		String result = st.toString();
+		String expecting ="Foo\nBar\n";     // expect \n in output
+		assertEquals(expecting, result);
+	}
+
+	public void testNewlineNormalizationInTemplateStringPC() throws Exception {
+		StringTemplate st = new StringTemplate(
+				"Foo\r\n"+
+				"Bar\n",
+				AngleBracketTemplateLexer.class
+				);
+		StringWriter sw = new StringWriter();
+		st.write(new AutoIndentWriter(sw,"\r\n")); // force \r\n as newline
+		String result = st.toString();
+		String expecting ="Foo\r\nBar\r\n";     // expect \r\n in output
+		assertEquals(expecting, result);
+	}
+
+	public void testNewlineNormalizationInAttribute() throws Exception {
+		StringTemplate st = new StringTemplate(
+				"Foo\r\n"+
+				"<name>\n",
+				AngleBracketTemplateLexer.class
+				);
+		st.setAttribute("name", "a\nb\r\nc");
+		StringWriter sw = new StringWriter();
+		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+		String result = st.toString();
+		String expecting ="Foo\na\nb\nc\n";     // expect \n in output
 		assertEquals(expecting, result);
 	}
 
@@ -4608,6 +4654,32 @@ public class TestStringTemplate extends TestCase {
 			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
 			"32,5,6,77,888,1,6,32,5 };";
 		assertEquals(expecting,a.toString(40));
+	}
+
+	public void testLineWrapWithNormalizedNewlines() throws Exception {
+		String templates =
+				"group test;" +newline+
+				"array(values) ::= <<int[] a = { <values; wrap=\"\\r\\n\", separator=\",\"> };>>"+newline;
+		StringTemplateGroup group =
+				new StringTemplateGroup(new StringReader(templates));
+
+		StringTemplate a = group.getInstanceOf("array");
+		a.setAttribute("values",
+					   new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
+						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
+					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
+		String expecting =
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" + // wrap is \r\n, normalize to \n
+			"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1,\n" +
+			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
+			"32,5,6,77,888,1,6,32,5 };";
+
+		StringWriter sw = new StringWriter();
+		StringTemplateWriter stw = new AutoIndentWriter(sw,"\n"); // force \n as newline
+		stw.setLineWidth(40);
+		a.write(stw); 
+		String result = sw.toString();
+		assertEquals(expecting, result);
 	}
 
 	public void testLineWrapAnchored() throws Exception {
