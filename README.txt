@@ -1,5 +1,5 @@
-StringTemplate 3.1
-January 23, 2008
+StringTemplate 3.2
+June 11, 2008
 
 Terence Parr, parrt at cs usfca edu
 ANTLR project lead and supreme dictator for life
@@ -13,11 +13,11 @@ The main website is:
 
 The documentation is in the wiki: 
 
-	http://www.antlr.org/wiki/display/ST/StringTemplate+3.1+Documentation
+	http://www.antlr.org/wiki/display/ST/StringTemplate+Documentation
 
-Here are the 3.1 release notes:
+Here are the 3.2 release notes:
 
-	http://www.antlr.org/wiki/display/ST/StringTemplate+3.1+Release+Notes
+	http://www.antlr.org/wiki/display/ST/3.2+Release+Notes
 
 Per the license in LICENSE.txt, this software is not guaranteed to
 work and might even destroy all life on this planet.
