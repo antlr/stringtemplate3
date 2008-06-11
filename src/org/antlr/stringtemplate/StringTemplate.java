@@ -467,7 +467,7 @@ public class StringTemplate {
 	}
 
 	public void removeAttribute(String name) {
-		attributes.remove(name);
+		if ( attributes!=null ) attributes.remove(name);
 	}
 
 	/** Set an attribute for this template.  If you set the same
