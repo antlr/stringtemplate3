@@ -1900,7 +1900,21 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testElseIfClause2() throws Exception {
+    public void testElseIfClauseAngleBrackets() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "<if(x)>"+newline +
+                "foo"+newline +
+                "<elseif(y)>"+newline +
+                "bar"+newline +
+                "<endif>",
+                AngleBracketTemplateLexer.class
+            );
+        e.setAttribute("y", "yep");
+        String expecting = "bar";
+        assertEquals(expecting, e.toString());
+    }
+
+    public void testElseIfClause2() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$if(x)$"+newline +
 				"foo"+newline +
@@ -1909,7 +1923,7 @@ public class TestStringTemplate extends TestCase {
 				"$elseif(z)$"+newline +
 				"blort"+newline +
 				"$endif$"
-			);
+            );
 		e.setAttribute("z", "yep");
 		String expecting = "blort";
 		assertEquals(expecting, e.toString());
