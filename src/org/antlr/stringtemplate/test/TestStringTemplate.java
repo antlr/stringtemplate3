@@ -5382,8 +5382,8 @@ public class TestStringTemplate extends TestCase {
 			new StringTemplate(group,
 				"<aMap.keys:{k|<k>:<aMap.(k)>}; separator=\", \">");
 		Map map = new HashMap();
-		map.put(1,new ArrayList(){{add("ick"); add("foo");}});
-		map.put(2,new ArrayList(){{add("x"); add("y");}});
+		map.put(new Integer(1),new ArrayList(){{add("ick"); add("foo");}});
+		map.put(new Integer(2),new ArrayList(){{add("x"); add("y");}});
 		t.setAttribute("aMap", map);
 		assertEquals("2:xy, 1:ickfoo",t.toString());
 	}
