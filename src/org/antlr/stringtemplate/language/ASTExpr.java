@@ -948,10 +948,10 @@ public class ASTExpr extends Expr {
 		if ( attribute instanceof Iterator ) {
 			List a = new ArrayList();
 			Iterator it = (Iterator)attribute;
-			it.next(); // ignore first value
-			if ( !it.hasNext() ) {
-				return null; // if not even one value return null
-			}
+            if ( !it.hasNext() ) {
+                return null; // if not even one value return null
+            }
+            it.next(); // ignore first value
 			while (it.hasNext()) {
 				Object o = (Object) it.next();
 				if ( o!=null ) a.add(o);

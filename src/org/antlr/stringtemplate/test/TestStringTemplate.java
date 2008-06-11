@@ -3726,17 +3726,27 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testRestOp() throws Exception {
-		StringTemplate e = new StringTemplate(
-				"$rest(names); separator=\", \"$"
-			);
-		e = e.getInstanceOf();
-		e.setAttribute("names", "Ter");
-		e.setAttribute("names", "Tom");
-		e.setAttribute("names", "Sriram");
-		String expecting = "Tom, Sriram";
-		assertEquals(expecting, e.toString());
-	}
+    public void testRestOp() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "$rest(names); separator=\", \"$"
+            );
+        e = e.getInstanceOf();
+        e.setAttribute("names", "Ter");
+        e.setAttribute("names", "Tom");
+        e.setAttribute("names", "Sriram");
+        String expecting = "Tom, Sriram";
+        assertEquals(expecting, e.toString());
+    }
+
+    public void testRestOpEmptyList() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "$rest(names); separator=\", \"$"
+            );
+        e = e.getInstanceOf();
+        e.setAttribute("names", new ArrayList());
+        String expecting = "";
+        assertEquals(expecting, e.toString());
+    }
 
 	public void testReUseOfRestResult() throws Exception {
 		String templates =
