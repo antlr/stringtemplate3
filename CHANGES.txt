@@ -20,6 +20,36 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+08-11-2008
+
+o Made template output sensitive to the anchor of any enclosing template
+  instances. ST used to ignore anchor unless you had a wrap and now it
+  looks at anchor like an indent; uses widest.  ST used to give this:
+
+	{ a, 
+	{ 1,
+	2,
+	3 }
+	, b }
+
+  for these templates where the first was stuck into second
+	<\n>{ <stuff; anchor, separator=",\n"> }<\n>
+        { <values; anchor, separator=", "> }
+
+  but now gives:
+
+	{ a, 
+	  { 1,
+	    2,
+	    3 }
+	  , b };
+
+  see testSubtemplatesAnchorToo()
+
+o To deal with combined anchors and indentation, force indents to
+  include any current anchor point. Prevents a check later in write
+  to deal with anchors when starting new line.  See pushIndentation()
+
 06-11-2008 -- 3.2 release
 
 o Fixed ST-36; allow <elseif>

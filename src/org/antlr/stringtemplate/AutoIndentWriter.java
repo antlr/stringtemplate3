@@ -94,9 +94,25 @@ public class AutoIndentWriter implements StringTemplateWriter {
 
 	/** Push even blank (null) indents as they are like scopes; must
      *  be able to pop them back off stack.
+     *
+     *  To deal with combined anchors and indentation, force indents to
+     *  include any current anchor point.  If current anchor is beyond
+     *  current indent width, add the difference to the indent to be added.
+     *
+     *  This prevents a check later to deal with anchors when starting new line.
      */
     public void pushIndentation(String indent) {
-		indents.add(indent);
+        int lastAnchor = 0;
+        int indentWidth = getIndentationWidth();
+        // If current anchor is beyond current indent width, add in difference
+        if ( anchors_sp>=0 && anchors[anchors_sp]>indentWidth ) {
+            lastAnchor = anchors[anchors_sp];
+            StringBuffer buf = getIndentString(lastAnchor-indentWidth);
+            if ( indent!=null ) buf.append(indent); // don't add if null
+            indents.add(buf.toString());
+            return;
+        }
+        indents.add(indent);        
     }
 
     public String popIndentation() {
@@ -149,8 +165,8 @@ public class AutoIndentWriter implements StringTemplateWriter {
 			// normal character
 			// check to see if we are at the start of a line; need indent if so
 			if ( atStartOfLine ) {
-				n+=indent();
-				atStartOfLine = false;
+                n+=indent();
+                atStartOfLine = false;
 			}
 			n++;
 			out.write(c);
@@ -159,7 +175,7 @@ public class AutoIndentWriter implements StringTemplateWriter {
 		return n;
 	}
 
-	public int writeSeparator(String str) throws IOException {
+    public int writeSeparator(String str) throws IOException {
 		return write(str);
 	}
 
@@ -190,21 +206,8 @@ public class AutoIndentWriter implements StringTemplateWriter {
 				if ( c=='\n' ) {
 					n++;
 					out.write(c);
-					//atStartOfLine = true;
 					charPosition = 0;
-					int indentWidth = getIndentationWidth();
-					int lastAnchor = 0;
-					if ( anchors_sp>=0 ) {
-						lastAnchor = anchors[anchors_sp];
-					}
-					if ( lastAnchor > indentWidth ) {
-						// use anchor not indentation
-						n+=indent(lastAnchor);
-					}
-					else {
-						// indent is farther over than last anchor, ignore anchor
-						n+=indent();
-					}
+                    n+=indent();
 					// continue writing any chars out
 				}
 				else {  // write A or B part
@@ -238,4 +241,11 @@ public class AutoIndentWriter implements StringTemplateWriter {
 		return spaces;
 	}
 
+    protected StringBuffer getIndentString(int spaces) {
+        StringBuffer buf = new StringBuffer();
+        for (int i=1; i<=spaces; i++) {
+            buf.append(' ');
+        }
+        return buf;
+    }
 }

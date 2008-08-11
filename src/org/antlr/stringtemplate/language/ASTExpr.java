@@ -133,12 +133,12 @@ public class ASTExpr extends Expr {
         if ( exprTree==null || self==null || out==null ) {
             return 0;
         }
-		out.pushIndentation(getIndentation());
 		// handle options, anchor, wrap, separator...
 		StringTemplateAST anchorAST = (StringTemplateAST)getOption("anchor");
 		if ( anchorAST!=null ) { // any non-empty expr means true; check presence
 			out.pushAnchorPoint();
 		}
+        out.pushIndentation(getIndentation());
 		handleExprOptions(self);
 		//System.out.println("evaluating tree: "+exprTree.toStringList());
         ActionEvaluator eval =

@@ -4674,6 +4674,30 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, a.toString(40));
 	}
 
+    public void testSubtemplatesAnchorToo() throws Exception {
+        String templates =
+                "group test;" +newline+
+                "array(values) ::= <<{ <values; anchor, separator=\", \"> }>>"+newline;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+
+        final StringTemplate x = new StringTemplate(group, "<\\n>{ <stuff; anchor, separator=\",\\n\"> }<\\n>");
+        x.setAttribute("stuff", "1");
+        x.setAttribute("stuff", "2");
+        x.setAttribute("stuff", "3");
+        StringTemplate a = group.getInstanceOf("array");
+        a.setAttribute("values", new ArrayList() {{
+            add("a"); add(x); add("b");
+        }});
+        String expecting =
+            "{ a, \n" +
+            "  { 1,\n" +
+            "    2,\n" +
+            "    3 }\n" +
+            "  , b }";
+        assertEquals(expecting, a.toString(40));
+    }
+
 	public void testFortranLineWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
