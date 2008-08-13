@@ -20,6 +20,14 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+08-13-2008
+
+o IF conditionals and list elements couldn't use template
+  application.  Can do $if(names:{$it$})$Fail!$endif$ and
+  $[names:{$it$!},phones]$ and $[names, ["foo","bar"]:{$it$!},phones]$
+  Can't use IF inside of a [...] because those are expressions not
+  statements.
+
 08-11-2008
 
 o Made template output sensitive to the anchor of any enclosing template

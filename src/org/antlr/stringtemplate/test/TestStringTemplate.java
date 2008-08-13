@@ -1663,6 +1663,16 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
+    public void testIFConditionWithTemplateApplication() throws Exception {
+        StringTemplateGroup group =
+            new StringTemplateGroup("dummy", ".");
+        StringTemplate t =
+            new StringTemplate(group,
+                      "$if(names:{$it$})$Fail!$endif$ $if(!names:{$it$})$Works!$endif$");
+        t.setAttribute("b", new Boolean(true));
+        assertEquals(t.toString(), " Works!");
+    }
+
     public class Connector {
         public int getID() { return 1; }
         public String getFirstName() { return "Terence"; }
@@ -4215,7 +4225,57 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testListAsTemplateArgument() throws Exception {
+    public void testCatWithTemplateApplicationAsElement() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "$[names:{$it$!},phones]; separator=\", \"$"
+            );
+        e = e.getInstanceOf();
+        e.setAttribute("names", "Ter");
+        e.setAttribute("names", "Tom");
+        e.setAttribute("phones" , "1");
+        e.setAttribute("phones", "2");
+        String expecting = "Ter!, Tom!, 1, 2";
+        assertEquals(expecting, e.toString());
+    }
+
+    public void testCatWithIFAsElement() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "$[{$if(names)$doh$endif$},phones]; separator=\", \"$"
+            );
+        e = e.getInstanceOf();
+        e.setAttribute("names", "Ter");
+        e.setAttribute("names", "Tom");
+        e.setAttribute("phones" , "1");
+        e.setAttribute("phones", "2");
+        String expecting = "doh, 1, 2";
+        assertEquals(expecting, e.toString());
+    }
+
+    public void testCatWithNullTemplateApplicationAsElement() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "$[names:{$it$!},\"foo\"]:{x}; separator=\", \"$"
+            );
+        e = e.getInstanceOf();
+        e.setAttribute("phones", "1");
+        e.setAttribute("phones", "2");
+        String expecting = "x";  // only one since template application gives nothing
+        assertEquals(expecting, e.toString());
+    }
+
+    public void testCatWithNestedTemplateApplicationAsElement() throws Exception {
+        StringTemplate e = new StringTemplate(
+                "$[names, [\"foo\",\"bar\"]:{$it$!},phones]; separator=\", \"$"
+            );
+        e = e.getInstanceOf();
+        e.setAttribute("names", "Ter");
+        e.setAttribute("names", "Tom");
+        e.setAttribute("phones", "1");
+        e.setAttribute("phones", "2");
+        String expecting = "Ter, Tom, foo!, bar!, 1, 2";
+        assertEquals(expecting, e.toString());
+    }
+
+    public void testListAsTemplateArgument() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(names,phones) ::= \"<foo([names,phones])>\""+newline+
@@ -5466,7 +5526,19 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public static void writeFile(String dir, String fileName, String content) {
+    public void testTemplateApplicationAsOptionValue() throws Exception {
+        StringTemplate st =new StringTemplate(
+                "Tokens : <rules; separator=names:{<it>}> ;",
+                AngleBracketTemplateLexer.class);
+        st.setAttribute("rules", "A");
+        st.setAttribute("rules", "B");
+        st.setAttribute("names", "Ter");
+        st.setAttribute("names", "Tom");
+        String expecting = "Tokens : ATerTomB ;";
+        assertEquals(expecting, st.toString());
+    }
+
+    public static void writeFile(String dir, String fileName, String content) {
 		try {
 			File f = new File(dir, fileName);
 			FileWriter w = new FileWriter(f);

@@ -87,7 +87,7 @@ option[Map opts]
 Object v=null;
 }
 	:	i:ID
-		( ASSIGN e:expr {v=#e;}
+		( ASSIGN e:nonAlternatingTemplateExpr {v=#e;}
 		| {v=ASTExpr.EMPTY_OPTION;}
 		)
 		{opts.put(#i.getText(),v);}
@@ -112,7 +112,7 @@ ifCondition
 	;
 
 ifAtom
-    :   expr
+    :   templatesExpr
     ;
 
 expr:   primaryExpr (PLUS^ primaryExpr)*
@@ -194,7 +194,7 @@ list:	lb:LBRACK^ {#lb.setType(LIST); #lb.setText("value");}
     ;
 
 listElement
-    :   expr
+    :   nonAlternatingTemplateExpr
     |   {#listElement = #[NOTHING, "NOTHING"];}
     ;
 
