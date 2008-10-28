@@ -5440,7 +5440,15 @@ public class TestStringTemplate extends TestCase {
 		map.put(new Integer(1),new ArrayList(){{add("ick"); add("foo");}});
 		map.put(new Integer(2),new ArrayList(){{add("x"); add("y");}});
 		t.setAttribute("aMap", map);
-		assertEquals("2:xy, 1:ickfoo",t.toString());
+        
+        String res = t.toString();
+        boolean passed = false;
+        if  (res.equals("2:xy, 1:ickfoo") || res.equals("1:ickfoo, 2:xy")) {
+            passed = true;
+        }
+        
+		assertTrue("Map traversal did not return expected strings", passed);
+
 	}
 
 	/** Use when super.attr name is implemented
