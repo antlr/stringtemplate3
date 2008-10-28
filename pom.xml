@@ -122,8 +122,29 @@ There are currently about 600 StringTemplate source downloads a month.
             </extension>
         </extensions>
         <defaultGoal>install</defaultGoal>
+        
+        <!--
+            The root of the source code for StringTemplate
+        -->
         <sourceDirectory>src</sourceDirectory>
-        <testSourceDirectory>src</testSourceDirectory>
+        
+        <!--
+            The root of the test source code for StringTemplate.
+        -->
+        <testSourceDirectory>test</testSourceDirectory>
+        
+        <!--
+            All the resources that should be on the classpath, when 
+            the junit tests are run. Here we need to include the test
+            source code directory as the .st files loaded dynamically
+            by the tests, are located underneath this tree.
+        -->
+        <testResources>
+            <testResource>
+                <directory>test</directory>
+            </testResource>
+        </testResources>
+        
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -146,10 +167,6 @@ There are currently about 600 StringTemplate source downloads a month.
                     <source>1.4</source>
                     <target>1.4</target>
                     <sourceDirectory>src</sourceDirectory>
-                    <excludes>
-                        <exclude>**/test/*.java</exclude>
-                        <exclude>**/test/*.st</exclude>
-                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -158,12 +175,6 @@ There are currently about 600 StringTemplate source downloads a month.
                     <additionalClasspathElements>
                         <additionalClasspathElement>${basedir}/src</additionalClasspathElement>
                     </additionalClasspathElements>
-                    
-                    <includes>
-                        <include>**/test/*.java</include>
-                        <include>**/test/*.st</include>
-                    </includes>
-                    <workingDirectory>src</workingDirectory>
                 </configuration>
             </plugin>
         </plugins>
