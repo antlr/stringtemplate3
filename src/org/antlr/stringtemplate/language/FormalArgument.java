@@ -46,7 +46,7 @@ public class FormalArgument {
      *  must be distinguished from the case where a template can specify
      *  args and there just aren't any such as the t() template above.
      */
-    public static LinkedHashMap UNKNOWN = new LinkedHashMap();
+    public static final LinkedHashMap UNKNOWN = new LinkedHashMap();
 
     public String name;
     //protected int cardinality = REQUIRED;
