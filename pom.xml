@@ -113,7 +113,11 @@ There are currently about 600 StringTemplate source downloads a month.
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
     <build>
+
+        <defaultGoal>install</defaultGoal>
+
         <extensions>
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
@@ -121,7 +125,7 @@ There are currently about 600 StringTemplate source downloads a month.
                 <version>1.0-beta-2</version>
             </extension>
         </extensions>
-        <defaultGoal>install</defaultGoal>
+      
         
         <!--
             The root of the source code for StringTemplate
