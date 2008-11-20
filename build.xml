@@ -62,6 +62,10 @@
 
     <property name="build.dist" value="${build.dir}${file.separator}${name}-${version}"/>
 
+    <property name="build.packages"
+    value="org.antlr.stringtemplate,org.antlr.stringtemplate.language,org.antlr.stringtemplate.misc,org.antlr.stringtemplate.test"/>
+    <property name="javadocs.additionalparam" value="" />
+
     <property name="dist.basedir" value="${build.dir}"/>
     <property name="dist.includes" value="${name}${file.separator}**"/>
     <property name="dist.excludes"
