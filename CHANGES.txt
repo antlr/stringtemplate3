@@ -27,9 +27,9 @@ o IF with false condition results in missing not empty value. So,
   doesn't emit a separator for non-cool names. See
   http://www.antlr.org/pipermail/stringtemplate-interest/2009-July/002020.html
 
-  WARNING: You now pay a penalty now for a separator.  It writes each element to
-  a temp buffer before emitting.  Expensive.
-  Later, I can optimize to check if one chunk in template and it's a conditional.
+  WARNING: You now pay a penalty now for a separator if the iterated value is
+  nullable.  Nullable if iterable or a template with nothing buf IF statements.
+  If nullable, ST writes each element to a temp buffer before emitting.  Expensive.
 
 08-13-2008
 

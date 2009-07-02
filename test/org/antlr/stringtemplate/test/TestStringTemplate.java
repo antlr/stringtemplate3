@@ -2856,19 +2856,19 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }
 
-    public void testMissingIteratedConditionalValueGetsNOSeparator3() throws Exception {
+    public void testMissingIteratedDoubleConditionalValueGetsNOSeparator() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplateErrorListener errors = new ErrorBuffer();
         group.setErrorListener(errors);
         StringTemplate t = new StringTemplate(group,
-            "$users:{$if(it.ok)$$it.name$$endif$}; separator=\",\"$");
+            "$users:{$if(it.ok)$$it.name$$endif$$if(it.ok)$$it.name$$endif$}; separator=\",\"$");
         t.setAttribute("users.{name,ok}", "Terence", new Boolean(false));
         t.setAttribute("users.{name,ok}", "Tom", new Boolean(true));
         t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
         t.setAttribute("users.{name,ok}", "Johnny", new Boolean(true));
         // empty conditional values get no separator
-        String expecting="Tom,Frank,Johnny";
+        String expecting="TomTom,FrankFrank,JohnnyJohnny";
         String result = t.toString();
         assertEquals(expecting, result);
     }

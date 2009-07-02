@@ -674,122 +674,13 @@ public class ASTExpr extends Expr {
 				return MISSING;
 			}
 			o = nullValue; // continue with null option if specified
-		}
+        }
         int n = 0;
         try {
-            if ( o instanceof StringTemplate ) {
-                StringTemplate stToWrite = (StringTemplate)o;
-				// failsafe: perhaps enclosing instance not set
-				// Or, it could be set to another context!  This occurs
-				// when you store a template instance as an attribute of more
-				// than one template (like both a header file and C file when
-				// generating C code).  It must execute within the context of
-				// the enclosing template.
-				stToWrite.setEnclosingInstance(self);
-                // if self is found up the enclosing instance chain, then
-                // infinite recursion
-                if ( StringTemplate.inLintMode() &&
-                     StringTemplate.isRecursiveEnclosingInstance(stToWrite) )
-                {
-                    // throw exception since sometimes eval keeps going
-                    // even after I ignore this write of o.
-                    throw new IllegalStateException("infinite recursion to "+
-                            stToWrite.getTemplateDeclaratorString()+" referenced in "+
-                            stToWrite.getEnclosingInstance().getTemplateDeclaratorString()+
-                            "; stack trace:\n"+stToWrite.getEnclosingInstanceStackTrace());
-                }
-                else {
-					// if we have a wrap string, then inform writer it
-					// might need to wrap
-					if ( wrapString!=null ) {
-						n = out.writeWrapSeparator(wrapString);
-					}
-					// check if formatting needs to be applied to the stToWrite
-					if ( formatString != null ) {
-						AttributeRenderer renderer =
-							self.getAttributeRenderer(String.class);
-						if ( renderer != null ) {
-							// you pay a penalty for applying format option to a template
-							// because the template must be written to a temp StringWriter so it can
-							// be formatted before being written to the real output.
-							StringWriter buf = new StringWriter();
-							StringTemplateWriter sw =
-								self.getGroup().getStringTemplateWriter(buf);
-							stToWrite.write(sw);
-							n = out.write(renderer.toString(buf.toString(), formatString));
-							return n;
-						}
-					}
-                    n = stToWrite.write(out);
-                }
-                return n;
-            }
-            // normalize anything iteratable to iterator
-			o = convertAnythingIteratableToIterator(o);
-			if ( o instanceof Iterator ) {
-				Iterator iter = (Iterator)o;
-                boolean seenAValue = false;
-				while ( iter.hasNext() ) {
-                    Object iterValue = iter.next();
-					if ( iterValue==null ) iterValue = nullValue;
-					if ( iterValue!=null ) {
-                        if ( separatorString==null ) {
-                            // if no separator, don't waste time writing to
-                            // temp buffer
-                            int nw = write(self, iterValue, out);
-                            if ( nw!=MISSING ) n += nw;
-                            continue;
-                        }
-                        // if separator exists, write iterated value to a
-                        // tmp buffer in case we don't need a separator.
-                        // Can't generate separator then test next expr value
-                        // as we can't undo separator emit.
-                        // Write to dummy buffer to if it is MISSING
-                        // but eval/write value again to real out so
-                        // we get proper autowrap etc...
-                        // Ack: you pay a penalty now for a separator
-                        // Later, i can optimze to check if one chunk and
-                        // it's a conditional
-                        StringWriter buf = new StringWriter();
-                        StringTemplateWriter sw =
-                            self.getGroup().getStringTemplateWriter(buf);
-                        int tmpsize = write(self, iterValue, sw);
-
-                        if ( tmpsize!=MISSING ) {
-                            if ( seenAValue && separatorString!=null ) {
-                                n += out.writeSeparator(separatorString);
-                            }
-                            // do it to real output stream now
-                            int nw = write(self, iterValue, out);
-                            n += nw;
-                            seenAValue = true;
-                        }
-					}
-				}
-			}
-			else {
-				AttributeRenderer renderer =
-					self.getAttributeRenderer(o.getClass());
-				String v = null;
-				if ( renderer!=null ) {
-					if ( formatString != null ) {
-						v = renderer.toString(o, formatString);
-					}
-					else {
-						v = renderer.toString(o);
-					}
-				}
-				else {
-					v = o.toString();
-				}
-				if ( wrapString!=null ) {
-					n = out.write(v, wrapString);
-				}
-				else {
-					n = out.write( v );
-				}
-				return n;
-            }
+            if ( o instanceof StringTemplate ) return writeTemplate(self, o, out);
+            o = convertAnythingIteratableToIterator(o); // normalize
+            if ( o instanceof Iterator ) return writeIterableValue(self, o, out);
+            return writePOJO(self, o, out);
         }
         catch (IOException io) {
             self.error("problem writing object: "+o, io);
@@ -797,7 +688,157 @@ public class ASTExpr extends Expr {
 		return n;
     }
 
-	/** A expr is normally just a string literal, but is still an AST that
+    protected int writePOJO(StringTemplate self, Object o, StringTemplateWriter out) throws IOException {
+        int n = 0;
+        AttributeRenderer renderer =
+            self.getAttributeRenderer(o.getClass());
+        String v = null;
+        if ( renderer!=null ) {
+            if ( formatString != null ) v = renderer.toString(o, formatString);
+            else v = renderer.toString(o);
+        }
+        else v = o.toString();
+        if ( wrapString!=null ) n = out.write(v, wrapString);
+        else n = out.write( v );
+        return n;
+    }
+
+    protected int writeTemplate(StringTemplate self, Object o, StringTemplateWriter out) throws IOException {
+        int n = 0;
+        StringTemplate stToWrite = (StringTemplate)o;
+        // failsafe: perhaps enclosing instance not set
+        // Or, it could be set to another context!  This occurs
+        // when you store a template instance as an attribute of more
+        // than one template (like both a header file and C file when
+        // generating C code).  It must execute within the context of
+        // the enclosing template.
+        stToWrite.setEnclosingInstance(self);
+        // if self is found up the enclosing instance chain, then
+        // infinite recursion
+        if ( StringTemplate.inLintMode() &&
+             StringTemplate.isRecursiveEnclosingInstance(stToWrite) )
+        {
+            // throw exception since sometimes eval keeps going
+            // even after I ignore this write of o.
+            throw new IllegalStateException("infinite recursion to "+
+                    stToWrite.getTemplateDeclaratorString()+" referenced in "+
+                    stToWrite.getEnclosingInstance().getTemplateDeclaratorString()+
+                    "; stack trace:\n"+stToWrite.getEnclosingInstanceStackTrace());
+        }
+        else {
+            // if we have a wrap string, then inform writer it
+            // might need to wrap
+            if ( wrapString!=null ) {
+                n = out.writeWrapSeparator(wrapString);
+            }
+            // check if formatting needs to be applied to the stToWrite
+            if ( formatString != null ) {
+                AttributeRenderer renderer =
+                    self.getAttributeRenderer(String.class);
+                if ( renderer != null ) {
+                    // you pay a penalty for applying format option to a template
+                    // because the template must be written to a temp StringWriter so it can
+                    // be formatted before being written to the real output.
+                    StringWriter buf = new StringWriter();
+                    StringTemplateWriter sw =
+                        self.getGroup().getStringTemplateWriter(buf);
+                    stToWrite.write(sw);
+                    n = out.write(renderer.toString(buf.toString(), formatString));
+                    return n;
+                }
+            }
+            n = stToWrite.write(out);
+        }
+        return n;
+    }
+
+    protected int writeIterableValue(StringTemplate self,
+                                     Object o,
+                                     StringTemplateWriter out)
+        throws IOException
+    {
+        int n = 0;
+        Iterator iter = (Iterator)o;
+        boolean seenAValue = false;
+        while ( iter.hasNext() ) {
+            Object iterValue = iter.next();
+            if ( iterValue==null ) iterValue = nullValue;
+            if ( iterValue!=null ) {
+                // if no separator or separator but iterValue isn't
+                // a single IF condition template
+                if ( separatorString==null ) {
+                    // if no separator, don't waste time writing to
+                    // temp buffer
+                    int nw = write(self, iterValue, out);
+                    if ( nw!=MISSING ) n += nw;
+                    continue;
+                }
+                if ( !(iterValue instanceof StringTemplate) &&
+                     !(iterValue instanceof Iterator))
+                {
+                    // if not possible to be missing, don't waste time
+                    // writing to temp buffer; might need separator though
+                    if ( seenAValue && separatorString!=null ) {
+                        n += out.writeSeparator(separatorString);
+                    }
+                    int nw = write(self, iterValue, out);
+                    seenAValue = true;
+                    n += nw;
+                    continue;
+                }
+                // if value to emit is a template, only buffer its
+                // value if it's nullable (can eval to missing).
+                // Only a sequence of IF can eval to missing.
+                if ( iterValue instanceof StringTemplate ) {
+                    StringTemplate st = (StringTemplate)iterValue;
+                    int nchunks = st.getChunks()!=null ? st.getChunks().size() : 0;
+                    boolean nullable = true;
+                    for (int i=0; i<nchunks; i++) {
+                        Expr a = (Expr)st.getChunks().get(i);
+                        if ( !(a instanceof ConditionalExpr) ) nullable = false;
+                    }
+                    // if not all IF, not nullable, spit out w/o buffering
+                    if ( !nullable) {
+                        if ( seenAValue && separatorString!=null ) {
+                            n += out.writeSeparator(separatorString);
+                        }
+                        int nw = write(self, iterValue, out);
+                        n += nw;
+                        seenAValue = true;
+                        continue;
+                    }
+                }
+
+                // if separator exists, write iterated value to a
+                // tmp buffer in case we don't need a separator.
+                // Can't generate separator then test next expr value
+                // as we can't undo separator emit.
+                // Write to dummy buffer to if it is MISSING
+                // but eval/write value again to real out so
+                // we get proper autowrap etc...
+                // Ack: you pay a penalty now for a separator
+                // Later, i can optimze to check if one chunk and
+                // it's a conditional
+                StringWriter buf = new StringWriter();
+                StringTemplateWriter sw =
+                    self.getGroup().getStringTemplateWriter(buf);
+                int tmpsize = write(self, iterValue, sw);
+
+                if ( tmpsize!=MISSING ) {
+                    if ( seenAValue && separatorString!=null ) {
+                        n += out.writeSeparator(separatorString);
+                    }
+                    // do it to real output stream now
+                    int nw = write(self, iterValue, out);
+                    n += nw;
+                    seenAValue = true;
+                }
+            }
+        }
+        return n;
+    }
+
+    /** A expr is normally just a string literal, but is still an AST that
      *  we must evaluate.  The expr can be any expression such as a template
      *  include or string cat expression etc...  Evaluate with its own writer
 	 *  so that we can convert to string and then reuse, don't want to compute
