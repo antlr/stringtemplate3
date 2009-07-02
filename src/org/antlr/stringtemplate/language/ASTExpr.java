@@ -45,6 +45,7 @@ import java.util.*;
  *  parsed into an AST chunk to be evaluated.
  */
 public class ASTExpr extends Expr {
+    public static final int MISSING = -1; // writing -1 char means missing not empty
     public static final String DEFAULT_ATTRIBUTE_NAME = "it";
     public static final String DEFAULT_ATTRIBUTE_NAME_DEPRECATED = "attr";
 	public static final String DEFAULT_INDEX_VARIABLE_NAME = "i";
@@ -670,11 +671,11 @@ public class ASTExpr extends Expr {
     {
         if ( o==null ) {
 			if ( nullValue==null ) {
-				return 0;
+				return MISSING;
 			}
 			o = nullValue; // continue with null option if specified
 		}
-		int n = 0;
+        int n = 0;
         try {
             if ( o instanceof StringTemplate ) {
                 StringTemplate stToWrite = (StringTemplate)o;
@@ -727,20 +728,42 @@ public class ASTExpr extends Expr {
 			o = convertAnythingIteratableToIterator(o);
 			if ( o instanceof Iterator ) {
 				Iterator iter = (Iterator)o;
-				boolean seenPrevValue = false;
+                boolean seenAValue = false;
 				while ( iter.hasNext() ) {
                     Object iterValue = iter.next();
-					if ( iterValue==null ) {
-						iterValue = nullValue;
-					}
+					if ( iterValue==null ) iterValue = nullValue;
 					if ( iterValue!=null ) {
-						if ( seenPrevValue /*prevIterValue!=null*/
-							&& separatorString!=null ) {
-							n += out.writeSeparator(separatorString);
-						}
-						seenPrevValue = true;
-						int nw = write(self, iterValue, out);
-						n += nw;
+                        if ( separatorString==null ) {
+                            // if no separator, don't waste time writing to
+                            // temp buffer
+                            int nw = write(self, iterValue, out);
+                            if ( nw!=MISSING ) n += nw;
+                            continue;
+                        }
+                        // if separator exists, write iterated value to a
+                        // tmp buffer in case we don't need a separator.
+                        // Can't generate separator then test next expr value
+                        // as we can't undo separator emit.
+                        // Write to dummy buffer to if it is MISSING
+                        // but eval/write value again to real out so
+                        // we get proper autowrap etc...
+                        // Ack: you pay a penalty now for a separator
+                        // Later, i can optimze to check if one chunk and
+                        // it's a conditional
+                        StringWriter buf = new StringWriter();
+                        StringTemplateWriter sw =
+                            self.getGroup().getStringTemplateWriter(buf);
+                        int tmpsize = write(self, iterValue, sw);
+
+                        if ( tmpsize!=MISSING ) {
+                            if ( seenAValue && separatorString!=null ) {
+                                n += out.writeSeparator(separatorString);
+                            }
+                            // do it to real output stream now
+                            int nw = write(self, iterValue, out);
+                            n += nw;
+                            seenAValue = true;
+                        }
 					}
 				}
 			}

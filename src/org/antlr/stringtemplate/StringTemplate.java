@@ -693,13 +693,14 @@ public class StringTemplate {
 			group.emitTemplateStartDebugString(this,out);
 		}
 		int n = 0;
+        boolean missing = true;
 		setPredefinedAttributes();
 		setDefaultArgumentValues();
 		for (int i=0; chunks!=null && i<chunks.size(); i++) {
 			Expr a = (Expr)chunks.get(i);
 			int chunkN = a.write(this, out);
 			// expr-on-first-line-with-no-output NEWLINE => NEWLINE
-			if ( chunkN==0 && i==0 && (i+1)<chunks.size() &&
+			if ( chunkN<=0 && i==0 && (i+1)<chunks.size() &&
 				 chunks.get(i+1) instanceof NewlineRef )
 			{
 				//System.out.println("found pure first-line-blank \\n pattern");
@@ -709,22 +710,24 @@ public class StringTemplate {
 			// NEWLINE expr-with-no-output NEWLINE => NEWLINE
 			// Indented $...$ have the indent stored with the ASTExpr
 			// so the indent does not come out as a StringRef
-			if ( chunkN==0 &&
+			if ( chunkN<=0 &&
 				(i-1)>=0 && chunks.get(i-1) instanceof NewlineRef &&
 				(i+1)<chunks.size() && chunks.get(i+1) instanceof NewlineRef )
 			{
 				//System.out.println("found pure \\n blank \\n pattern");
 				i++; // make it skip over the next chunk, the NEWLINE
 			}
-			n += chunkN;
+            if ( chunkN!=ASTExpr.MISSING ) {
+                n += chunkN;
+                missing = false;
+            }
 		}
 		if ( group.debugTemplateOutput ) {
 			group.emitTemplateStopDebugString(this,out);
 		}
-		if ( lintMode ) {
-			checkForTrouble();
-		}
-		return n;
+		if ( lintMode ) checkForTrouble();
+		if ( missing && chunks!=null && chunks.size()>0 ) return ASTExpr.MISSING;
+        return n;
 	}
 
 	/** Resolve an attribute reference.  It can be in four possible places:

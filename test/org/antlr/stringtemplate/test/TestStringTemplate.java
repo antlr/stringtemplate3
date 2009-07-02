@@ -2822,24 +2822,58 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmptyIteratedConditionalValueGetsSeparator() throws Exception {
-		StringTemplateGroup group =
-				new StringTemplateGroup("test");
-		StringTemplateErrorListener errors = new ErrorBuffer();
-		group.setErrorListener(errors);
-		StringTemplate t = new StringTemplate(group,
-			"$users:{$if(it.ok)$$it.name$$endif$}; separator=\",\"$");
-		t.setAttribute("users.{name,ok}", "Terence", new Boolean(true));
-		t.setAttribute("users.{name,ok}", "Tom", new Boolean(false));
-		t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
-		t.setAttribute("users.{name,ok}", "Johnny", new Boolean(false));
-		// empty conditional values get no separator
-		String expecting="Terence,,Frank,";
-		String result = t.toString();
-		assertEquals(expecting, result);
-	}
+    public void testMissingIteratedConditionalValueGetsNOSeparator() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        group.setErrorListener(errors);
+        StringTemplate t = new StringTemplate(group,
+            "$users:{$if(it.ok)$$it.name$$endif$}; separator=\",\"$");
+        t.setAttribute("users.{name,ok}", "Terence", new Boolean(true));
+        t.setAttribute("users.{name,ok}", "Tom", new Boolean(false));
+        t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
+        t.setAttribute("users.{name,ok}", "Johnny", new Boolean(false));
+        // empty conditional values get no separator
+        String expecting="Terence,Frank";
+        String result = t.toString();
+        assertEquals(expecting, result);
+    }
 
-	public void testEmptyIteratedConditionalWithElseValueGetsSeparator() throws Exception {
+    public void testMissingIteratedConditionalValueGetsNOSeparator2() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        group.setErrorListener(errors);
+        StringTemplate t = new StringTemplate(group,
+            "$users:{$if(it.ok)$$it.name$$endif$}; separator=\",\"$");
+        t.setAttribute("users.{name,ok}", "Terence", new Boolean(true));
+        t.setAttribute("users.{name,ok}", "Tom", new Boolean(false));
+        t.setAttribute("users.{name,ok}", "Frank", new Boolean(false));
+        t.setAttribute("users.{name,ok}", "Johnny", new Boolean(false));
+        // empty conditional values get no separator
+        String expecting="Terence";
+        String result = t.toString();
+        assertEquals(expecting, result);
+    }
+
+    public void testMissingIteratedConditionalValueGetsNOSeparator3() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplateErrorListener errors = new ErrorBuffer();
+        group.setErrorListener(errors);
+        StringTemplate t = new StringTemplate(group,
+            "$users:{$if(it.ok)$$it.name$$endif$}; separator=\",\"$");
+        t.setAttribute("users.{name,ok}", "Terence", new Boolean(false));
+        t.setAttribute("users.{name,ok}", "Tom", new Boolean(true));
+        t.setAttribute("users.{name,ok}", "Frank", new Boolean(true));
+        t.setAttribute("users.{name,ok}", "Johnny", new Boolean(true));
+        // empty conditional values get no separator
+        String expecting="Tom,Frank,Johnny";
+        String result = t.toString();
+        assertEquals(expecting, result);
+    }
+
+	public void testIteratedConditionalWithEmptyElseValueGetsSeparator() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();

@@ -125,6 +125,8 @@ public class ConditionalExpr extends ASTExpr {
 				s.setNativeGroup(self.getNativeGroup());
 				n = s.write(out);
 			}
+            // cond==false and no else => MISSING output not empty
+            if ( !testedTrue && elseSubtemplate==null ) n = MISSING;
 		}
 		catch (RecognitionException re) {
 			self.error("can't evaluate tree: "+exprTree.toStringList(), re);

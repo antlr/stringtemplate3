@@ -20,6 +20,17 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+07-02-2009
+
+o IF with false condition results in missing not empty value. So,
+  <names:{n | <if(n.cool)><n><endif>}; separator=",">
+  doesn't emit a separator for non-cool names. See
+  http://www.antlr.org/pipermail/stringtemplate-interest/2009-July/002020.html
+
+  WARNING: You now pay a penalty now for a separator.  It writes each element to
+  a temp buffer before emitting.  Expensive.
+  Later, I can optimize to check if one chunk in template and it's a conditional.
+
 08-13-2008
 
 o IF conditionals and list elements couldn't use template
