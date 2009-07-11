@@ -5154,6 +5154,22 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, top.toString(40));
 	}
 
+    public void testBackslash() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate t = group.defineTemplate("t", "\\");
+        String expecting="\\";
+        assertEquals(expecting, t.toString());
+    }
+
+    public void testBackslash2() throws Exception {
+        StringTemplateGroup group =
+                new StringTemplateGroup("test");
+        StringTemplate t = group.defineTemplate("t", "\\ ");
+        String expecting="\\ ";
+        assertEquals(expecting, t.toString());
+    }
+
 	public void testEscapeEscape() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
