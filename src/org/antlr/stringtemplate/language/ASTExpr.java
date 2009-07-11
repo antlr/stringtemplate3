@@ -841,12 +841,12 @@ public class ASTExpr extends Expr {
     /** A expr is normally just a string literal, but is still an AST that
      *  we must evaluate.  The expr can be any expression such as a template
      *  include or string cat expression etc...  Evaluate with its own writer
-	 *  so that we can convert to string and then reuse, don't want to compute
-	 *  all the time; must precompute w/o writing to output buffer.
+     *  so that we can convert to string and then reuse, don't want to compute
+     *  all the time; must precompute w/o writing to output buffer.
      */
-    protected String evaluateExpression(StringTemplate self,
-										Object expr)
-	{
+    public String evaluateExpression(StringTemplate self,
+                                     Object expr)
+    {
         if ( expr ==null ) {
             return null;
         }

@@ -932,6 +932,7 @@ public class StringTemplate {
 	 *  the template attributes table just for consistency's sake.
 	 */
 	public void setDefaultArgumentValues() {
+        //System.out.println("setDefaultArgumentValues; "+name+": argctx="+argumentContext);
 		if ( numberOfDefaultArgumentValues==0 ) {
 			return;
 		}
@@ -948,11 +949,26 @@ public class StringTemplate {
 				if ( arg.defaultValueST!=null ) {
 					Object existingValue = getAttribute(argName);
 					if ( existingValue==null ) { // value unset?
+                        Object defaultValue = arg.defaultValueST;
 						// if no value for attribute, set arg context
 						// to the default value.  We don't need an instance
 						// here because no attributes can be set in
 						// the arg templates by the user.
-						argumentContext.put(argName, arg.defaultValueST);
+                        int nchunks = arg.defaultValueST.chunks.size();
+                        if ( nchunks==1 ) {
+                            // If default arg is template with single expression
+                            // wrapped in parens, x={<(...)>}, then eval to string
+                            // rather than setting x to the template for later
+                            // eval.
+                            Object a = arg.defaultValueST.chunks.get(0);
+                            if ( a instanceof ASTExpr ) {
+                                ASTExpr e = (ASTExpr)a;
+                                if ( e.getAST().getType()==ActionEvaluator.VALUE ) {
+                                    defaultValue = e.evaluateExpression(this, e.getAST());
+                                }
+                            }
+                        }
+                        argumentContext.put(argName, defaultValue);
 					}
 				}
 			}

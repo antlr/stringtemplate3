@@ -22,6 +22,11 @@ Changes to ST (StringTemplate).
 
 07-11-2009
 
+o If default arg is a template with single expression wrapped in parens, x={<(...)>},
+  then eval to string rather than setting x to the template for later eval. Useful
+  in rare cases where the expression can change value when you read it, such as
+  accessing time value or random number generator object.
+
 o Added line break operator <\\>. It consumes remaining whitespace on that line, the first
 and then any whitespace. Added a number of unit tests. example:
 

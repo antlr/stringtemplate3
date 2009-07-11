@@ -27,7 +27,6 @@
 */
 package org.antlr.stringtemplate.test;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
@@ -3303,6 +3302,26 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
+    public void testDefaultArgumentInParensToEvalEarly() throws Exception {
+        class Counter {
+            int n = 0;
+            public String toString() { return String.valueOf(n++); }
+        }
+        String templates =
+                "group test;" +newline+
+                "A(x) ::= \"<B()>\""+newline+
+                "B(y={<(x)>}) ::= \"<y> <x> <x> <y>\""+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate b = group.getInstanceOf("A");
+        b.setAttribute("x", new Counter());
+        String expecting = "0 1 2 0";
+        String result = b.toString();
+        //System.err.println("result='"+result+"'");
+        assertEquals(expecting, result);
+    }
+    
 	public void testArgumentsAsTemplates() throws Exception {
 		String templates =
 				"group test;" +newline+
