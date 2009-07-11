@@ -40,7 +40,7 @@ import java.util.*;
 public class TestStringTemplate extends TestCase {
     static final String newline = System.getProperty("line.separator");
 
-	static class ErrorBuffer implements StringTemplateErrorListener {
+    static class ErrorBuffer implements StringTemplateErrorListener {
 		StringBuffer errorOutput = new StringBuffer(500);
 		int n = 0;
 		public void error(String msg, Throwable e) {
@@ -2712,6 +2712,84 @@ public class TestStringTemplate extends TestCase {
 		result = st.toString();
 		assertEquals(expecting, result);
 	}
+
+    public void testLineBreak() throws Exception {
+        StringTemplate st = new StringTemplate(
+                "Foo <\\\\>"+newline+
+                "  \t  bar" +newline,
+                AngleBracketTemplateLexer.class
+                );
+        StringWriter sw = new StringWriter();
+        st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+        String result = sw.toString();
+        String expecting ="Foo bar"+newline;     // expect \n in output
+        assertEquals(expecting, result);
+    }
+
+    public void testLineBreak2() throws Exception {
+        StringTemplate st = new StringTemplate(
+                "Foo <\\\\>       "+newline+
+                "  \t  bar" +newline,
+                AngleBracketTemplateLexer.class
+                );
+        StringWriter sw = new StringWriter();
+        st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+        String result = sw.toString();
+        String expecting ="Foo bar"+newline;     // expect \n in output
+        assertEquals(expecting, result);
+    }
+
+    public void testLineBreakNoWhiteSpace() throws Exception {
+        StringTemplate st = new StringTemplate(
+                "Foo <\\\\>"+newline+
+                "bar" +newline,
+                AngleBracketTemplateLexer.class
+                );
+        StringWriter sw = new StringWriter();
+        st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+        String result = sw.toString();
+        String expecting ="Foo bar"+newline;     // expect \n in output
+        assertEquals(expecting, result);
+    }
+
+    public void testLineBreakDollar() throws Exception {
+        StringTemplate st = new StringTemplate(
+                "Foo $\\\\$"+newline+
+                "  \t  bar" +newline,
+                DefaultTemplateLexer.class
+                );
+        StringWriter sw = new StringWriter();
+        st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+        String result = sw.toString();
+        String expecting ="Foo bar"+newline;     // expect \n in output
+        assertEquals(expecting, result);
+    }
+
+    public void testLineBreakDollar2() throws Exception {
+        StringTemplate st = new StringTemplate(
+                "Foo $\\\\$          "+newline+
+                "  \t  bar" +newline,
+                DefaultTemplateLexer.class
+                );
+        StringWriter sw = new StringWriter();
+        st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+        String result = sw.toString();
+        String expecting ="Foo bar"+newline;     // expect \n in output
+        assertEquals(expecting, result);
+    }
+
+    public void testLineBreakNoWhiteSpaceDollar() throws Exception {
+        StringTemplate st = new StringTemplate(
+                "Foo $\\\\$"+newline+
+                "bar" +newline,
+                DefaultTemplateLexer.class
+                );
+        StringWriter sw = new StringWriter();
+        st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
+        String result = sw.toString();
+        String expecting ="Foo bar"+newline;     // expect \n in output
+        assertEquals(expecting, result);
+    }
 
 	public void testCharLiterals() throws Exception {
 		StringTemplate st = new StringTemplate(

@@ -269,7 +269,8 @@ ACTION
 {
     int startCol = getColumn();
 }
-    :	// Match escapes not in a string like <\n\ufea5>
+    :   LINE_BREAK {$setType(Token.SKIP);}
+    |	// Match escapes not in a string like <\n\ufea5>
 		{StringBuffer buf = new StringBuffer(); char uc = '\u0000';}
     	'$'! (uc=ESC_CHAR {buf.append(uc);} )+'$'!
     	{$setText(buf.toString()); $setType(LITERAL);}
@@ -400,3 +401,8 @@ COMMENT
     	"!$" ( {startCol==1}? ('\r')? '\n' {newline();} )?
     ;
 
+
+protected
+LINE_BREAK
+    :   "$\\\\$" (INDENT)? ('\r')? '\n' {newline();} (INDENT)?
+    ;

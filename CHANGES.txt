@@ -20,6 +20,16 @@ Changes to ST (StringTemplate).
 
 #### Fixed bugs and changes
 
+07-11-2009
+
+o Added line break operator <\\>. It consumes remaining whitespace on that line, the first
+and then any whitespace. Added a number of unit tests. example:
+
+  "foo <\\>
+       bar"
+
+  emits "foo bar". All of the whitespace after the <\\> gets thrown away like a comment.
+
 07-02-2009
 
 o IF with false condition results in missing not empty value. So,
