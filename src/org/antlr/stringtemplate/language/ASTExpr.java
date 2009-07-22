@@ -773,19 +773,6 @@ public class ASTExpr extends Expr {
                     if ( nw!=MISSING ) n += nw;
                     continue;
                 }
-                if ( !(iterValue instanceof StringTemplate) &&
-                     !(iterValue instanceof Iterator))
-                {
-                    // if not possible to be missing, don't waste time
-                    // writing to temp buffer; might need separator though
-                    if ( seenAValue && separatorString!=null ) {
-                        n += out.writeSeparator(separatorString);
-                    }
-                    int nw = write(self, iterValue, out);
-                    seenAValue = true;
-                    n += nw;
-                    continue;
-                }
                 // if value to emit is a template, only buffer its
                 // value if it's nullable (can eval to missing).
                 // Only a sequence of IF can eval to missing.
@@ -807,6 +794,20 @@ public class ASTExpr extends Expr {
                         seenAValue = true;
                         continue;
                     }
+                }
+
+                if ( !(iterValue instanceof StringTemplate) &&
+                     !(iterValue instanceof Iterator))
+                {
+                    // if not possible to be missing, don't waste time
+                    // writing to temp buffer; might need separator though
+                    if ( seenAValue && separatorString!=null ) {
+                        n += out.writeSeparator(separatorString);
+                    }
+                    int nw = write(self, iterValue, out);
+                    seenAValue = true;
+                    n += nw;
+                    continue;
                 }
 
                 // if separator exists, write iterated value to a
