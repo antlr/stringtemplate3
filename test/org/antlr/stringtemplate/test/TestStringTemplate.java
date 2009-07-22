@@ -2561,8 +2561,8 @@ public class TestStringTemplate extends TestCase {
 		String templates =
 				"group dork;"+newline +
 				""+newline +
-				"test(names) ::= <<" +
-				"<names:(ind)()>"+newline +
+				"test(names,t) ::= <<" +
+				"<names:(t)()>"+newline + // t null be must be defined else error: null attr w/o formal def
 				">>"+newline+
 				"ind() ::= \"[<it>]\""+newline;
 				;
@@ -3246,6 +3246,89 @@ public class TestStringTemplate extends TestCase {
 		//System.err.println("result='"+result+"'");
 		assertEquals(expecting, result);
 	}
+
+    public void testDefaultArgumentManuallySet() throws Exception {
+        class Field {
+            public String name = "parrt";
+            public int n = 0;
+            public String toString() {
+                return "Field";
+            }
+        }
+        String templates =
+                "group test;" +newline+
+                "method(fields) ::= <<"+newline+
+                "<fields:{f | <stat(f=f)>}>" +newline+
+                ">>"+newline+
+                "stat(f,value={<f.name>}) ::= \"x=<value>; // <f.name>\""+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate m = group.getInstanceOf("method");
+        m.setAttribute("fields", new Field());
+        String expecting = "x=parrt; // parrt";
+        String result = m.toString();
+        assertEquals(expecting, result);
+    }
+
+    /** This fails because checkNullAttributeAgainstFormalArguments looks
+     *  for a formal argument at the current level not of the original embedded
+     *  template. We have defined it all the way in the embedded, but there is
+     *  no value so we try to look upwards ala dynamic scoping. When it reaches
+     *  the top, it doesn't find a value but it will miss the
+     *  formal argument down in the embedded.
+     *
+     *  By definition, though, the formal parameter exists if we have
+     *  a default value. look up the value to see if it's null without
+     *  checking checkNullAttributeAgainstFormalArguments.
+     */
+    public void testDefaultArgumentImplicitlySet() throws Exception {
+        class Field {
+            public String name = "parrt";
+            public int n = 0;
+            public String toString() {
+                return "Field";
+            }
+        }
+        String templates =
+                "group test;" +newline+
+                "method(fields) ::= <<"+newline+
+                "<fields:{f | <stat(...)>}>" +newline+
+                ">>"+newline+
+                "stat(f,value={<f.name>}) ::= \"x=<value>; // <f.name>\""+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate m = group.getInstanceOf("method");
+        m.setAttribute("fields", new Field());
+        String expecting = "x=parrt; // parrt";
+        String result = m.toString();
+        assertEquals(expecting, result);
+    }
+
+    public void testDefaultArgumentImplicitlySet2() throws Exception {
+        class Field {
+            public String name = "parrt";
+            public int n = 0;
+            public String toString() {
+                return "Field";
+            }
+        }
+        String templates =
+                "group test;" +newline+
+                "method(fields) ::= <<"+newline+
+                "<fields:{f | <f:stat()>}>" +newline+  // THIS SHOULD BE ERROR; >1 arg?
+                ">>"+newline+
+                "stat(f,value={<f.name>}) ::= \"x=<value>; // <f.name>\""+newline
+                ;
+        StringTemplateGroup group =
+                new StringTemplateGroup(new StringReader(templates));
+        StringTemplate m = group.getInstanceOf("method");
+        m.setAttribute("fields", new Field());
+        String expecting = "x=parrt; // parrt";
+        String result = m.toString();
+        assertEquals(expecting, result);
+    }
 
 	public void testDefaultArgumentAsTemplate() throws Exception {
 		String templates =

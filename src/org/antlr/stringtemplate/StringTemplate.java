@@ -679,7 +679,11 @@ public class StringTemplate {
 	}
 
 	public Object getAttribute(String name) {
-		return get(this,name);
+		Object v = get(this,name);
+        if ( v==null ) {
+            checkNullAttributeAgainstFormalArguments(this, name);
+        }
+        return v;
 	}
 
 	/** Walk the chunks, asking them to write themselves out according
@@ -757,8 +761,10 @@ public class StringTemplate {
 	 *  This method is not static so people can override functionality.
 	 */
 	public Object get(StringTemplate self, String attribute) {
-		//System.out.println("### get("+self.getEnclosingInstanceStackString()+", "+attribute+")");
-		//System.out.println("attributes="+(self.attributes!=null?self.attributes.keySet().toString():"none"));
+        /*
+		System.out.println("### get("+self.getEnclosingInstanceStackString()+", "+attribute+")");
+		System.out.println("attributes="+(self.attributes!=null?self.attributes.keySet().toString():"none"));
+		*/
 		if ( self==null ) {
 			return null;
 		}
@@ -794,14 +800,16 @@ public class StringTemplate {
 
 		// not locally defined, check enclosingInstance if embedded
 		if ( o==null && self.enclosingInstance!=null ) {
-			/*
+            /*
             System.out.println("looking for "+getName()+"."+attribute+" in super="+
                     enclosingInstance.getName());
-			*/
+             */
 			Object valueFromEnclosing = get(self.enclosingInstance, attribute);
+            /*
 			if ( valueFromEnclosing==null ) {
 				checkNullAttributeAgainstFormalArguments(self, attribute);
 			}
+			*/
 			o = valueFromEnclosing;
 		}
 
@@ -932,7 +940,7 @@ public class StringTemplate {
 	 *  the template attributes table just for consistency's sake.
 	 */
 	public void setDefaultArgumentValues() {
-        //System.out.println("setDefaultArgumentValues; "+name+": argctx="+argumentContext);
+        //System.out.println("setDefaultArgumentValues; "+name+": argctx="+argumentContext+", n="+numberOfDefaultArgumentValues);
 		if ( numberOfDefaultArgumentValues==0 ) {
 			return;
 		}
@@ -940,6 +948,7 @@ public class StringTemplate {
 			argumentContext = new HashMap();
 		}
 		if ( formalArguments!=FormalArgument.UNKNOWN ) {
+            //System.out.println("formal args="+formalArguments.keySet());
 			Set argNames = formalArguments.keySet();
 			for (Iterator it = argNames.iterator(); it.hasNext();) {
 				String argName = (String) it.next();
@@ -947,7 +956,10 @@ public class StringTemplate {
 				FormalArgument arg =
 					(FormalArgument)formalArguments.get(argName);
 				if ( arg.defaultValueST!=null ) {
+                    //System.out.println("default value="+arg.defaultValueST.chunks);
+                    //System.out.println(getEnclosingInstanceStackString()+": get "+argName+" argctx="+argumentContext);
 					Object existingValue = getAttribute(argName);
+                    //System.out.println("existing value="+existingValue);
 					if ( existingValue==null ) { // value unset?
                         Object defaultValue = arg.defaultValueST;
 						// if no value for attribute, set arg context
@@ -1009,6 +1021,10 @@ public class StringTemplate {
 	}
 
 	public void defineFormalArgument(String name, StringTemplate defaultValue) {
+        /*
+        System.out.println("define formal arg "+this.name+"."+name+
+                           ", def value="+(defaultValue!=null?defaultValue.chunks:"null"));
+                           */
 		if ( defaultValue!=null ) {
 			numberOfDefaultArgumentValues++;
 		}
