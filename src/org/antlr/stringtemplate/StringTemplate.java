@@ -45,7 +45,7 @@ import antlr.collections.ASTEnumeration;
  *
  */
 public class StringTemplate {
-	public static final String VERSION = "3.3a"; // August 11, 2008
+	public static final String VERSION = "3.2.1"; // September 22, 2009
 
 	/** <@r()> */
 	public static final int REGION_IMPLICIT = 1;
@@ -66,7 +66,7 @@ public class StringTemplate {
 	 *
 	 *  using template:
 	 *
-	 *  $items:{$attr.name$=$attr.type$}$
+	 *  $items:{it.name$=$it.type$}$
 	 *
 	 *  This example will call getName() on the objects in items attribute, but
 	 *  what if they aren't objects?  I have perhaps two parallel arrays
