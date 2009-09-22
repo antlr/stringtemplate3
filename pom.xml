@@ -12,7 +12,7 @@
         will be deplyed to the ANTLR snapshot repository at antlr.org with the word
         SNAPSHOT replaced with the the data, time and unique number.
     -->
-    <version>3.3-SNAPSHOT</version>
+    <version>3.2.2-SNAPSHOT</version>
     
     <!--
         The name of the project as seen by IDEs and release documentation etc.
