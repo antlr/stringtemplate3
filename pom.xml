@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.antlr</groupId>
     <artifactId>stringtemplate</artifactId>
     <packaging>jar</packaging>
-    
+
     <!--
         The version number defined here in the version tag indicates how the
         jar is named and released. When it ends with SNAPSHOT, it will be stored
@@ -13,22 +20,22 @@
         SNAPSHOT replaced with the the data, time and unique number.
     -->
     <version>3.2.2-SNAPSHOT</version>
-    
+
     <!--
         The name of the project as seen by IDEs and release documentation etc.
     -->
     <name>ANTLR StringTemplate</name>
-    
+
     <description>StringTemplate is a java template engine for generating source code,
 web pages, emails, or any other formatted text output.
 
 StringTemplate is particularly good at multi-targeted code generators,
-multiple site skins, and internationalization/localization. 
+multiple site skins, and internationalization/localization.
 
-It evolved over years of effort developing jGuru.com. 
+It evolved over years of effort developing jGuru.com.
 
 StringTemplate also generates the stringtemplate website: http://www.stringtemplate.org
-and powers the ANTLR v3 code generator. Its distinguishing characteristic 
+and powers the ANTLR v3 code generator. Its distinguishing characteristic
 is that unlike other engines, it strictly enforces model-view separation.
 
 Strict separation makes websites and code generators more flexible
@@ -37,7 +44,17 @@ template authors.
 
 There are currently about 600 StringTemplate source downloads a month.
     </description>
-    
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java5.home>${env.JAVA5_HOME}</java5.home>
+        <java6.home>${env.JAVA6_HOME}</java6.home>
+        <bootclasspath.java5>${java5.home}/lib/rt.jar</bootclasspath.java5>
+        <bootclasspath.java6>${java6.home}/lib/rt.jar</bootclasspath.java6>
+        <bootclasspath.compile>${bootclasspath.java5}</bootclasspath.compile>
+        <bootclasspath.testCompile>${bootclasspath.java6}</bootclasspath.testCompile>
+    </properties>
+
     <!--
         The URL of the ANTLR base project
       -->
@@ -55,6 +72,16 @@ There are currently about 600 StringTemplate source downloads a month.
             <timezone>PST</timezone>
         </developer>
         <developer>
+            <name>Sam Harwell</name>
+            <organization>Tunnel Vision Laboratories, LLC</organization>
+            <organizationUrl>http://tunnelvisionlabs.com</organizationUrl>
+            <email>sam@tunnelvisionlabs.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>CST</timezone>
+        </developer>
+        <developer>
             <name>Jim Idle</name>
             <organization>Temporal Wave LLC</organization>
             <organizationUrl>http://www.temporal-wave.com</organizationUrl>
@@ -65,7 +92,7 @@ There are currently about 600 StringTemplate source downloads a month.
             <timezone>PST</timezone>
         </developer>
     </developers>
-        
+
     <licenses>
         <license>
             <name>BSD licence</name>
@@ -73,39 +100,26 @@ There are currently about 600 StringTemplate source downloads a month.
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/antlr/stringtemplate3/issues</url>
+    </issueManagement>
+
     <scm>
-        <url>http://fisheye2.cenqua.com/browse/stringtemplate</url>
-        <connection>http://fisheye2.cenqua.com/browse/stringtemplate</connection>
+        <url>https://github.com/antlr/stringtemplate3/tree/master</url>
+        <connection>scm:git:git://github.com/antlr/stringtemplate3.git</connection>
+        <developerConnection>scm:git:git@github.com:antlr/stringtemplate3.git</developerConnection>
     </scm>
-    
-  <!--
-    Definition of the ANTLR repositories. Note that you can only deploy
-    to the repositories via scp, and so the server must already know about
-    your public key. ONly ANTLR developers are allowed to deploy to the 
-    release and snapshot repositories, which are synced with the Maven central
-    repository.
-  -->
-  <distributionManagement>
-      <repository>
-          <id>antlr-repo</id>
-          <name>ANTLR Testing repository</name>
-          <url>scpexe://antlr.org/home/mavensync/antlr-repo</url>
-      </repository>
-      
-      <snapshotRepository>
-            <id>antlr-snapshot</id>
-            <name>ANTLR Testing Snapshot Repository</name>
-            <url>scpexe://antlr.org/home/mavensync/antlr-snapshot</url>
-      </snapshotRepository>
-  </distributionManagement>
-  
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.5</version>
+            <version>4.10</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>antlr</groupId>
             <artifactId>antlr</artifactId>
@@ -114,31 +128,82 @@ There are currently about 600 StringTemplate source downloads a month.
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>sonatype-oss-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-compile</id>
+                                <configuration>
+                                    <compilerArguments>
+                                        <bootclasspath>${bootclasspath.compile}</bootclasspath>
+                                    </compilerArguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>default-testCompile</id>
+                                <configuration>
+                                    <compilerArguments>
+                                        <bootclasspath>${bootclasspath.testCompile}</bootclasspath>
+                                    </compilerArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>2.0</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <minimizeJar>true</minimizeJar>
+                                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                                    <createSourcesJar>true</createSourcesJar>
+                                    <shadeSourcesContent>true</shadeSourcesContent>
+                                    <shadedClassifierName>complete</shadedClassifierName>
+                                    <relocations>
+                                        <relocation>
+                                            <pattern>antlr</pattern>
+                                            <shadedPattern>st3hidden.antlr</shadedPattern>
+                                        </relocation>
+                                    </relocations>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
 
         <defaultGoal>install</defaultGoal>
 
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh-external</artifactId>
-                <version>1.0-beta-2</version>
-            </extension>
-        </extensions>
-      
-        
         <!--
             The root of the source code for StringTemplate
         -->
         <sourceDirectory>src</sourceDirectory>
-        
+
         <!--
             The root of the test source code for StringTemplate.
         -->
         <testSourceDirectory>test</testSourceDirectory>
-        
+
         <!--
-            All the resources that should be on the classpath, when 
+            All the resources that should be on the classpath, when
             the junit tests are run. Here we need to include the test
             source code directory as the .st files loaded dynamically
             by the tests, are located underneath this tree.
@@ -148,11 +213,25 @@ There are currently about 600 StringTemplate source downloads a month.
                 <directory>test</directory>
             </testResource>
         </testResources>
-        
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>antlr-maven-plugin</artifactId>
+                <version>2.1</version>
                 <configuration>
                     <sourceDirectory>src/org/antlr/stringtemplate/language</sourceDirectory>
                     <grammars>template.g, angle.bracket.template.g, action.g, eval.g, group.g, interface.g</grammars>
@@ -165,16 +244,46 @@ There are currently about 600 StringTemplate source downloads a month.
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.0</version>
                 <configuration>
-                    <source>1.4</source>
-                    <target>1.4</target>
                     <sourceDirectory>src</sourceDirectory>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
                 </configuration>
+
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <source>1.5</source>
+                            <target>1.5</target>
+                            <compilerArgument>-Xlint:-serial</compilerArgument>
+                            <compilerArguments>
+                                <Xlint/>
+                            </compilerArguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <configuration>
+                            <source>1.6</source>
+                            <target>1.6</target>
+                            <compilerArgument>-Xlint:-serial</compilerArgument>
+                            <compilerArguments>
+                                <Xlint/>
+                            </compilerArguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
+
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.13</version>
                 <configuration>
                     <additionalClasspathElements>
                         <additionalClasspathElement>${basedir}/src</additionalClasspathElement>
@@ -185,11 +294,36 @@ There are currently about 600 StringTemplate source downloads a month.
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
+                <version>2.5.2</version>
                 <configuration>
                     <findbugsXmlOutput>true</findbugsXmlOutput>
                     <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
                     <xmlOutput>true</xmlOutput>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <!-- override the version inherited from the parent -->
+                <version>2.2.1</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <!-- override the version inherited from the parent -->
+                <version>2.9</version>
+                <configuration>
+                    <quiet>true</quiet>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <!-- override the version inherited from the parent -->
+                <version>1.4</version>
             </plugin>
 
         </plugins>
