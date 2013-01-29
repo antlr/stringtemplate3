@@ -27,16 +27,17 @@
 */
 package org.antlr.stringtemplate.test;
 
-import junit.framework.TestCase;
 import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
 import org.antlr.stringtemplate.language.DefaultTemplateLexer;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class TestStringTemplate extends TestCase {
+public class TestStringTemplate {
     static final String newline = System.getProperty("line.separator");
 
     static class ErrorBuffer implements StringTemplateErrorListener {
@@ -70,7 +71,7 @@ public class TestStringTemplate extends TestCase {
 		}
 	}
 
-	public void testInterfaceFileFormat() throws Exception {
+	@Test public void testInterfaceFileFormat() throws Exception {
 		String groupI =
 				"interface test;" +newline+
 				"t();" +newline+
@@ -87,7 +88,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,I.toString());
 	}
 
-	public void testNoGroupLoader() throws Exception {
+	@Test public void testNoGroupLoader() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -107,7 +108,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,errors.toString());
 	}
 
-	public void testCannotFindInterfaceFile() throws Exception {
+	@Test public void testCannotFindInterfaceFile() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -128,7 +129,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,errors.toString());
 	}
 
-	public void testMultiDirGroupLoading() throws Exception {
+	@Test public void testMultiDirGroupLoading() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -159,7 +160,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,group.toString());
 	}
 
-	public void testGroupSatisfiesSingleInterface() throws Exception {
+	@Test public void testGroupSatisfiesSingleInterface() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -186,7 +187,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,errors.toString());
 	}
 
-	public void testGroupExtendsSuperGroup() throws Exception {
+	@Test public void testGroupExtendsSuperGroup() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -215,7 +216,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, st.toString());
 	}
 
-	public void testGroupExtendsSuperGroupWithAngleBrackets() throws Exception {
+	@Test public void testGroupExtendsSuperGroupWithAngleBrackets() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -243,7 +244,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, st.toString());
 	}
 
-	public void testMissingInterfaceTemplate() throws Exception {
+	@Test public void testMissingInterfaceTemplate() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -269,7 +270,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, errors.toString());
 	}
 
-	public void testMissingOptionalInterfaceTemplate() throws Exception {
+	@Test public void testMissingOptionalInterfaceTemplate() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -295,7 +296,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, errors.toString());
 	}
 
-	public void testMismatchedInterfaceTemplate() throws Exception {
+	@Test public void testMismatchedInterfaceTemplate() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
@@ -322,7 +323,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,errors.toString());
 	}
 
-	public void testGroupFileFormat() throws Exception {
+	@Test public void testGroupFileFormat() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"t() ::= \"literal template\"" +newline+
@@ -332,10 +333,10 @@ public class TestStringTemplate extends TestCase {
 				new StringTemplateGroup(new StringReader(templates),
 										DefaultTemplateLexer.class);
 
-		String expecting = "group test;" +newline+
-				"bold(item) ::= <<<b>$item$</b>>>" +newline+
-				"duh() ::= <<xx>>" +newline+
-				"t() ::= <<literal template>>"+newline;
+		String expecting = "group test;\n" +
+				"bold(item) ::= <<<b>$item$</b>>>\n" +
+				"duh() ::= <<xx>>\n" +
+				"t() ::= <<literal template>>\n";
 		assertEquals(expecting,group.toString());
 
 		StringTemplate a = group.getInstanceOf("t");
@@ -348,7 +349,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,b.toString());
 	}
 
-	public void testEscapedTemplateDelimiters() throws Exception {
+	@Test public void testEscapedTemplateDelimiters() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"t() ::= <<$\"literal\":{a|$a$\\}}$ template\n>>" +newline+
@@ -358,10 +359,10 @@ public class TestStringTemplate extends TestCase {
 				new StringTemplateGroup(new StringReader(templates),
 										DefaultTemplateLexer.class);
 
-		String expecting = "group test;" +newline+
-				"bold(item) ::= <<<b>$item$</b>>>" +newline+
-				"duh() ::= <<xx>>" +newline+
-				"t() ::= <<$\"literal\":{a|$a$\\}}$ template>>"+newline;
+		String expecting = "group test;\n" +
+				"bold(item) ::= <<<b>$item$</b>>>\n" +
+				"duh() ::= <<xx>>\n" +
+				"t() ::= <<$\"literal\":{a|$a$\\}}$ template>>\n";
 		assertEquals(expecting,group.toString());
 
 		StringTemplate b = group.getInstanceOf("bold");
@@ -375,7 +376,7 @@ public class TestStringTemplate extends TestCase {
 	}
 
     /** Check syntax and setAttribute-time errors */
-    public void testTemplateParameterDecls() throws Exception {
+    @Test public void testTemplateParameterDecls() throws Exception {
         String templates =
                 "group test;" +newline+
                 "t() ::= \"no args but ref $foo$\"" +newline+
@@ -408,7 +409,7 @@ public class TestStringTemplate extends TestCase {
         a.setAttribute("b", "x");
     }
 
-    public void testTemplateRedef() throws Exception {
+    @Test public void testTemplateRedef() throws Exception {
         String templates =
                 "group test;" +newline+
                 "a() ::= \"x\"" +newline+
@@ -421,7 +422,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting,errors.toString());
     }
 
-    public void testMissingInheritedAttribute() throws Exception {
+    @Test public void testMissingInheritedAttribute() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page(title,font) ::= <<"+newline +
@@ -442,7 +443,7 @@ public class TestStringTemplate extends TestCase {
         t.toString(); // should be no problem
     }
 
-    public void testFormalArgumentAssignment() throws Exception {
+    @Test public void testFormalArgumentAssignment() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page() ::= <<$body(font=\"Times\")$>>"+newline +
@@ -455,7 +456,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testUndefinedArgumentAssignment() throws Exception {
+    @Test public void testUndefinedArgumentAssignment() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page(x) ::= <<$body(font=x)$>>"+newline +
@@ -476,7 +477,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, error);
     }
 
-    public void testFormalArgumentAssignmentInApply() throws Exception {
+    @Test public void testFormalArgumentAssignmentInApply() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page(name) ::= <<$name:bold(font=\"Times\")$>>"+newline +
@@ -490,7 +491,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testUndefinedArgumentAssignmentInApply() throws Exception {
+    @Test public void testUndefinedArgumentAssignmentInApply() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page(name,x) ::= <<$name:bold(font=x)$>>"+newline +
@@ -512,7 +513,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting,error);
     }
 
-    public void testUndefinedAttributeReference() throws Exception {
+    @Test public void testUndefinedAttributeReference() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page() ::= <<$bold()$>>"+newline +
@@ -532,7 +533,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting,error);
     }
 
-    public void testUndefinedDefaultAttributeReference() throws Exception {
+    @Test public void testUndefinedDefaultAttributeReference() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page() ::= <<$bold()$>>"+newline +
@@ -552,7 +553,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting,error);
     }
 
-    public void testAngleBracketsWithGroupFile() throws Exception {
+    @Test public void testAngleBracketsWithGroupFile() throws Exception {
         String templates =
                 "group test;" +newline+
                 "a(s) ::= \"<s:{case <i> : <it> break;}>\""+newline +
@@ -568,7 +569,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testAngleBracketsNoGroup() throws Exception {
+    @Test public void testAngleBracketsNoGroup() throws Exception {
         StringTemplate st =new StringTemplate(
                 "Tokens : <rules; separator=\"|\"> ;",
                 AngleBracketTemplateLexer.class);
@@ -578,7 +579,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, st.toString());
     }
 
-	public void testRegionRef() throws Exception {
+	@Test public void testRegionRef() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a() ::= \"X$@r()$Y\"" +newline;
@@ -591,7 +592,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmbeddedRegionRef() throws Exception {
+	@Test public void testEmbeddedRegionRef() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a() ::= \"X$@r$blort$@end$Y\"" +newline;
@@ -604,7 +605,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRegionRefAngleBrackets() throws Exception {
+	@Test public void testRegionRefAngleBrackets() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a() ::= \"X<@r()>Y\"" +newline;
@@ -616,7 +617,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmbeddedRegionRefAngleBrackets() throws Exception {
+	@Test public void testEmbeddedRegionRefAngleBrackets() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a() ::= \"X<@r>blort<@end>Y\"" +newline;
@@ -629,7 +630,7 @@ public class TestStringTemplate extends TestCase {
 	}
 
     // FIXME: This test fails due to inserted white space...
-	public void testEmbeddedRegionRefWithNewlinesAngleBrackets() throws Exception {
+	@Test public void testEmbeddedRegionRefWithNewlinesAngleBrackets() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a() ::= \"X<@r>" +newline+
@@ -644,7 +645,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRegionRefWithDefAngleBrackets() throws Exception {
+	@Test public void testRegionRefWithDefAngleBrackets() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a() ::= \"X<@r()>Y\"" +newline+
@@ -657,7 +658,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRegionRefWithDefInConditional() throws Exception {
+	@Test public void testRegionRefWithDefInConditional() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a(v) ::= \"X<if(v)>A<@r()>B<endif>Y\"" +newline+
@@ -671,7 +672,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRegionRefWithImplicitDefInConditional() throws Exception {
+	@Test public void testRegionRefWithImplicitDefInConditional() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"a(v) ::= \"X<if(v)>A<@r>yo<@end>B<endif>Y\"" +newline+
@@ -691,7 +692,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(err_expecting,err_result);
 	}
 
-	public void testRegionOverride() throws Exception {
+	@Test public void testRegionOverride() throws Exception {
 		String templates1 =
 				"group super;" +newline+
 				"a() ::= \"X<@r()>Y\"" +
@@ -714,7 +715,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRegionOverrideRefSuperRegion() throws Exception {
+	@Test public void testRegionOverrideRefSuperRegion() throws Exception {
 		String templates1 =
 				"group super;" +newline+
 				"a() ::= \"X<@r()>Y\"" +
@@ -737,7 +738,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRegionOverrideRefSuperRegion3Levels() throws Exception {
+	@Test public void testRegionOverrideRefSuperRegion3Levels() throws Exception {
 		// Bug: This was causing infinite recursion:
 		// getInstanceOf(super::a)
 		// getInstanceOf(sub::a)
@@ -782,7 +783,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRegionOverrideRefSuperImplicitRegion() throws Exception {
+	@Test public void testRegionOverrideRefSuperImplicitRegion() throws Exception {
 		String templates1 =
 				"group super;" +newline+
 				"a() ::= \"X<@r>foo<@end>Y\""+newline;
@@ -804,7 +805,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmbeddedRegionRedefError() throws Exception {
+	@Test public void testEmbeddedRegionRedefError() throws Exception {
 		// cannot define an embedded template within group
 		String templates =
 				"group test;" +newline+
@@ -821,7 +822,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testImplicitRegionRedefError() throws Exception {
+	@Test public void testImplicitRegionRedefError() throws Exception {
 		// cannot define an implicitly-defined template more than once
 		String templates =
 				"group test;" +newline+
@@ -839,7 +840,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testImplicitOverriddenRegionRedefError() throws Exception {
+	@Test public void testImplicitOverriddenRegionRedefError() throws Exception {
 		String templates1 =
 			"group super;" +newline+
 			"a() ::= \"X<@r()>Y\"" +
@@ -864,7 +865,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testUnknownRegionDefError() throws Exception {
+	@Test public void testUnknownRegionDefError() throws Exception {
 		// cannot define an implicitly-defined template more than once
 		String templates =
 				"group test;" +newline+
@@ -881,7 +882,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testSuperRegionRefError() throws Exception {
+	@Test public void testSuperRegionRefError() throws Exception {
 		String templates1 =
 			"group super;" +newline+
 			"a() ::= \"X<@r()>Y\"" +
@@ -905,7 +906,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMissingEndRegionError() throws Exception {
+	@Test public void testMissingEndRegionError() throws Exception {
 		// cannot define an implicitly-defined template more than once
 		String templates =
 				"group test;" +newline+
@@ -923,7 +924,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMissingEndRegionErrorAngleBrackets() throws Exception {
+	@Test public void testMissingEndRegionErrorAngleBrackets() throws Exception {
 		// cannot define an implicitly-defined template more than once
 		String templates =
 				"group test;" +newline+
@@ -939,7 +940,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-    public void testSimpleInheritance() throws Exception {
+    @Test public void testSimpleInheritance() throws Exception {
 		// make a bold template in the super group that you can inherit from sub
 		StringTemplateGroup supergroup = new StringTemplateGroup("super");
 		StringTemplateGroup subgroup = new StringTemplateGroup("sub");
@@ -954,7 +955,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,duh.toString());
 	}
 
-	public void testOverrideInheritance() throws Exception {
+	@Test public void testOverrideInheritance() throws Exception {
 		// make a bold template in the super group and one in sub group
 		StringTemplateGroup supergroup = new StringTemplateGroup("super");
 		StringTemplateGroup subgroup = new StringTemplateGroup("sub");
@@ -970,7 +971,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,duh.toString());
 	}
 
-	public void testMultiLevelInheritance() throws Exception {
+	@Test public void testMultiLevelInheritance() throws Exception {
 		// must loop up two levels to find bold()
 		StringTemplateGroup rootgroup = new StringTemplateGroup("root");
 		StringTemplateGroup level1 = new StringTemplateGroup("level1");
@@ -988,7 +989,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,duh.toString());
 	}
 
-	public void testComplicatedInheritance() throws Exception {
+	@Test public void testComplicatedInheritance() throws Exception {
 		// in super: decls invokes labels
 		// in sub:   overridden decls which calls super.decls
 		//           overridden labels
@@ -1018,7 +1019,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void test3LevelSuperRef() throws Exception {
+	@Test public void test3LevelSuperRef() throws Exception {
 		String templates1 =
 				"group super;" +newline+
 				"r() ::= \"foo\"" +newline;
@@ -1049,7 +1050,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testExprInParens() throws Exception {
+	@Test public void testExprInParens() throws Exception {
 		// specify a template to apply to an attribute
 		// Use a template group so we can specify the start/stop chars
 		StringTemplateGroup group =
@@ -1064,7 +1065,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, duh.toString());
 	}
 
-    public void testMultipleAdditions() throws Exception {
+    @Test public void testMultipleAdditions() throws Exception {
         // specify a template to apply to an attribute
         // Use a template group so we can specify the start/stop chars
         StringTemplateGroup group =
@@ -1079,7 +1080,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, duh.toString());
     }
 
-    public void testCollectionAttributes() throws Exception {
+    @Test public void testCollectionAttributes() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1106,7 +1107,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testParenthesizedExpression() throws Exception {
+    @Test public void testParenthesizedExpression() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1118,7 +1119,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-	public void testApplyTemplateNameExpression() throws Exception {
+	@Test public void testApplyTemplateNameExpression() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /* StringTemplate bold =*/ group.defineTemplate("foobar", "foo$attr$bar");
@@ -1131,7 +1132,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-	public void testApplyTemplateNameTemplateEval() throws Exception {
+	@Test public void testApplyTemplateNameTemplateEval() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
 		/*StringTemplate foobar =*/ group.defineTemplate("foobar", "foo$it$bar");
@@ -1144,7 +1145,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testTemplateNameExpression() throws Exception {
+    @Test public void testTemplateNameExpression() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate foo =*/ group.defineTemplate("foo", "hi there!");
@@ -1155,7 +1156,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testMissingEndDelimiter() throws Exception {
+    @Test public void testMissingEndDelimiter() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -1167,7 +1168,7 @@ public class TestStringTemplate extends TestCase {
         assertTrue(errors.toString().startsWith(expectingError));
     }
 
-    public void testSetButNotRefd() throws Exception {
+    @Test public void testSetButNotRefd() throws Exception {
         StringTemplate.setLintMode(true);
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
@@ -1185,7 +1186,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expectingError,errors.toString());
     }
 
-    public void testNullTemplateApplication() throws Exception {
+    @Test public void testNullTemplateApplication() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -1204,7 +1205,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,error);
     }
 
-    public void testNullTemplateToMultiValuedApplication() throws Exception {
+    @Test public void testNullTemplateToMultiValuedApplication() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -1224,7 +1225,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,error);
     }
 
-    public void testChangingAttrValueTemplateApplicationToVector() throws Exception {
+    @Test public void testChangingAttrValueTemplateApplicationToVector() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$x$</b>");
@@ -1236,7 +1237,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testChangingAttrValueRepeatedTemplateApplicationToVector() throws Exception {
+    @Test public void testChangingAttrValueRepeatedTemplateApplicationToVector() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
         /*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$item$</b>");
@@ -1251,7 +1252,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting,members.toString());
     }
 
-    public void testAlternatingTemplateApplication() throws Exception {
+    @Test public void testAlternatingTemplateApplication() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
         /*StringTemplate listItem =*/ group.defineTemplate("listItem", "<li>$it$</li>");
@@ -1267,7 +1268,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(item.toString(), expecting);
     }
 
-    public void testExpressionAsRHSOfAssignment() throws Exception {
+    @Test public void testExpressionAsRHSOfAssignment() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate hostname =*/ group.defineTemplate("hostname", "$machine$.jguru.com");
@@ -1277,7 +1278,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testTemplateApplicationAsRHSOfAssignment() throws Exception {
+    @Test public void testTemplateApplicationAsRHSOfAssignment() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate hostname =*/ group.defineTemplate("hostname", "$machine$.jguru.com");
@@ -1288,7 +1289,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testParameterAndAttributeScoping() throws Exception {
+    @Test public void testParameterAndAttributeScoping() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate italics =*/ group.defineTemplate("italics", "<i>$x$</i>");
@@ -1300,7 +1301,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testComplicatedSeparatorExpr() throws Exception {
+    @Test public void testComplicatedSeparatorExpr() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate bold =*/ group.defineTemplate("bulletSeparator", "</li>$foo$<li>");
@@ -1316,7 +1317,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testAttributeRefButtedUpAgainstEndifAndWhitespace() throws Exception {
+    @Test public void testAttributeRefButtedUpAgainstEndifAndWhitespace() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplate a = new StringTemplate(group,
@@ -1326,7 +1327,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(a.toString(), expecting);
     }
 
-	public void testStringCatenationOnSingleValuedAttributeViaTemplateLiteral() throws Exception {
+	@Test public void testStringCatenationOnSingleValuedAttributeViaTemplateLiteral() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		/*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1339,7 +1340,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(b.toString(), expecting);
 	}
 
-	public void testStringCatenationOpOnArg() throws Exception {
+	@Test public void testStringCatenationOpOnArg() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		/*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1351,7 +1352,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, b.toString());
 	}
 
-	public void testStringCatenationOpOnArgWithEqualsInString() throws Exception {
+	@Test public void testStringCatenationOpOnArgWithEqualsInString() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		/*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1363,7 +1364,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, b.toString());
 	}
 
-    public void testApplyingTemplateFromDiskWithPrecompiledIF()
+    @Test public void testApplyingTemplateFromDiskWithPrecompiledIF()
             throws Exception
     {
         // Create a temporary working directory
@@ -1417,7 +1418,7 @@ public class TestStringTemplate extends TestCase {
         tmpWorkDir.delete();
     }
 
-    public void testMultiValuedAttributeWithAnonymousTemplateUsingIndexVariableI()
+    @Test public void testMultiValuedAttributeWithAnonymousTemplateUsingIndexVariableI()
             throws Exception
     {
         StringTemplateGroup tgroup =
@@ -1441,7 +1442,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testFindTemplateInCLASSPATH() throws Exception {
+    @Test public void testFindTemplateInCLASSPATH() throws Exception {
         // Look for templates in CLASSPATH as resources
         StringTemplateGroup mgroup =
                 new StringTemplateGroup("method stuff",
@@ -1464,7 +1465,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, m.toString());        
     }
 
-    public void testApplyTemplateToSingleValuedAttribute() throws Exception {
+    @Test public void testApplyTemplateToSingleValuedAttribute() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$x$</b>");
@@ -1473,7 +1474,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals("<b>Terence</b>",name.toString());
     }
 
-    public void testStringLiteralAsAttribute() throws Exception {
+    @Test public void testStringLiteralAsAttribute() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1481,7 +1482,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals("<b>Terence</b>",name.toString());
     }
 
-    public void testApplyTemplateToSingleValuedAttributeWithDefaultAttribute() throws Exception {
+    @Test public void testApplyTemplateToSingleValuedAttributeWithDefaultAttribute() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         /*StringTemplate bold =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1490,7 +1491,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals("<b>Terence</b>",name.toString());
     }
 
-    public void testApplyAnonymousTemplateToSingleValuedAttribute() throws Exception {
+    @Test public void testApplyAnonymousTemplateToSingleValuedAttribute() throws Exception {
         // specify a template to apply to an attribute
         // Use a template group so we can specify the start/stop chars
         StringTemplateGroup group =
@@ -1501,7 +1502,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals("<li>Terence</li>",item.toString());
     }
 
-    public void testApplyAnonymousTemplateToMultiValuedAttribute() throws Exception {
+    @Test public void testApplyAnonymousTemplateToMultiValuedAttribute() throws Exception {
         // specify a template to apply to an attribute
         // Use a template group so we can specify the start/stop chars
         StringTemplateGroup group =
@@ -1519,7 +1520,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting,list.toString());
     }
 
-    public void testApplyAnonymousTemplateToAggregateAttribute() throws Exception {
+    @Test public void testApplyAnonymousTemplateToAggregateAttribute() throws Exception {
         StringTemplate st =
                 new StringTemplate("$items:{$it.lastName$, $it.firstName$\n}$");
 		// also testing wacky spaces in aggregate spec
@@ -1531,7 +1532,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, st.toString());
     }
 
-    public void testRepeatedApplicationOfTemplateToSingleValuedAttribute() throws Exception {
+    @Test public void testRepeatedApplicationOfTemplateToSingleValuedAttribute() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
         /*StringTemplate search =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1541,7 +1542,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals("<b><b>Jim</b></b>", item.toString());
     }
 
-    public void testRepeatedApplicationOfTemplateToMultiValuedAttributeWithSeparator() throws Exception {
+    @Test public void testRepeatedApplicationOfTemplateToMultiValuedAttributeWithSeparator() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
         /*StringTemplate search =*/ group.defineTemplate("bold", "<b>$it$</b>");
@@ -1558,7 +1559,7 @@ public class TestStringTemplate extends TestCase {
 
     // ### NEED A TEST OF obj ASSIGNED TO ARG?
 
-    public void testMultiValuedAttributeWithSeparator() throws Exception {
+    @Test public void testMultiValuedAttributeWithSeparator() throws Exception {
         StringTemplate query;
 
         // if column can be multi-valued, specify a separator
@@ -1574,7 +1575,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals("SELECT  name, email FROM User;",query.toString());
     }
 
-    public void testSingleValuedAttributes() throws Exception {
+    @Test public void testSingleValuedAttributes() throws Exception {
         // all attributes are single-valued:
         StringTemplate query =
                 new StringTemplate("SELECT $column$ FROM $table$;");
@@ -1584,7 +1585,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals("SELECT name FROM User;",query.toString());
     }
 
-	public void testIFTemplate() throws Exception {
+	@Test public void testIFTemplate() throws Exception {
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -1597,7 +1598,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals("SELECT name FROM PERSON WHERE ID=231;",t.toString());
 	}
 
-	public void testIFCondWithParensTemplate() throws Exception {
+	@Test public void testIFCondWithParensTemplate() throws Exception {
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -1611,7 +1612,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals("int x=0;",t.toString());
 	}
 
-	public void testIFCondWithParensDollarDelimsTemplate() throws Exception {
+	@Test public void testIFCondWithParensDollarDelimsTemplate() throws Exception {
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".");
 		StringTemplate t =
@@ -1626,7 +1627,7 @@ public class TestStringTemplate extends TestCase {
 	}
 
 	/** As of 2.0, you can test a boolean value */
-	public void testIFBoolean() throws Exception {
+	@Test public void testIFBoolean() throws Exception {
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".");
 		StringTemplate t =
@@ -1640,7 +1641,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(" y", t.toString());
 	}
 
-    public void testNestedIFTemplate() throws Exception {        
+    @Test public void testNestedIFTemplate() throws Exception {
         StringTemplateGroup group =
             new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
         StringTemplate t =
@@ -1662,7 +1663,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testIFConditionWithTemplateApplication() throws Exception {
+    @Test public void testIFConditionWithTemplateApplication() throws Exception {
         StringTemplateGroup group =
             new StringTemplateGroup("dummy", ".");
         StringTemplate t =
@@ -1693,7 +1694,7 @@ public class TestStringTemplate extends TestCase {
 		public Boolean getCanEdit() { return new Boolean(true); }
 	}
 
-    public void testObjectPropertyReference() throws Exception {
+    @Test public void testObjectPropertyReference() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
         StringTemplate t =
@@ -1712,7 +1713,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testApplyRepeatedAnonymousTemplateWithForeignTemplateRefToMultiValuedAttribute() throws Exception {
+    @Test public void testApplyRepeatedAnonymousTemplateWithForeignTemplateRefToMultiValuedAttribute() throws Exception {
         // specify a template to apply to an attribute
         // Use a template group so we can specify the start/stop chars
         StringTemplateGroup group =
@@ -1754,7 +1755,7 @@ public class TestStringTemplate extends TestCase {
 		}
 	}
 
-	public void testRecursion() throws Exception {
+	@Test public void testRecursion() throws Exception {
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
 		group.defineTemplate("tree",
@@ -1776,7 +1777,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, tree.toString());
 	}
 
-    public void testNestedAnonymousTemplates() throws Exception {
+    @Test public void testNestedAnonymousTemplates() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
         StringTemplate t =
@@ -1796,7 +1797,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testAnonymousTemplateAccessToEnclosingAttributes() throws Exception {
+    @Test public void testAnonymousTemplateAccessToEnclosingAttributes() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
         StringTemplate t =
@@ -1817,7 +1818,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testNestedAnonymousTemplatesAgain() throws Exception {
+    @Test public void testNestedAnonymousTemplatesAgain() throws Exception {
 
         StringTemplateGroup group =
                 new StringTemplateGroup("dummy", ".");
@@ -1837,7 +1838,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-	public void testEscapes() throws Exception {
+	@Test public void testEscapes() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("dummy", ".");		
 		group.defineTemplate("foo", "$x$ && $it$");
@@ -1871,7 +1872,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,v.toString());
 	}
 
-    public void testEscapesOutsideExpressions() throws Exception {
+    @Test public void testEscapesOutsideExpressions() throws Exception {
         StringTemplate b = new StringTemplate("It\\'s ok...\\$; $a:{\\'hi\\', $it$}$");
         b.setAttribute("a", "Ter");
         String expecting ="It\\'s ok...$; \\'hi\\', Ter";
@@ -1879,7 +1880,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }
 
-    public void testElseClause() throws Exception {
+    @Test public void testElseClause() throws Exception {
         StringTemplate e = new StringTemplate(
                 "$if(title)$"+newline +
                 "foo"+newline +
@@ -1896,7 +1897,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-	public void testElseIfClause() throws Exception {
+	@Test public void testElseIfClause() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$if(x)$"+newline +
 				"foo"+newline +
@@ -1909,7 +1910,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-    public void testElseIfClauseAngleBrackets() throws Exception {
+    @Test public void testElseIfClauseAngleBrackets() throws Exception {
         StringTemplate e = new StringTemplate(
                 "<if(x)>"+newline +
                 "foo"+newline +
@@ -1923,7 +1924,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-    public void testElseIfClause2() throws Exception {
+    @Test public void testElseIfClause2() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$if(x)$"+newline +
 				"foo"+newline +
@@ -1938,7 +1939,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testElseIfClauseAndElse() throws Exception {
+	@Test public void testElseIfClauseAndElse() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$if(x)$"+newline +
 				"foo"+newline +
@@ -1954,7 +1955,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testNestedIF() throws Exception {
+	@Test public void testNestedIF() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$if(title)$"+newline +
 				"foo"+newline +
@@ -1980,7 +1981,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testEmbeddedMultiLineIF() throws Exception {
+	@Test public void testEmbeddedMultiLineIF() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplate main = new StringTemplate(group, "$sub$");
@@ -2008,7 +2009,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, main.toString());
 	}
 
-    public void testSimpleIndentOfAttributeList()
+    @Test public void testSimpleIndentOfAttributeList()
             throws Exception
     {
         String templates =
@@ -2032,7 +2033,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testIndentOfMultilineAttributes()
+    @Test public void testIndentOfMultilineAttributes()
             throws Exception
     {
         String templates =
@@ -2061,7 +2062,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-	public void testIndentOfMultipleBlankLines()
+	@Test public void testIndentOfMultipleBlankLines()
 			throws Exception
 	{
 		String templates =
@@ -2083,7 +2084,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-    public void testIndentBetweenLeftJustifiedLiterals()
+    @Test public void testIndentBetweenLeftJustifiedLiterals()
             throws Exception
     {
         String templates =
@@ -2111,7 +2112,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testNestedIndent()
+    @Test public void testNestedIndent()
             throws Exception
     {
         String templates =
@@ -2161,7 +2162,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-	public void testAlternativeWriter() throws Exception {
+	@Test public void testAlternativeWriter() throws Exception {
 		final StringBuffer buf = new StringBuffer();
 		StringTemplateWriter w = new StringTemplateWriter() {
 			public void pushIndentation(String indent) {
@@ -2197,7 +2198,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals("<b>Terence</b>", buf.toString());
 	}
 
-	public void testApplyAnonymousTemplateToMapAndSet() throws Exception {
+	@Test public void testApplyAnonymousTemplateToMapAndSet() throws Exception {
 		StringTemplate st =
 				new StringTemplate("$items:{<li>$it$</li>}$");
 		Map m = new LinkedHashMap();
@@ -2218,7 +2219,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, st.toString());
 	}
 
-	public void testDumpMapAndSet() throws Exception {
+	@Test public void testDumpMapAndSet() throws Exception {
 		StringTemplate st =
 				new StringTemplate("$items; separator=\",\"$");
 		Map m = new LinkedHashMap();
@@ -2246,7 +2247,7 @@ public class TestStringTemplate extends TestCase {
 		}
 	}
 
-	public void testApplyAnonymousTemplateToArrayAndMapProperty() throws Exception {
+	@Test public void testApplyAnonymousTemplateToArrayAndMapProperty() throws Exception {
 		StringTemplate st =
 				new StringTemplate("$x.values:{<li>$it$</li>}$");
 		st.setAttribute("x", new Connector3());
@@ -2259,7 +2260,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, st.toString());
 	}
 
-    public void testSuperTemplateRef()
+    @Test public void testSuperTemplateRef()
             throws Exception
     {
         // you can refer to a template defined in a super group via super.t()
@@ -2275,7 +2276,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, st.toString());
     }
 
-    public void testApplySuperTemplateRef()
+    @Test public void testApplySuperTemplateRef()
             throws Exception
     {
         StringTemplateGroup group = new StringTemplateGroup("super");
@@ -2291,7 +2292,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, st.toString());
     }
 
-    public void testLazyEvalOfSuperInApplySuperTemplateRef()
+    @Test public void testLazyEvalOfSuperInApplySuperTemplateRef()
             throws Exception
     {
         StringTemplateGroup group = new StringTemplateGroup("base");
@@ -2321,7 +2322,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expectingError, error);
     }
 
-    public void testTemplatePolymorphism()
+    @Test public void testTemplatePolymorphism()
             throws Exception
     {
         StringTemplateGroup group = new StringTemplateGroup("super");
@@ -2341,7 +2342,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, st.toString());
     }
 
-    public void testListOfEmbeddedTemplateSeesEnclosingAttributes() throws Exception {
+    @Test public void testListOfEmbeddedTemplateSeesEnclosingAttributes() throws Exception {
         String templates =
                 "group test;" +newline+
                 "output(cond,items) ::= <<page: $items$>>" +newline+
@@ -2364,7 +2365,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, outputST.toString());
     }
 
-    public void testInheritArgumentFromRecursiveTemplateApplication() throws Exception {
+    @Test public void testInheritArgumentFromRecursiveTemplateApplication() throws Exception {
         // do not inherit attributes through formal args
         String templates =
                 "group test;" +newline+
@@ -2383,7 +2384,7 @@ public class TestStringTemplate extends TestCase {
     }
 
 
-    public void testDeliberateRecursiveTemplateApplication() throws Exception {
+    @Test public void testDeliberateRecursiveTemplateApplication() throws Exception {
         // This test will cause infinite loop.  block contains a stat which
         // contains the same block.  Must be in lintMode to detect
         String templates =
@@ -2400,10 +2401,10 @@ public class TestStringTemplate extends TestCase {
         b.setAttribute("stats", ifstat); // block has if stat
         ifstat.setAttribute("stats", b); // but make "if" contain block
         String expectingError =
-                "infinite recursion to <ifstat([stats])@4> referenced in <block([stats])@3>; stack trace:"+newline +
-                "<ifstat([stats])@4>, attributes=[stats=<block()@3>]>"+newline +
-                "<block([stats])@3>, attributes=[stats=<ifstat()@4>], references=[stats]>"+newline +
-                "<ifstat([stats])@4> (start of recursive cycle)"+newline +
+                "infinite recursion to <ifstat([stats])@4> referenced in <block([stats])@3>; stack trace:\n"+
+                "<ifstat([stats])@4>, attributes=[stats=<block()@3>]>\n"+
+                "<block([stats])@3>, attributes=[stats=<ifstat()@4>], references=[stats]>\n"+
+                "<ifstat([stats])@4> (start of recursive cycle)\n"+
                 "...";
         // note that attributes attribute doesn't show up in ifstat() because
         // recursion detection traps the problem before it writes out the
@@ -2423,7 +2424,7 @@ public class TestStringTemplate extends TestCase {
     }
 
 
-    public void testImmediateTemplateAsAttributeLoop() throws Exception {
+    @Test public void testImmediateTemplateAsAttributeLoop() throws Exception {
         // even though block has a stats value that refers to itself,
         // there is no recursion because each instance of block hides
         // the stats value from above since it's a formal arg.
@@ -2442,7 +2443,7 @@ public class TestStringTemplate extends TestCase {
     }
 
 
-    public void testTemplateAlias() throws Exception {
+    @Test public void testTemplateAlias() throws Exception {
         String templates =
                 "group test;" +newline+
                 "page(name) ::= \"name is <name>\"" +
@@ -2457,7 +2458,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }
 
-    public void testTemplateGetPropertyGetsAttribute() throws Exception {
+    @Test public void testTemplateGetPropertyGetsAttribute() throws Exception {
         // This test will cause infinite loop if missing attribute no
         // properly caught in getAttribute
         String templates =
@@ -2500,7 +2501,7 @@ public class TestStringTemplate extends TestCase {
         public String getType() {return type;}
     }
 
-	public void testComplicatedIndirectTemplateApplication() throws Exception {
+	@Test public void testComplicatedIndirectTemplateApplication() throws Exception {
 		String templates =
 				"group Java;"+newline +
 				""+newline +
@@ -2521,7 +2522,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, f.toString());
 	}
 
-	public void testIndirectTemplateApplication() throws Exception {
+	@Test public void testIndirectTemplateApplication() throws Exception {
 		String templates =
 				"group dork;"+newline +
 				""+newline +
@@ -2539,7 +2540,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, f.toString());
 	}
 
-	public void testIndirectTemplateWithArgsApplication() throws Exception {
+	@Test public void testIndirectTemplateWithArgsApplication() throws Exception {
 		String templates =
 				"group dork;"+newline +
 				""+newline +
@@ -2557,7 +2558,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(f.toString(), expecting);
 	}
 
-	public void testNullIndirectTemplateApplication() throws Exception {
+	@Test public void testNullIndirectTemplateApplication() throws Exception {
 		String templates =
 				"group dork;"+newline +
 				""+newline +
@@ -2575,7 +2576,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, f.toString());
 	}
 
-	public void testNullIndirectTemplate() throws Exception {
+	@Test public void testNullIndirectTemplate() throws Exception {
 		String templates =
 				"group dork;"+newline +
 				""+newline +
@@ -2593,7 +2594,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, f.toString());
 	}
 
-	public void testHashMapPropertyFetch() throws Exception {
+	@Test public void testHashMapPropertyFetch() throws Exception {
 		StringTemplate a = new StringTemplate("$stuff.prop$");
 		HashMap map = new HashMap();
 		a.setAttribute("stuff", map);
@@ -2604,7 +2605,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, results);
 	}
 
-	public void testHashMapPropertyFetchEmbeddedStringTemplate() throws Exception {
+	@Test public void testHashMapPropertyFetchEmbeddedStringTemplate() throws Exception {
 		StringTemplate a = new StringTemplate("$stuff.prop$");
 		HashMap map = new HashMap();
 		a.setAttribute("stuff", map);
@@ -2616,7 +2617,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, results);
 	}
 
-	public void testEmbeddedComments() throws Exception {
+	@Test public void testEmbeddedComments() throws Exception {
 		StringTemplate st = new StringTemplate(
 				"Foo $! ignore !$bar" +newline
 				);
@@ -2661,7 +2662,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmbeddedCommentsAngleBracketed() throws Exception {
+	@Test public void testEmbeddedCommentsAngleBracketed() throws Exception {
 		StringTemplate st = new StringTemplate(
 				"Foo <! ignore !>bar" +newline,
 				AngleBracketTemplateLexer.class
@@ -2712,7 +2713,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-    public void testLineBreak() throws Exception {
+    @Test public void testLineBreak() throws Exception {
         StringTemplate st = new StringTemplate(
                 "Foo <\\\\>"+newline+
                 "  \t  bar" +newline,
@@ -2721,11 +2722,11 @@ public class TestStringTemplate extends TestCase {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
-    public void testLineBreak2() throws Exception {
+    @Test public void testLineBreak2() throws Exception {
         StringTemplate st = new StringTemplate(
                 "Foo <\\\\>       "+newline+
                 "  \t  bar" +newline,
@@ -2734,11 +2735,11 @@ public class TestStringTemplate extends TestCase {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
-    public void testLineBreakNoWhiteSpace() throws Exception {
+    @Test public void testLineBreakNoWhiteSpace() throws Exception {
         StringTemplate st = new StringTemplate(
                 "Foo <\\\\>"+newline+
                 "bar" +newline,
@@ -2747,11 +2748,11 @@ public class TestStringTemplate extends TestCase {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
-    public void testLineBreakDollar() throws Exception {
+    @Test public void testLineBreakDollar() throws Exception {
         StringTemplate st = new StringTemplate(
                 "Foo $\\\\$"+newline+
                 "  \t  bar" +newline,
@@ -2760,11 +2761,11 @@ public class TestStringTemplate extends TestCase {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
-    public void testLineBreakDollar2() throws Exception {
+    @Test public void testLineBreakDollar2() throws Exception {
         StringTemplate st = new StringTemplate(
                 "Foo $\\\\$          "+newline+
                 "  \t  bar" +newline,
@@ -2773,11 +2774,11 @@ public class TestStringTemplate extends TestCase {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
-    public void testLineBreakNoWhiteSpaceDollar() throws Exception {
+    @Test public void testLineBreakNoWhiteSpaceDollar() throws Exception {
         StringTemplate st = new StringTemplate(
                 "Foo $\\\\$"+newline+
                 "bar" +newline,
@@ -2786,11 +2787,11 @@ public class TestStringTemplate extends TestCase {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
-	public void testCharLiterals() throws Exception {
+	@Test public void testCharLiterals() throws Exception {
 		StringTemplate st = new StringTemplate(
 				"Foo <\\r\\n><\\n><\\t> bar" +newline,
 				AngleBracketTemplateLexer.class
@@ -2798,14 +2799,14 @@ public class TestStringTemplate extends TestCase {
 		StringWriter sw = new StringWriter();
 		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
 		String result = sw.toString();
-		String expecting ="Foo \n\n\t bar"+newline;     // expect \n in output
+		String expecting ="Foo \n\n\t bar\n";     // expect \n in output
 		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo $\\n$$\\t$ bar" +newline);
 		sw = new StringWriter();
 		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
-		expecting ="Foo \n\t bar"+newline;     // expect \n in output
+		expecting ="Foo \n\t bar\n";     // expect \n in output
 		result = sw.toString();
 		assertEquals(expecting, result);
 
@@ -2818,7 +2819,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testNewlineNormalizationInTemplateString() throws Exception {
+	@Test public void testNewlineNormalizationInTemplateString() throws Exception {
 		StringTemplate st = new StringTemplate(
 				"Foo\r\n"+
 				"Bar\n",
@@ -2831,7 +2832,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testNewlineNormalizationInTemplateStringPC() throws Exception {
+	@Test public void testNewlineNormalizationInTemplateStringPC() throws Exception {
 		StringTemplate st = new StringTemplate(
 				"Foo\r\n"+
 				"Bar\n",
@@ -2844,7 +2845,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testNewlineNormalizationInAttribute() throws Exception {
+	@Test public void testNewlineNormalizationInAttribute() throws Exception {
 		StringTemplate st = new StringTemplate(
 				"Foo\r\n"+
 				"<name>\n",
@@ -2858,7 +2859,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testUnicodeLiterals() throws Exception {
+	@Test public void testUnicodeLiterals() throws Exception {
 		StringTemplate st = new StringTemplate(
 				"Foo <\\uFEA5\\n\\u00C2> bar" +newline,
 				AngleBracketTemplateLexer.class
@@ -2881,7 +2882,7 @@ public class TestStringTemplate extends TestCase {
 	}
 
 
-	public void testEmptyIteratedValueGetsSeparator() throws Exception {
+	@Test public void testEmptyIteratedValueGetsSeparator() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -2899,7 +2900,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-    public void testMissingIteratedConditionalValueGetsNOSeparator() throws Exception {
+    @Test public void testMissingIteratedConditionalValueGetsNOSeparator() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplateErrorListener errors = new ErrorBuffer();
@@ -2916,7 +2917,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }
 
-    public void testMissingIteratedConditionalValueGetsNOSeparator2() throws Exception {
+    @Test public void testMissingIteratedConditionalValueGetsNOSeparator2() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplateErrorListener errors = new ErrorBuffer();
@@ -2933,7 +2934,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }
 
-    public void testMissingIteratedDoubleConditionalValueGetsNOSeparator() throws Exception {
+    @Test public void testMissingIteratedDoubleConditionalValueGetsNOSeparator() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplateErrorListener errors = new ErrorBuffer();
@@ -2950,7 +2951,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }
 
-	public void testIteratedConditionalWithEmptyElseValueGetsSeparator() throws Exception {
+	@Test public void testIteratedConditionalWithEmptyElseValueGetsSeparator() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -2967,7 +2968,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testWhiteSpaceAtEndOfTemplate() throws Exception {
+	@Test public void testWhiteSpaceAtEndOfTemplate() throws Exception {
 		StringTemplateGroup group = new StringTemplateGroup("group");
 		StringTemplate pageST = group.getInstanceOf("org/antlr/stringtemplate/test/page");
 		StringTemplate listST = group.getInstanceOf("org/antlr/stringtemplate/test/users_list");
@@ -2989,7 +2990,7 @@ public class TestStringTemplate extends TestCase {
 		public List users = new ArrayList();
 	}
 
-	public void testSizeZeroButNonNullListGetsNoOutput() throws Exception {
+	@Test public void testSizeZeroButNonNullListGetsNoOutput() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -2999,12 +3000,12 @@ public class TestStringTemplate extends TestCase {
 			"$duh.users:{name: $it$}; separator=\", \"$\n" +
 			"end\n");
 		t.setAttribute("duh", new Duh());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
 
-	public void testNullListGetsNoOutput() throws Exception {
+	@Test public void testNullListGetsNoOutput() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -3014,12 +3015,12 @@ public class TestStringTemplate extends TestCase {
 			"$users:{name: $it$}; separator=\", \"$\n" +
 			"end\n");
 		//t.setAttribute("users", new Duh());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
 
-	public void testEmptyListGetsNoOutput() throws Exception {
+	@Test public void testEmptyListGetsNoOutput() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -3029,12 +3030,12 @@ public class TestStringTemplate extends TestCase {
 			"$users:{name: $it$}; separator=\", \"$\n" +
 			"end\n");
 		t.setAttribute("users", new ArrayList());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
 
-	public void testEmptyListNoIteratorGetsNoOutput() throws Exception {
+	@Test public void testEmptyListNoIteratorGetsNoOutput() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -3044,12 +3045,12 @@ public class TestStringTemplate extends TestCase {
 			"$users; separator=\", \"$\n" +
 			"end\n");
 		t.setAttribute("users", new ArrayList());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
 
-	public void testEmptyExprAsFirstLineGetsNoOutput() throws Exception {
+	@Test public void testEmptyExprAsFirstLineGetsNoOutput() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -3058,12 +3059,12 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate t = new StringTemplate(group,
 			"$users$\n" +
 			"end\n");
-		String expecting="end\n";
+		String expecting="end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
 
-	public void testSizeZeroOnLineByItselfGetsNoOutput() throws Exception {
+	@Test public void testSizeZeroOnLineByItselfGetsNoOutput() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -3074,12 +3075,12 @@ public class TestStringTemplate extends TestCase {
 			"$users:{name: $it$}$\n"+
 			"$users:{name: $it$}; separator=\", \"$\n"+
 			"end\n");
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
 
-	public void testSizeZeroOnLineWithIndentGetsNoOutput() throws Exception {
+	@Test public void testSizeZeroOnLineWithIndentGetsNoOutput() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -3090,12 +3091,12 @@ public class TestStringTemplate extends TestCase {
 			"	$users:{name: $it$}$\n"+
 			"	$users:{name: $it$$\\n$}$\n"+
 			"end\n");
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
 
-	public void testSimpleAutoIndent() throws Exception {
+	@Test public void testSimpleAutoIndent() throws Exception {
 		StringTemplate a = new StringTemplate(
 			"$title$: {\n" +
 			"	$name; separator=\"\n\"$\n" +
@@ -3106,14 +3107,14 @@ public class TestStringTemplate extends TestCase {
 		String results = a.toString();
 		//System.out.println(results);
 		String expecting =
-			"foo: {\n" +
-			"	Terence\n" +
-			"	Frank\n" +
+			"foo: {" + newline +
+			"	Terence" + newline +
+			"	Frank" + newline +
 			"}";
 		assertEquals(results, expecting);
 	}
 
-	public void testComputedPropertyName() throws Exception {
+	@Test public void testComputedPropertyName() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplateErrorListener errors = new ErrorBuffer();
@@ -3128,7 +3129,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testNonNullButEmptyIteratorTestsFalse() throws Exception {
+	@Test public void testNonNullButEmptyIteratorTestsFalse() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplate t = new StringTemplate(group,
@@ -3141,7 +3142,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testDoNotInheritAttributesThroughFormalArgs() throws Exception {
+	@Test public void testDoNotInheritAttributesThroughFormalArgs() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name) ::= \"<stat()>\"" +newline+
@@ -3159,7 +3160,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testArgEvaluationContext() throws Exception {
+	@Test public void testArgEvaluationContext() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name) ::= \"<stat(name=name)>\"" +newline+
@@ -3180,7 +3181,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testPassThroughAttributes() throws Exception {
+	@Test public void testPassThroughAttributes() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name) ::= \"<stat(...)>\"" +newline+
@@ -3196,7 +3197,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testPassThroughAttributes2() throws Exception {
+	@Test public void testPassThroughAttributes2() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name) ::= <<"+newline+
@@ -3214,7 +3215,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testDefaultArgument() throws Exception {
+	@Test public void testDefaultArgument() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name) ::= <<"+newline+
@@ -3232,7 +3233,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testDefaultArgument2() throws Exception {
+	@Test public void testDefaultArgument2() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"stat(name,value=\"99\") ::= \"x=<value>; // <name>\""+newline
@@ -3247,7 +3248,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-    public void testDefaultArgumentManuallySet() throws Exception {
+    @Test public void testDefaultArgumentManuallySet() throws Exception {
         class Field {
             public String name = "parrt";
             public int n = 0;
@@ -3282,7 +3283,7 @@ public class TestStringTemplate extends TestCase {
      *  a default value. look up the value to see if it's null without
      *  checking checkNullAttributeAgainstFormalArguments.
      */
-    public void testDefaultArgumentImplicitlySet() throws Exception {
+    @Test public void testDefaultArgumentImplicitlySet() throws Exception {
         class Field {
             public String name = "parrt";
             public int n = 0;
@@ -3307,7 +3308,7 @@ public class TestStringTemplate extends TestCase {
     }
 
     /* FIX THIS
-    public void testDefaultArgumentImplicitlySet2() throws Exception {
+    @Test public void testDefaultArgumentImplicitlySet2() throws Exception {
         class Field {
             public String name = "parrt";
             public int n = 0;
@@ -3332,7 +3333,7 @@ public class TestStringTemplate extends TestCase {
     }
     */
 
-	public void testDefaultArgumentAsTemplate() throws Exception {
+	@Test public void testDefaultArgumentAsTemplate() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name,size) ::= <<"+newline+
@@ -3351,7 +3352,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testDefaultArgumentAsTemplate2() throws Exception {
+	@Test public void testDefaultArgumentAsTemplate2() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name,size) ::= <<"+newline+
@@ -3370,7 +3371,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testDoNotUseDefaultArgument() throws Exception {
+	@Test public void testDoNotUseDefaultArgument() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name) ::= <<"+newline+
@@ -3387,7 +3388,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-    public void testDefaultArgumentInParensToEvalEarly() throws Exception {
+    @Test public void testDefaultArgumentInParensToEvalEarly() throws Exception {
         class Counter {
             int n = 0;
             public String toString() { return String.valueOf(n++); }
@@ -3407,7 +3408,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }
     
-	public void testArgumentsAsTemplates() throws Exception {
+	@Test public void testArgumentsAsTemplates() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name,size) ::= <<"+newline+
@@ -3425,7 +3426,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testTemplateArgumentEvaluatedInSurroundingContext() throws Exception {
+	@Test public void testTemplateArgumentEvaluatedInSurroundingContext() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"file(m,size) ::= \"<m>\""+newline+
@@ -3446,7 +3447,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testArgumentsAsTemplatesDefaultDelimiters() throws Exception {
+	@Test public void testArgumentsAsTemplatesDefaultDelimiters() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"method(name,size) ::= <<"+newline+
@@ -3465,7 +3466,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testDefaultArgsWhenNotInvoked() throws Exception {
+	@Test public void testDefaultArgsWhenNotInvoked() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"b(name=\"foo\") ::= \".<name>.\""+newline
@@ -3521,7 +3522,7 @@ public class TestStringTemplate extends TestCase {
 		}
 	}
 
-	public void testRendererForST() throws Exception {
+	@Test public void testRendererForST() throws Exception {
 		StringTemplate st =new StringTemplate(
 				"date: <created>",
 				AngleBracketTemplateLexer.class);
@@ -3533,7 +3534,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRendererWithFormat() throws Exception {
+	@Test public void testRendererWithFormat() throws Exception {
 		StringTemplate st =new StringTemplate(
 				"date: <created; format=\"yyyy.MM.dd\">",
 				AngleBracketTemplateLexer.class);
@@ -3545,7 +3546,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRendererWithFormatAndList() throws Exception {
+	@Test public void testRendererWithFormatAndList() throws Exception {
 		StringTemplate st =new StringTemplate(
 				"The names: <names; format=\"upper\">",
 				AngleBracketTemplateLexer.class);
@@ -3558,7 +3559,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRendererWithFormatAndSeparator() throws Exception {
+	@Test public void testRendererWithFormatAndSeparator() throws Exception {
 		StringTemplate st =new StringTemplate(
 				"The names: <names; separator=\" and \", format=\"upper\">",
 				AngleBracketTemplateLexer.class);
@@ -3571,7 +3572,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRendererWithFormatAndSeparatorAndNull() throws Exception {
+	@Test public void testRendererWithFormatAndSeparatorAndNull() throws Exception {
 		StringTemplate st =new StringTemplate(
 				"The names: <names; separator=\" and \", null=\"n/a\", format=\"upper\">",
 				AngleBracketTemplateLexer.class);
@@ -3586,7 +3587,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmbeddedRendererSeesEnclosing() throws Exception {
+	@Test public void testEmbeddedRendererSeesEnclosing() throws Exception {
 		// st is embedded in outer; set renderer on outer, st should
 		// still see it.
 		StringTemplate outer =new StringTemplate(
@@ -3604,7 +3605,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testRendererForGroup() throws Exception {
+	@Test public void testRendererForGroup() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"dateThing(created) ::= \"date: <created>\""+newline
@@ -3620,7 +3621,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testOverriddenRenderer() throws Exception {
+	@Test public void testOverriddenRenderer() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"dateThing(created) ::= \"date: <created>\""+newline
@@ -3637,7 +3638,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMap() throws Exception {
+	@Test public void testMap() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
@@ -3653,7 +3654,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapValuesAreTemplates() throws Exception {
+	@Test public void testMapValuesAreTemplates() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0<w>\", \"float\":\"0.0<w>\"] "+newline+
@@ -3670,7 +3671,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapKeyLookupViaTemplate() throws Exception {
+	@Test public void testMapKeyLookupViaTemplate() throws Exception {
 		// ST doesn't do a toString on .(key) values, it just uses the value
 		// of key rather than key itself as the key.  But, if you compute a
 		// key via a template
@@ -3690,7 +3691,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapMissingDefaultValueIsEmpty() throws Exception {
+	@Test public void testMapMissingDefaultValueIsEmpty() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
@@ -3707,7 +3708,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapHiddenByFormalArg() throws Exception {
+	@Test public void testMapHiddenByFormalArg() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
@@ -3723,7 +3724,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapEmptyValueAndAngleBracketStrings() throws Exception {
+	@Test public void testMapEmptyValueAndAngleBracketStrings() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", \"float\":, \"double\":<<0.0L>>] "+newline+
@@ -3739,7 +3740,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapDefaultValue() throws Exception {
+	@Test public void testMapDefaultValue() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", default:\"null\"] "+newline+
@@ -3755,7 +3756,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapEmptyDefaultValue() throws Exception {
+	@Test public void testMapEmptyDefaultValue() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", default:] "+newline+
@@ -3771,7 +3772,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapDefaultValueIsKey() throws Exception {
+	@Test public void testMapDefaultValueIsKey() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", default:key] "+newline+
@@ -3792,7 +3793,7 @@ public class TestStringTemplate extends TestCase {
      * <p>
      * Bug ref: JIRA bug ST-15 (Fixed)
      */
-    public void testMapDefaultStringAsKey() throws Exception {
+    @Test public void testMapDefaultStringAsKey() throws Exception {
         String templates =
                 "group test;" +newline+
                 "typeInit ::= [\"default\":\"foo\"] "+newline+
@@ -3813,7 +3814,7 @@ public class TestStringTemplate extends TestCase {
      * <p>
      * Bug ref: JIRA bug ST-15 (Fixed)
      */
-    public void testMapDefaultIsDefaultString() throws Exception {
+    @Test public void testMapDefaultIsDefaultString() throws Exception {
         String templates =
                 "group test;" +newline+
                 "map ::= [default: \"default\"] "+newline+
@@ -3827,7 +3828,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, result);
     }    
 
-	public void testMapViaEnclosingTemplates() throws Exception {
+	@Test public void testMapViaEnclosingTemplates() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
@@ -3844,7 +3845,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testMapViaEnclosingTemplates2() throws Exception {
+	@Test public void testMapViaEnclosingTemplates2() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"typeInit ::= [\"int\":\"0\", \"float\":\"0.0\"] "+newline+
@@ -3863,7 +3864,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmptyGroupTemplate() throws Exception {
+	@Test public void testEmptyGroupTemplate() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"foo() ::= \"\""+newline
@@ -3876,7 +3877,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingAngleBracketLexer() throws Exception {
+	@Test public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingAngleBracketLexer() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"top() ::= <<<x(a=\"\", b={})\\>>>"+newline+
@@ -3890,7 +3891,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingDollarLexer() throws Exception {
+	@Test public void testEmptyStringAndEmptyAnonTemplateAsParameterUsingDollarLexer() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"top() ::= <<$x(a=\"\", b={})$>>"+newline+
@@ -3910,7 +3911,7 @@ public class TestStringTemplate extends TestCase {
      *  encoding on windows. The character needs to be escaped as bellow.
      *  Please correct to escape the correct charcter.
      */
-	public void test8BitEuroChars() throws Exception {
+	@Test public void test8BitEuroChars() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"Danish: \u0143 char"
 			);
@@ -3919,7 +3920,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void test16BitUnicodeChar() throws Exception {
+	@Test public void test16BitUnicodeChar() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"DINGBAT CIRCLED SANS-SERIF DIGIT ONE: \u2780"
 			);
@@ -3928,7 +3929,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testFirstOp() throws Exception {
+	@Test public void testFirstOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$first(names)$"
 			);
@@ -3940,7 +3941,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testTruncOp() throws Exception {
+	@Test public void testTruncOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$trunc(names); separator=\", \"$"
 			);
@@ -3952,7 +3953,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-    public void testRestOp() throws Exception {
+    @Test public void testRestOp() throws Exception {
         StringTemplate e = new StringTemplate(
                 "$rest(names); separator=\", \"$"
             );
@@ -3964,7 +3965,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-    public void testRestOpEmptyList() throws Exception {
+    @Test public void testRestOpEmptyList() throws Exception {
         StringTemplate e = new StringTemplate(
                 "$rest(names); separator=\", \"$"
             );
@@ -3974,7 +3975,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-	public void testReUseOfRestResult() throws Exception {
+	@Test public void testReUseOfRestResult() throws Exception {
 		String templates =
 			"group test;" +newline+
 			"a(names) ::= \"<b(rest(names))>\""+newline+
@@ -3991,7 +3992,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLastOp() throws Exception {
+	@Test public void testLastOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$last(names)$"
 			);
@@ -4003,7 +4004,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testCombinedOp() throws Exception {
+	@Test public void testCombinedOp() throws Exception {
 		// replace first of yours with first of mine
 		StringTemplate e = new StringTemplate(
 				"$[first(mine),rest(yours)]; separator=\", \"$"
@@ -4018,7 +4019,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testCatListAndSingleAttribute() throws Exception {
+	@Test public void testCatListAndSingleAttribute() throws Exception {
 		// replace first of yours with first of mine
 		StringTemplate e = new StringTemplate(
 				"$[mine,yours]; separator=\", \"$"
@@ -4032,7 +4033,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testReUseOfCat() throws Exception {
+	@Test public void testReUseOfCat() throws Exception {
 		String templates =
 			"group test;" +newline+
 			"a(mine,yours) ::= \"<b([mine,yours])>\""+newline+
@@ -4052,7 +4053,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testCatListAndEmptyAttributes() throws Exception {
+	@Test public void testCatListAndEmptyAttributes() throws Exception {
 		// + is overloaded to be cat strings and cat lists so the
 		// two operands (from left to right) determine which way it
 		// goes.  In this case, x+mine is a list so everything from their
@@ -4069,7 +4070,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testNestedOp() throws Exception {
+	@Test public void testNestedOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$first(rest(names))$" // gets 2nd element
 			);
@@ -4081,7 +4082,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testFirstWithOneAttributeOp() throws Exception {
+	@Test public void testFirstWithOneAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$first(names)$"
 			);
@@ -4091,7 +4092,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLastWithOneAttributeOp() throws Exception {
+	@Test public void testLastWithOneAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$last(names)$"
 			);
@@ -4101,7 +4102,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLastWithLengthOneListAttributeOp() throws Exception {
+	@Test public void testLastWithLengthOneListAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$last(names)$"
 			);
@@ -4111,7 +4112,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testRestWithOneAttributeOp() throws Exception {
+	@Test public void testRestWithOneAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$rest(names)$"
 			);
@@ -4121,7 +4122,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testRestWithLengthOneListAttributeOp() throws Exception {
+	@Test public void testRestWithLengthOneListAttributeOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$rest(names)$"
 			);
@@ -4131,7 +4132,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testRepeatedRestOp() throws Exception {
+	@Test public void testRepeatedRestOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$rest(names)$, $rest(names)$" // gets 2nd element
 			);
@@ -4147,7 +4148,7 @@ public class TestStringTemplate extends TestCase {
 	 *  work if we passed in a List not an iterator.  Avoid sending in iterators
 	 *  if you ref it twice.
 	 */
-	public void testRepeatedIteratedAttrFromArg() throws Exception {
+	@Test public void testRepeatedIteratedAttrFromArg() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"root(names) ::= \"$other(names)$\""+newline+
@@ -4173,7 +4174,7 @@ public class TestStringTemplate extends TestCase {
 	 *  Maybe make a RestIterator like I have CatIterator.
 	 */
 	/*
-	public void testRepeatedRestOpAsArg() throws Exception {
+	@Test public void testRepeatedRestOpAsArg() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"root(names) ::= \"$other(rest(names))$\""+newline+
@@ -4190,7 +4191,7 @@ public class TestStringTemplate extends TestCase {
 	}
 	*/
 
-	public void testIncomingLists() throws Exception {
+	@Test public void testIncomingLists() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$rest(names)$, $rest(names)$" // gets 2nd element
 			);
@@ -4201,7 +4202,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testIncomingListsAreNotModified() throws Exception {
+	@Test public void testIncomingListsAreNotModified() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names; separator=\", \"$" // gets 2nd element
 			);
@@ -4217,7 +4218,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(names.size(), 2);
 	}
 
-	public void testIncomingListsAreNotModified2() throws Exception {
+	@Test public void testIncomingListsAreNotModified2() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names; separator=\", \"$" // gets 2nd element
 			);
@@ -4233,7 +4234,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(names.size(), 2);
 	}
 
-	public void testIncomingArraysAreOk() throws Exception {
+	@Test public void testIncomingArraysAreOk() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names; separator=\", \"$" // gets 2nd element
 			);
@@ -4244,7 +4245,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testMultipleRefsToListAttribute() throws Exception {
+	@Test public void testMultipleRefsToListAttribute() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"f(x) ::= \"<x> <x>\""+newline
@@ -4258,7 +4259,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testApplyTemplateWithSingleFormalArgs() throws Exception {
+	@Test public void testApplyTemplateWithSingleFormalArgs() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(names) ::= <<<names:bold(item=it); separator=\", \"> >>"+newline+
@@ -4274,7 +4275,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testApplyTemplateWithNoFormalArgs() throws Exception {
+	@Test public void testApplyTemplateWithNoFormalArgs() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(names) ::= <<<names:bold(); separator=\", \"> >>"+newline+
@@ -4291,7 +4292,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testAnonTemplateArgs() throws Exception {
+	@Test public void testAnonTemplateArgs() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names:{n| $n$}; separator=\", \"$"
 			);
@@ -4302,7 +4303,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testAnonTemplateWithArgHasNoITArg() throws Exception {
+	@Test public void testAnonTemplateWithArgHasNoITArg() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names:{n| $n$:$it$}; separator=\", \"$"
 			);
@@ -4320,7 +4321,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(error, expecting);
 	}
 
-	public void testAnonTemplateArgs2() throws Exception {
+	@Test public void testAnonTemplateArgs2() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names:{n| .$n$.}:{ n | _$n$_}; separator=\", \"$"
 			);
@@ -4331,7 +4332,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testFirstWithCatAttribute() throws Exception {
+	@Test public void testFirstWithCatAttribute() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$first([names,phones])$"
 			);
@@ -4344,7 +4345,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testFirstWithListOfMaps() throws Exception {
+	@Test public void testFirstWithListOfMaps() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$first(maps).Ter$"
 			);
@@ -4367,7 +4368,7 @@ public class TestStringTemplate extends TestCase {
 
 	// this FAILS!
 	/*
-	public void testFirstWithListOfMaps2() throws Exception {
+	@Test public void testFirstWithListOfMaps2() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$first(maps):{ m | $m.Ter$ }$"
 			);
@@ -4387,7 +4388,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 */
-	public void testJustCat() throws Exception {
+	@Test public void testJustCat() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$[names,phones]$"
 			);
@@ -4400,7 +4401,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testCat2Attributes() throws Exception {
+	@Test public void testCat2Attributes() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$[names,phones]; separator=\", \"$"
 			);
@@ -4413,7 +4414,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testCat2AttributesWithApply() throws Exception {
+	@Test public void testCat2AttributesWithApply() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$[names,phones]:{a|$a$.}$"
 			);
@@ -4426,7 +4427,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testCat3Attributes() throws Exception {
+	@Test public void testCat3Attributes() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$[names,phones,salaries]; separator=\", \"$"
 			);
@@ -4441,7 +4442,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-    public void testCatWithTemplateApplicationAsElement() throws Exception {
+    @Test public void testCatWithTemplateApplicationAsElement() throws Exception {
         StringTemplate e = new StringTemplate(
                 "$[names:{$it$!},phones]; separator=\", \"$"
             );
@@ -4454,7 +4455,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-    public void testCatWithIFAsElement() throws Exception {
+    @Test public void testCatWithIFAsElement() throws Exception {
         StringTemplate e = new StringTemplate(
                 "$[{$if(names)$doh$endif$},phones]; separator=\", \"$"
             );
@@ -4467,7 +4468,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-    public void testCatWithNullTemplateApplicationAsElement() throws Exception {
+    @Test public void testCatWithNullTemplateApplicationAsElement() throws Exception {
         StringTemplate e = new StringTemplate(
                 "$[names:{$it$!},\"foo\"]:{x}; separator=\", \"$"
             );
@@ -4478,7 +4479,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-    public void testCatWithNestedTemplateApplicationAsElement() throws Exception {
+    @Test public void testCatWithNestedTemplateApplicationAsElement() throws Exception {
         StringTemplate e = new StringTemplate(
                 "$[names, [\"foo\",\"bar\"]:{$it$!},phones]; separator=\", \"$"
             );
@@ -4491,7 +4492,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, e.toString());
     }
 
-    public void testListAsTemplateArgument() throws Exception {
+    @Test public void testListAsTemplateArgument() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(names,phones) ::= \"<foo([names,phones])>\""+newline+
@@ -4510,7 +4511,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testSingleExprTemplateArgument() throws Exception {
+	@Test public void testSingleExprTemplateArgument() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(name) ::= \"<bold(name)>\""+newline+
@@ -4526,7 +4527,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testSingleExprTemplateArgumentInApply() throws Exception {
+	@Test public void testSingleExprTemplateArgumentInApply() throws Exception {
 		// when you specify a single arg on a template application
 		// it overrides the setting of the iterated value "it" to that
 		// same single formal arg.  Your arg hides the implicitly set "it".
@@ -4547,7 +4548,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testSoleFormalTemplateArgumentInMultiApply() throws Exception {
+	@Test public void testSoleFormalTemplateArgumentInMultiApply() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(names) ::= \"<names:bold(),italics()>\""+newline+
@@ -4565,7 +4566,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testSingleExprTemplateArgumentError() throws Exception {
+	@Test public void testSingleExprTemplateArgumentError() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(name) ::= \"<bold(name)>\""+newline+
@@ -4582,7 +4583,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(errors.toString(), expecting);
 	}
 
-	public void testInvokeIndirectTemplateWithSingleFormalArgs() throws Exception {
+	@Test public void testInvokeIndirectTemplateWithSingleFormalArgs() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"test(templateName,arg) ::= \"<(templateName)(arg)>\""+newline+
@@ -4599,7 +4600,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testParallelAttributeIteration() throws Exception {
+	@Test public void testParallelAttributeIteration() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$\n}$"
 			);
@@ -4614,7 +4615,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testParallelAttributeIterationWithNullValue() throws Exception {
+	@Test public void testParallelAttributeIterationWithNullValue() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$\n}$"
 			);
@@ -4632,7 +4633,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testParallelAttributeIterationHasI() throws Exception {
+	@Test public void testParallelAttributeIterationHasI() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names,phones,salaries:{n,p,s | $i0$. $n$@$p$: $s$\n}$"
 			);
@@ -4647,7 +4648,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testParallelAttributeIterationWithDifferentSizes() throws Exception {
+	@Test public void testParallelAttributeIterationWithDifferentSizes() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$}; separator=\", \"$"
 			);
@@ -4662,7 +4663,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testParallelAttributeIterationWithSingletons() throws Exception {
+	@Test public void testParallelAttributeIterationWithSingletons() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$names,phones,salaries:{n,p,s | $n$@$p$: $s$}; separator=\", \"$"
 			);
@@ -4674,7 +4675,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testParallelAttributeIterationWithMismatchArgListSizes() throws Exception {
+	@Test public void testParallelAttributeIterationWithMismatchArgListSizes() throws Exception {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplate e = new StringTemplate(
 				"$names,phones,salaries:{n,p | $n$@$p$}; separator=\", \"$"
@@ -4692,7 +4693,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(errorExpecting, errors.toString());
 	}
 
-	public void testParallelAttributeIterationWithMissingArgs() throws Exception {
+	@Test public void testParallelAttributeIterationWithMissingArgs() throws Exception {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		StringTemplate e = new StringTemplate(
 				"$names,phones,salaries:{$n$@$p$}; separator=\", \"$"
@@ -4707,7 +4708,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(errorExpecting, errors.toString());
 	}
 
-	public void testParallelAttributeIterationWithDifferentSizesTemplateRefInsideToo() throws Exception {
+	@Test public void testParallelAttributeIterationWithDifferentSizesTemplateRefInsideToo() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"page(names,phones,salaries) ::= "+newline+
@@ -4727,7 +4728,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, p.toString());
 	}
 
-	public void testAnonTemplateOnLeftOfApply() throws Exception {
+	@Test public void testAnonTemplateOnLeftOfApply() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"${foo}:{($it$)}$"
 			);
@@ -4735,7 +4736,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testOverrideThroughConditional() throws Exception {
+	@Test public void testOverrideThroughConditional() throws Exception {
 		String templates =
 			"group base;" +newline+
 			"body(ick) ::= \"<if(ick)>ick<f()><else><f()><endif>\"" +
@@ -4763,7 +4764,7 @@ public class TestStringTemplate extends TestCase {
 
 	}
 
-	public void testNonPublicPropertyAccess() throws Exception {
+	@Test public void testNonPublicPropertyAccess() throws Exception {
 		StringTemplate st =
 				new StringTemplate("$x.foo$:$x.bar$");
 		Object o = new Object() {
@@ -4776,7 +4777,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, st.toString());
 	}
 
-	public void testIndexVar() throws Exception {
+	@Test public void testIndexVar() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("dummy", ".");
 		StringTemplate t =
@@ -4792,7 +4793,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testIndex0Var() throws Exception {
+	@Test public void testIndex0Var() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("dummy", ".");
 		StringTemplate t =
@@ -4808,7 +4809,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testIndexVarWithMultipleExprs() throws Exception {
+	@Test public void testIndexVarWithMultipleExprs() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("dummy", ".");
 		StringTemplate t =
@@ -4826,7 +4827,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testIndex0VarWithMultipleExprs() throws Exception {
+	@Test public void testIndex0VarWithMultipleExprs() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("dummy", ".");
 		StringTemplate t =
@@ -4844,7 +4845,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testArgumentContext() throws Exception {
+	@Test public void testArgumentContext() throws Exception {
 		// t is referenced within foo and so will be evaluated in that
 		// context.  it can therefore see name.
 		StringTemplateGroup group =
@@ -4855,7 +4856,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, main.toString());
 	}
 
-	public void testNoDotsInAttributeNames() throws Exception {
+	@Test public void testNoDotsInAttributeNames() throws Exception {
 		StringTemplateGroup group = new StringTemplateGroup("dummy", ".");
 		StringTemplate t = new StringTemplate(group, "$user.Name$");
 		String error=null;
@@ -4869,7 +4870,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting,error);
 	}
 
-	public void testNoDotsInTemplateNames() throws Exception {
+	@Test public void testNoDotsInTemplateNames() throws Exception {
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String templates =
 				"group test;" +newline+
@@ -4883,7 +4884,7 @@ public class TestStringTemplate extends TestCase {
 		assertTrue(errors.toString().startsWith(expecting));
 	}
 
-	public void testLineWrap() throws Exception {
+	@Test public void testLineWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"array(values) ::= <<int[] a = { <values; wrap=\"\\n\", separator=\",\"> };>>"+newline;
@@ -4896,14 +4897,14 @@ public class TestStringTemplate extends TestCase {
 						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
 					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
 		String expecting =
-			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
-			"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1,\n" +
-			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888," + newline +
+			"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1," + newline +
+			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6," + newline +
 			"32,5,6,77,888,1,6,32,5 };";
 		assertEquals(expecting,a.toString(40));
 	}
 
-	public void testLineWrapWithNormalizedNewlines() throws Exception {
+	@Test public void testLineWrapWithNormalizedNewlines() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"array(values) ::= <<int[] a = { <values; wrap=\"\\r\\n\", separator=\",\"> };>>"+newline;
@@ -4929,7 +4930,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, result);
 	}
 
-	public void testLineWrapAnchored() throws Exception {
+	@Test public void testLineWrapAnchored() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"array(values) ::= <<int[] a = { <values; anchor, wrap=\"\\n\", separator=\",\"> };>>"+newline;
@@ -4942,15 +4943,15 @@ public class TestStringTemplate extends TestCase {
 						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
 					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
 		String expecting =
-			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
-			"            2,1,6,32,5,6,77,4,9,20,2,1,4,\n" +
-			"            63,9,20,2,1,4,6,32,5,6,77,6,\n" +
-			"            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888," + newline +
+			"            2,1,6,32,5,6,77,4,9,20,2,1,4," + newline +
+			"            63,9,20,2,1,4,6,32,5,6,77,6," + newline +
+			"            32,5,6,77,3,9,20,2,1,4,6,32," + newline +
 			"            5,6,77,888,1,6,32,5 };";
 		assertEquals(expecting, a.toString(40));
 	}
 
-    public void testSubtemplatesAnchorToo() throws Exception {
+    @Test public void testSubtemplatesAnchorToo() throws Exception {
         String templates =
                 "group test;" +newline+
                 "array(values) ::= <<{ <values; anchor, separator=\", \"> }>>"+newline;
@@ -4974,7 +4975,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, a.toString(40));
     }
 
-	public void testFortranLineWrap() throws Exception {
+	@Test public void testFortranLineWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"func(args) ::= <<       FUNCTION line( <args; wrap=\"\\n      c\", separator=\",\"> )>>"+newline;
@@ -4985,12 +4986,12 @@ public class TestStringTemplate extends TestCase {
 		a.setAttribute("args",
 					   new String[] {"a","b","c","d","e","f"});
 		String expecting =
-			"       FUNCTION line( a,b,c,d,\n" +
+			"       FUNCTION line( a,b,c,d," + newline +
 			"      ce,f )";
 		assertEquals(expecting, a.toString(30));
 	}
 
-	public void testLineWrapWithDiffAnchor() throws Exception {
+	@Test public void testLineWrapWithDiffAnchor() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"array(values) ::= <<int[] a = { <{1,9,2,<values; wrap, separator=\",\">}; anchor> };>>"+newline;
@@ -5002,15 +5003,15 @@ public class TestStringTemplate extends TestCase {
 					   new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
 						4,9,20,2,1,4,63,9,20,2,1,4,6});
 		String expecting =
-			"int[] a = { 1,9,2,3,9,20,2,1,4,\n" +
-			"            6,32,5,6,77,888,2,\n" +
-			"            1,6,32,5,6,77,4,9,\n" +
-			"            20,2,1,4,63,9,20,2,\n" +
+			"int[] a = { 1,9,2,3,9,20,2,1,4," + newline +
+			"            6,32,5,6,77,888,2," + newline +
+			"            1,6,32,5,6,77,4,9," + newline +
+			"            20,2,1,4,63,9,20,2," + newline +
 			"            1,4,6 };";
 		assertEquals(expecting, a.toString(30));
 	}
 
-	public void testLineWrapEdgeCase() throws Exception {
+	@Test public void testLineWrapEdgeCase() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"duh(chars) ::= <<<chars; wrap=\"\\n\"\\>>>"+newline;
@@ -5021,12 +5022,12 @@ public class TestStringTemplate extends TestCase {
 		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		// lineWidth==3 implies that we can have 3 characters at most
 		String expecting =
-			"abc\n"+
+			"abc"+newline+
 			"de";
 		assertEquals(expecting, a.toString(3));
 	}
 
-	public void testLineWrapLastCharIsNewline() throws Exception {
+	@Test public void testLineWrapLastCharIsNewline() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"duh(chars) ::= <<<chars; wrap=\"\\n\"\\>>>"+newline;
@@ -5037,12 +5038,12 @@ public class TestStringTemplate extends TestCase {
 		a.setAttribute("chars", new String[] {"a","b","\n","d","e"});
 		// don't do \n if it's last element anyway
 		String expecting =
-			"ab\n"+
+			"ab"+newline+
 			"de";
 		assertEquals(expecting,a.toString(3));
 	}
 
-	public void testLineWrapCharAfterWrapIsNewline() throws Exception {
+	@Test public void testLineWrapCharAfterWrapIsNewline() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"duh(chars) ::= <<<chars; wrap=\"\\n\"\\>>>"+newline;
@@ -5055,13 +5056,13 @@ public class TestStringTemplate extends TestCase {
 		// after a wrap is just an "unfortunate" event.  People will expect
 		// a newline if it's in the data.
 		String expecting =
-			"abc\n" +
-			"\n" +
+			"abc" + newline +
+			newline +
 			"de";
 		assertEquals(expecting, a.toString(3));
 	}
 
-	public void testLineWrapForAnonTemplate() throws Exception {
+	@Test public void testLineWrapForAnonTemplate() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"duh(data) ::= <<!<data:{v|[<v>]}; wrap>!>>"+newline;
@@ -5071,13 +5072,13 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate a = group.getInstanceOf("duh");
 		a.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
 		String expecting =
-			"![1][2][3]\n" + // width=9 is the 3 char; don't break til after ]
-			"[4][5][6]\n" +
+			"![1][2][3]" + newline + // width=9 is the 3 char; don't break til after ]
+			"[4][5][6]" + newline +
 			"[7][8][9]!";
 		assertEquals(expecting,a.toString(9));
 	}
 
-	public void testLineWrapForAnonTemplateAnchored() throws Exception {
+	@Test public void testLineWrapForAnonTemplateAnchored() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"duh(data) ::= <<!<data:{v|[<v>]}; anchor, wrap>!>>"+newline;
@@ -5087,13 +5088,13 @@ public class TestStringTemplate extends TestCase {
 		StringTemplate a = group.getInstanceOf("duh");
 		a.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
 		String expecting =
-			"![1][2][3]\n" +
-			" [4][5][6]\n" +
+			"![1][2][3]" + newline +
+			" [4][5][6]" + newline +
 			" [7][8][9]!";
 		assertEquals(expecting, a.toString(9));
 	}
 
-	public void testLineWrapForAnonTemplateComplicatedWrap() throws Exception {
+	@Test public void testLineWrapForAnonTemplateComplicatedWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"top(s) ::= <<  <s>.>>"+
@@ -5106,15 +5107,15 @@ public class TestStringTemplate extends TestCase {
 		s.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
 		t.setAttribute("s", s);
 		String expecting =
-			"  ![1][2]!+\n" +
-			"  ![3][4]!+\n" +
-			"  ![5][6]!+\n" +
-			"  ![7][8]!+\n" +
+			"  ![1][2]!+" + newline +
+			"  ![3][4]!+" + newline +
+			"  ![5][6]!+" + newline +
+			"  ![7][8]!+" + newline +
 			"  ![9]!.";
 		assertEquals(expecting,t.toString(9));
 	}
 
-	public void testIndentBeyondLineWidth() throws Exception {
+	@Test public void testIndentBeyondLineWidth() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"duh(chars) ::= <<    <chars; wrap=\"\\n\"\\>>>"+newline;
@@ -5125,15 +5126,15 @@ public class TestStringTemplate extends TestCase {
 		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		//
 		String expecting =
-			"    a\n" +
-			"    b\n" +
-			"    c\n" +
-			"    d\n" +
+			"    a" + newline +
+			"    b" + newline +
+			"    c" + newline +
+			"    d" + newline +
 			"    e";
 		assertEquals(expecting, a.toString(2));
 	}
 
-	public void testIndentedExpr() throws Exception {
+	@Test public void testIndentedExpr() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"duh(chars) ::= <<    <chars; wrap=\"\\n\"\\>>>"+newline;
@@ -5144,14 +5145,14 @@ public class TestStringTemplate extends TestCase {
 		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		//
 		String expecting =
-			"    ab\n" +
-			"    cd\n" +
+			"    ab" + newline +
+			"    cd" + newline +
 			"    e";
 		// width=4 spaces + 2 char.
 		assertEquals(expecting, a.toString(6));
 	}
 
-	public void testNestedIndentedExpr() throws Exception {
+	@Test public void testNestedIndentedExpr() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"top(d) ::= <<  <d>!>>"+newline+
@@ -5164,14 +5165,14 @@ public class TestStringTemplate extends TestCase {
 		duh.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		top.setAttribute("d", duh);
 		String expecting =
-			"    ab\n" +
-			"    cd\n" +
+			"    ab" + newline +
+			"    cd" + newline +
 			"    e!";
 		// width=4 spaces + 2 char.
 		assertEquals(expecting, top.toString(6));
 	}
 
-	public void testNestedWithIndentAndTrackStartOfExpr() throws Exception {
+	@Test public void testNestedWithIndentAndTrackStartOfExpr() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"top(d) ::= <<  <d>!>>"+newline+
@@ -5185,13 +5186,13 @@ public class TestStringTemplate extends TestCase {
 		top.setAttribute("d", duh);
 		//
 		String expecting =
-			"  x: ab\n" +
-			"     cd\n" +
+			"  x: ab" + newline +
+			"     cd" + newline +
 			"     e!";
 		assertEquals(expecting, top.toString(7));
 	}
 
-	public void testLineDoesNotWrapDueToLiteral() throws Exception {
+	@Test public void testLineDoesNotWrapDueToLiteral() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"m(args,body) ::= <<public void foo(<args; wrap=\"\\n\",separator=\", \">) throws Ick { <body> }>>"+newline;
@@ -5209,7 +5210,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, a.toString(n));
 	}
 
-	public void testSingleValueWrap() throws Exception {
+	@Test public void testSingleValueWrap() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"m(args,body) ::= <<{ <body; anchor, wrap=\"\\n\"> }>>"+newline;
@@ -5220,12 +5221,12 @@ public class TestStringTemplate extends TestCase {
 		m.setAttribute("body", "i=3;");
 		// make it wrap because of ") throws Ick { " literal
 		String expecting =
-			"{ \n"+
+			"{ "+newline+
 			"  i=3; }";
 		assertEquals(expecting, m.toString(2));
 	}
 
-	public void testLineWrapInNestedExpr() throws Exception {
+	@Test public void testLineWrapInNestedExpr() throws Exception {
 		String templates =
 				"group test;" +newline+
 				"top(arrays) ::= <<Arrays: <arrays>done>>"+newline+
@@ -5258,7 +5259,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, top.toString(40));
 	}
 
-    public void testBackslash() throws Exception {
+    @Test public void testBackslash() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplate t = group.defineTemplate("t", "\\");
@@ -5266,7 +5267,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-    public void testBackslash2() throws Exception {
+    @Test public void testBackslash2() throws Exception {
         StringTemplateGroup group =
                 new StringTemplateGroup("test");
         StringTemplate t = group.defineTemplate("t", "\\ ");
@@ -5274,7 +5275,7 @@ public class TestStringTemplate extends TestCase {
         assertEquals(expecting, t.toString());
     }
 
-	public void testEscapeEscape() throws Exception {
+	@Test public void testEscapeEscape() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test");
 		StringTemplate t = group.defineTemplate("t", "\\\\$v$");
@@ -5284,7 +5285,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testEscapeEscapeNestedAngle() throws Exception {
+	@Test public void testEscapeEscapeNestedAngle() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t = group.defineTemplate("t", "<v:{a|\\\\<a>}>");
@@ -5294,7 +5295,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testListOfIntArrays() throws Exception {
+	@Test public void testListOfIntArrays() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5312,7 +5313,7 @@ public class TestStringTemplate extends TestCase {
 
 	// Test null option
 
-	public void testNullOptionSingleNullValue() throws Exception {
+	@Test public void testNullOptionSingleNullValue() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5322,7 +5323,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testNullOptionHasEmptyNullValue() throws Exception {
+	@Test public void testNullOptionHasEmptyNullValue() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5335,7 +5336,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testNullOptionSingleNullValueInList() throws Exception {
+	@Test public void testNullOptionSingleNullValueInList() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5348,7 +5349,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testNullValueInList() throws Exception {
+	@Test public void testNullValueInList() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5366,7 +5367,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testNullValueInListNoNullOption() throws Exception {
+	@Test public void testNullValueInListNoNullOption() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5384,7 +5385,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 	
-    public void testNullValueInListWithTemplateApply() throws Exception {
+    @Test public void testNullValueInListWithTemplateApply() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5400,7 +5401,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testNullValueInListWithTemplateApplyNullFirstValue() throws Exception {
+	@Test public void testNullValueInListWithTemplateApplyNullFirstValue() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5416,7 +5417,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testNullSingleValueInListWithTemplateApply() throws Exception {
+	@Test public void testNullSingleValueInListWithTemplateApply() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5429,7 +5430,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testNullSingleValueWithTemplateApply() throws Exception {
+	@Test public void testNullSingleValueWithTemplateApply() throws Exception {
 		StringTemplateGroup group =
 				new StringTemplateGroup("test", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5439,7 +5440,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, t.toString());
 	}
 
-	public void testLengthOp() throws Exception {
+	@Test public void testLengthOp() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(names)$"
 			);
@@ -5451,7 +5452,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpWithMap() throws Exception {
+	@Test public void testLengthOpWithMap() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(names)$"
 			);
@@ -5465,7 +5466,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpWithSet() throws Exception {
+	@Test public void testLengthOpWithSet() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(names)$"
 			);
@@ -5479,7 +5480,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpNull() throws Exception {
+	@Test public void testLengthOpNull() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(names)$"
 			);
@@ -5489,7 +5490,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpSingleValue() throws Exception {
+	@Test public void testLengthOpSingleValue() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(names)$"
 			);
@@ -5499,7 +5500,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpPrimitive() throws Exception {
+	@Test public void testLengthOpPrimitive() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(ints)$"
 			);
@@ -5509,7 +5510,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpOfListWithNulls() throws Exception {
+	@Test public void testLengthOpOfListWithNulls() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(data)$"
 			);
@@ -5524,7 +5525,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testStripOpOfListWithNulls() throws Exception {
+	@Test public void testStripOpOfListWithNulls() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$strip(data)$"
 			);
@@ -5539,7 +5540,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testStripOpOfListOfListsWithNulls() throws Exception {
+	@Test public void testStripOpOfListOfListsWithNulls() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$strip(data):{list | $strip(list)$}; separator=\",\"$"
 			);
@@ -5561,7 +5562,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testStripOpOfSingleAlt() throws Exception {
+	@Test public void testStripOpOfSingleAlt() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$strip(data)$"
 			);
@@ -5571,7 +5572,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testStripOpOfNull() throws Exception {
+	@Test public void testStripOpOfNull() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$strip(data)$"
 			);
@@ -5580,7 +5581,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testReUseOfStripResult() throws Exception {
+	@Test public void testReUseOfStripResult() throws Exception {
 		String templates =
 			"group test;" +newline+
 			"a(names) ::= \"<b(strip(names))>\""+newline+
@@ -5598,7 +5599,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpOfStrippedListWithNulls() throws Exception {
+	@Test public void testLengthOpOfStrippedListWithNulls() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(strip(data))$"
 			);
@@ -5613,7 +5614,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testLengthOpOfStrippedListWithNullsFrontAndBack() throws Exception {
+	@Test public void testLengthOpOfStrippedListWithNullsFrontAndBack() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$length(strip(data))$"
 			);
@@ -5635,7 +5636,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-	public void testMapKeys() throws Exception {
+	@Test public void testMapKeys() throws Exception {
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5648,7 +5649,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals("int:0, float:0.0",t.toString());
 	}
 
-	public void testMapValues() throws Exception {
+	@Test public void testMapValues() throws Exception {
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
 		StringTemplate t =
@@ -5661,7 +5662,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals("0, 0.0 0", t.toString());
 	}
 
-	public void testMapKeysWithIntegerType() throws Exception {
+	@Test public void testMapKeysWithIntegerType() throws Exception {
 		// must get back an Integer from keys not a toString()'d version
 		StringTemplateGroup group =
 			new StringTemplateGroup("dummy", ".", AngleBracketTemplateLexer.class);
@@ -5684,7 +5685,7 @@ public class TestStringTemplate extends TestCase {
 	}
 
 	/** Use when super.attr name is implemented
-	public void testArgumentContext2() throws Exception {
+	@Test public void testArgumentContext2() throws Exception {
 		// t is referenced within foo and so will be evaluated in that
 		// context.  it can therefore see name.
 		StringTemplateGroup group =
@@ -5705,7 +5706,7 @@ public class TestStringTemplate extends TestCase {
      * Bug ref: JIRA bug ST-2
      */
 	/*
-	public void testGroupTrailingSemiColon() throws Exception {
+	@Test public void testGroupTrailingSemiColon() throws Exception {
         //try {
             String templates =
                     "group test;" +newline+
@@ -5726,7 +5727,7 @@ public class TestStringTemplate extends TestCase {
         //}
     }
 */
-	public void testSuperReferenceInIfClause() throws Exception {
+	@Test public void testSuperReferenceInIfClause() throws Exception {
 		String superGroupString =
 			"group super;" + newline +
 			"a(x) ::= \"super.a\"" + newline +
@@ -5754,7 +5755,7 @@ public class TestStringTemplate extends TestCase {
 	}
 
 	/** Added feature for ST-21 */
-	public void testListLiteralWithEmptyElements() throws Exception {
+	@Test public void testListLiteralWithEmptyElements() throws Exception {
 		StringTemplate e = new StringTemplate(
 				"$[\"Ter\",,\"Jesse\"]:{n | $i$:$n$}; separator=\", \", null=\"\"$"
 			);
@@ -5766,7 +5767,7 @@ public class TestStringTemplate extends TestCase {
 		assertEquals(expecting, e.toString());
 	}
 
-    public void testTemplateApplicationAsOptionValue() throws Exception {
+    @Test public void testTemplateApplicationAsOptionValue() throws Exception {
         StringTemplate st =new StringTemplate(
                 "Tokens : <rules; separator=names:{<it>}> ;",
                 AngleBracketTemplateLexer.class);
