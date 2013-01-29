@@ -333,10 +333,10 @@ public class TestStringTemplate {
 				new StringTemplateGroup(new StringReader(templates),
 										DefaultTemplateLexer.class);
 
-		String expecting = "group test;" +newline+
-				"bold(item) ::= <<<b>$item$</b>>>" +newline+
-				"duh() ::= <<xx>>" +newline+
-				"t() ::= <<literal template>>"+newline;
+		String expecting = "group test;\n" +
+				"bold(item) ::= <<<b>$item$</b>>>\n" +
+				"duh() ::= <<xx>>\n" +
+				"t() ::= <<literal template>>\n";
 		assertEquals(expecting,group.toString());
 
 		StringTemplate a = group.getInstanceOf("t");
@@ -359,10 +359,10 @@ public class TestStringTemplate {
 				new StringTemplateGroup(new StringReader(templates),
 										DefaultTemplateLexer.class);
 
-		String expecting = "group test;" +newline+
-				"bold(item) ::= <<<b>$item$</b>>>" +newline+
-				"duh() ::= <<xx>>" +newline+
-				"t() ::= <<$\"literal\":{a|$a$\\}}$ template>>"+newline;
+		String expecting = "group test;\n" +
+				"bold(item) ::= <<<b>$item$</b>>>\n" +
+				"duh() ::= <<xx>>\n" +
+				"t() ::= <<$\"literal\":{a|$a$\\}}$ template>>\n";
 		assertEquals(expecting,group.toString());
 
 		StringTemplate b = group.getInstanceOf("bold");
@@ -2401,10 +2401,10 @@ public class TestStringTemplate {
         b.setAttribute("stats", ifstat); // block has if stat
         ifstat.setAttribute("stats", b); // but make "if" contain block
         String expectingError =
-                "infinite recursion to <ifstat([stats])@4> referenced in <block([stats])@3>; stack trace:"+newline +
-                "<ifstat([stats])@4>, attributes=[stats=<block()@3>]>"+newline +
-                "<block([stats])@3>, attributes=[stats=<ifstat()@4>], references=[stats]>"+newline +
-                "<ifstat([stats])@4> (start of recursive cycle)"+newline +
+                "infinite recursion to <ifstat([stats])@4> referenced in <block([stats])@3>; stack trace:\n"+
+                "<ifstat([stats])@4>, attributes=[stats=<block()@3>]>\n"+
+                "<block([stats])@3>, attributes=[stats=<ifstat()@4>], references=[stats]>\n"+
+                "<ifstat([stats])@4> (start of recursive cycle)\n"+
                 "...";
         // note that attributes attribute doesn't show up in ifstat() because
         // recursion detection traps the problem before it writes out the
@@ -2722,7 +2722,7 @@ public class TestStringTemplate {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
@@ -2735,7 +2735,7 @@ public class TestStringTemplate {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
@@ -2748,7 +2748,7 @@ public class TestStringTemplate {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
@@ -2761,7 +2761,7 @@ public class TestStringTemplate {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
@@ -2774,7 +2774,7 @@ public class TestStringTemplate {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
@@ -2787,7 +2787,7 @@ public class TestStringTemplate {
         StringWriter sw = new StringWriter();
         st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
         String result = sw.toString();
-        String expecting ="Foo bar"+newline;     // expect \n in output
+        String expecting ="Foo bar\n";     // expect \n in output
         assertEquals(expecting, result);
     }
 
@@ -2799,14 +2799,14 @@ public class TestStringTemplate {
 		StringWriter sw = new StringWriter();
 		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
 		String result = sw.toString();
-		String expecting ="Foo \n\n\t bar"+newline;     // expect \n in output
+		String expecting ="Foo \n\n\t bar\n";     // expect \n in output
 		assertEquals(expecting, result);
 
 		st = new StringTemplate(
 				"Foo $\\n$$\\t$ bar" +newline);
 		sw = new StringWriter();
 		st.write(new AutoIndentWriter(sw,"\n")); // force \n as newline
-		expecting ="Foo \n\t bar"+newline;     // expect \n in output
+		expecting ="Foo \n\t bar\n";     // expect \n in output
 		result = sw.toString();
 		assertEquals(expecting, result);
 
@@ -3000,7 +3000,7 @@ public class TestStringTemplate {
 			"$duh.users:{name: $it$}; separator=\", \"$\n" +
 			"end\n");
 		t.setAttribute("duh", new Duh());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
@@ -3015,7 +3015,7 @@ public class TestStringTemplate {
 			"$users:{name: $it$}; separator=\", \"$\n" +
 			"end\n");
 		//t.setAttribute("users", new Duh());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
@@ -3030,7 +3030,7 @@ public class TestStringTemplate {
 			"$users:{name: $it$}; separator=\", \"$\n" +
 			"end\n");
 		t.setAttribute("users", new ArrayList());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
@@ -3045,7 +3045,7 @@ public class TestStringTemplate {
 			"$users; separator=\", \"$\n" +
 			"end\n");
 		t.setAttribute("users", new ArrayList());
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
@@ -3059,7 +3059,7 @@ public class TestStringTemplate {
 		StringTemplate t = new StringTemplate(group,
 			"$users$\n" +
 			"end\n");
-		String expecting="end\n";
+		String expecting="end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
@@ -3075,7 +3075,7 @@ public class TestStringTemplate {
 			"$users:{name: $it$}$\n"+
 			"$users:{name: $it$}; separator=\", \"$\n"+
 			"end\n");
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
@@ -3091,7 +3091,7 @@ public class TestStringTemplate {
 			"	$users:{name: $it$}$\n"+
 			"	$users:{name: $it$$\\n$}$\n"+
 			"end\n");
-		String expecting="begin\nend\n";
+		String expecting="begin"+newline+"end"+newline;
 		String result = t.toString();
 		assertEquals(expecting, result);
 	}
@@ -3107,9 +3107,9 @@ public class TestStringTemplate {
 		String results = a.toString();
 		//System.out.println(results);
 		String expecting =
-			"foo: {\n" +
-			"	Terence\n" +
-			"	Frank\n" +
+			"foo: {" + newline +
+			"	Terence" + newline +
+			"	Frank" + newline +
 			"}";
 		assertEquals(results, expecting);
 	}
@@ -4897,9 +4897,9 @@ public class TestStringTemplate {
 						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
 					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
 		String expecting =
-			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
-			"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1,\n" +
-			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6,\n" +
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888," + newline +
+			"2,1,6,32,5,6,77,4,9,20,2,1,4,63,9,20,2,1," + newline +
+			"4,6,32,5,6,77,6,32,5,6,77,3,9,20,2,1,4,6," + newline +
 			"32,5,6,77,888,1,6,32,5 };";
 		assertEquals(expecting,a.toString(40));
 	}
@@ -4943,10 +4943,10 @@ public class TestStringTemplate {
 						4,9,20,2,1,4,63,9,20,2,1,4,6,32,5,6,77,6,32,5,6,77,
 					    3,9,20,2,1,4,6,32,5,6,77,888,1,6,32,5});
 		String expecting =
-			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888,\n" +
-			"            2,1,6,32,5,6,77,4,9,20,2,1,4,\n" +
-			"            63,9,20,2,1,4,6,32,5,6,77,6,\n" +
-			"            32,5,6,77,3,9,20,2,1,4,6,32,\n" +
+			"int[] a = { 3,9,20,2,1,4,6,32,5,6,77,888," + newline +
+			"            2,1,6,32,5,6,77,4,9,20,2,1,4," + newline +
+			"            63,9,20,2,1,4,6,32,5,6,77,6," + newline +
+			"            32,5,6,77,3,9,20,2,1,4,6,32," + newline +
 			"            5,6,77,888,1,6,32,5 };";
 		assertEquals(expecting, a.toString(40));
 	}
@@ -4986,7 +4986,7 @@ public class TestStringTemplate {
 		a.setAttribute("args",
 					   new String[] {"a","b","c","d","e","f"});
 		String expecting =
-			"       FUNCTION line( a,b,c,d,\n" +
+			"       FUNCTION line( a,b,c,d," + newline +
 			"      ce,f )";
 		assertEquals(expecting, a.toString(30));
 	}
@@ -5003,10 +5003,10 @@ public class TestStringTemplate {
 					   new int[] {3,9,20,2,1,4,6,32,5,6,77,888,2,1,6,32,5,6,77,
 						4,9,20,2,1,4,63,9,20,2,1,4,6});
 		String expecting =
-			"int[] a = { 1,9,2,3,9,20,2,1,4,\n" +
-			"            6,32,5,6,77,888,2,\n" +
-			"            1,6,32,5,6,77,4,9,\n" +
-			"            20,2,1,4,63,9,20,2,\n" +
+			"int[] a = { 1,9,2,3,9,20,2,1,4," + newline +
+			"            6,32,5,6,77,888,2," + newline +
+			"            1,6,32,5,6,77,4,9," + newline +
+			"            20,2,1,4,63,9,20,2," + newline +
 			"            1,4,6 };";
 		assertEquals(expecting, a.toString(30));
 	}
@@ -5022,7 +5022,7 @@ public class TestStringTemplate {
 		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		// lineWidth==3 implies that we can have 3 characters at most
 		String expecting =
-			"abc\n"+
+			"abc"+newline+
 			"de";
 		assertEquals(expecting, a.toString(3));
 	}
@@ -5038,7 +5038,7 @@ public class TestStringTemplate {
 		a.setAttribute("chars", new String[] {"a","b","\n","d","e"});
 		// don't do \n if it's last element anyway
 		String expecting =
-			"ab\n"+
+			"ab"+newline+
 			"de";
 		assertEquals(expecting,a.toString(3));
 	}
@@ -5056,8 +5056,8 @@ public class TestStringTemplate {
 		// after a wrap is just an "unfortunate" event.  People will expect
 		// a newline if it's in the data.
 		String expecting =
-			"abc\n" +
-			"\n" +
+			"abc" + newline +
+			newline +
 			"de";
 		assertEquals(expecting, a.toString(3));
 	}
@@ -5072,8 +5072,8 @@ public class TestStringTemplate {
 		StringTemplate a = group.getInstanceOf("duh");
 		a.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
 		String expecting =
-			"![1][2][3]\n" + // width=9 is the 3 char; don't break til after ]
-			"[4][5][6]\n" +
+			"![1][2][3]" + newline + // width=9 is the 3 char; don't break til after ]
+			"[4][5][6]" + newline +
 			"[7][8][9]!";
 		assertEquals(expecting,a.toString(9));
 	}
@@ -5088,8 +5088,8 @@ public class TestStringTemplate {
 		StringTemplate a = group.getInstanceOf("duh");
 		a.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
 		String expecting =
-			"![1][2][3]\n" +
-			" [4][5][6]\n" +
+			"![1][2][3]" + newline +
+			" [4][5][6]" + newline +
 			" [7][8][9]!";
 		assertEquals(expecting, a.toString(9));
 	}
@@ -5107,10 +5107,10 @@ public class TestStringTemplate {
 		s.setAttribute("data", new int[] {1,2,3,4,5,6,7,8,9});
 		t.setAttribute("s", s);
 		String expecting =
-			"  ![1][2]!+\n" +
-			"  ![3][4]!+\n" +
-			"  ![5][6]!+\n" +
-			"  ![7][8]!+\n" +
+			"  ![1][2]!+" + newline +
+			"  ![3][4]!+" + newline +
+			"  ![5][6]!+" + newline +
+			"  ![7][8]!+" + newline +
 			"  ![9]!.";
 		assertEquals(expecting,t.toString(9));
 	}
@@ -5126,10 +5126,10 @@ public class TestStringTemplate {
 		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		//
 		String expecting =
-			"    a\n" +
-			"    b\n" +
-			"    c\n" +
-			"    d\n" +
+			"    a" + newline +
+			"    b" + newline +
+			"    c" + newline +
+			"    d" + newline +
 			"    e";
 		assertEquals(expecting, a.toString(2));
 	}
@@ -5145,8 +5145,8 @@ public class TestStringTemplate {
 		a.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		//
 		String expecting =
-			"    ab\n" +
-			"    cd\n" +
+			"    ab" + newline +
+			"    cd" + newline +
 			"    e";
 		// width=4 spaces + 2 char.
 		assertEquals(expecting, a.toString(6));
@@ -5165,8 +5165,8 @@ public class TestStringTemplate {
 		duh.setAttribute("chars", new String[] {"a","b","c","d","e"});
 		top.setAttribute("d", duh);
 		String expecting =
-			"    ab\n" +
-			"    cd\n" +
+			"    ab" + newline +
+			"    cd" + newline +
 			"    e!";
 		// width=4 spaces + 2 char.
 		assertEquals(expecting, top.toString(6));
@@ -5186,8 +5186,8 @@ public class TestStringTemplate {
 		top.setAttribute("d", duh);
 		//
 		String expecting =
-			"  x: ab\n" +
-			"     cd\n" +
+			"  x: ab" + newline +
+			"     cd" + newline +
 			"     e!";
 		assertEquals(expecting, top.toString(7));
 	}
@@ -5221,7 +5221,7 @@ public class TestStringTemplate {
 		m.setAttribute("body", "i=3;");
 		// make it wrap because of ") throws Ick { " literal
 		String expecting =
-			"{ \n"+
+			"{ "+newline+
 			"  i=3; }";
 		assertEquals(expecting, m.toString(2));
 	}
