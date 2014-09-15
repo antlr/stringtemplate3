@@ -13,11 +13,11 @@ The main website is:
 
 The documentation is in the wiki: 
 
-	http://www.antlr.org/wiki/display/ST/StringTemplate+Documentation
+	https://theantlrguy.atlassian.net/wiki/display/ST/StringTemplate+3+Wiki+Home
 
 Here are the 3.2.1 release notes:
 
-	http://www.antlr.org/wiki/display/ST/3.2.1+Release+Notes
+	https://theantlrguy.atlassian.net/wiki/display/ST/3.2.1+Release+Notes
 
 Per the license in LICENSE.txt, this software is not guaranteed to
 work and might even destroy all life on this planet.
