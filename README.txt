@@ -9,7 +9,7 @@ ST (StringTemplate) is a java template engine (with ports for C# and Python) for
 
 The main website is:
 
-	http://www.stringtemplate.org
+	http://www.stringtemplate3.org
 
 The documentation is in the wiki: 
 
