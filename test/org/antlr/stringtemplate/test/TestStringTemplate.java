@@ -2218,8 +2218,12 @@ public class TestStringTemplate {
 		s.add("2");
 		s.add("3");
 		st.setAttribute("items", s);
-		expecting = "<li>3</li><li>2</li><li>1</li>";
-		assertEquals(expecting, st.toString());
+		String[] split = st.toString().split("(</?li>){1,2}");
+		Arrays.sort(split);
+		assertEquals("",  split[0]);
+		assertEquals("1", split[1]);
+		assertEquals("2", split[2]);
+		assertEquals("3", split[3]);
 	}
 
 	@Test public void testDumpMapAndSet() throws Exception {
@@ -2239,8 +2243,11 @@ public class TestStringTemplate {
 		s.add("2");
 		s.add("3");
 		st.setAttribute("items", s);
-		expecting = "3,2,1";
-		assertEquals(expecting, st.toString());
+		String[] split = st.toString().split(",");
+		Arrays.sort(split);
+		assertEquals("1", split[0]);
+		assertEquals("2", split[1]);
+		assertEquals("3", split[2]);
 	}
 
 	public class Connector3 {
