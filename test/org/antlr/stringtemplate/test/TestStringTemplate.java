@@ -31,12 +31,15 @@ import org.antlr.stringtemplate.*;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
 import org.antlr.stringtemplate.language.DefaultTemplateLexer;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import static org.junit.Assert.*;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestStringTemplate {
     static final String newline = System.getProperty("line.separator");
 
@@ -88,7 +91,7 @@ public class TestStringTemplate {
 		assertEquals(expecting,I.toString());
 	}
 
-	@Test public void testNoGroupLoader() throws Exception {
+	@Test public void testAaaNoGroupLoader() throws Exception {
 		// this also tests the group loader
 		StringTemplateErrorListener errors = new ErrorBuffer();
 		String tmpdir = System.getProperty("java.io.tmpdir");
