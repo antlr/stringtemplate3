@@ -95,7 +95,7 @@ There are currently about 600 StringTemplate source downloads a month.
 
     <licenses>
         <license>
-            <name>BSD licence</name>
+            <name>BSD License</name>
             <url>http://antlr.org/license.html</url>
             <distribution>repo</distribution>
         </license>
